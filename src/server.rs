@@ -42,7 +42,7 @@ pub fn server(){
                     }
                 }
 
-                thread::sleep(::std::time::Duration::from_millis(100));
+                //thread::sleep(::std::time::Duration::from_millis(100));
             });
         }
         // socket writing
