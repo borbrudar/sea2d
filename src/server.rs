@@ -17,6 +17,11 @@ pub fn server(){
         if let Ok((mut socket, addr)) = listener.accept() {
             println!("Client {} connected", addr);
             let tx: mspc::Sender<String> = tx.clone();
+            let mut id_msg = ("CLIENT_ID: ".to_string() + &clients.len().to_string()).into_bytes();
+            id_msg.resize(MSG_SIZE, 0);
+            socket.write_all(&id_msg).map(|_| {}).ok();
+
+            
             clients.push(socket.try_clone().expect("Failed to clone client"));
         
             // read from the socket, new thread for each client
@@ -45,10 +50,9 @@ pub fn server(){
             clients = clients.into_iter().filter_map(|mut client| {
                 let mut buf = msg.clone().into_bytes();
                 buf.resize(MSG_SIZE, 0);
-
                 client.write_all(&buf).map(|_| client).ok()
             }).collect::<Vec<_>>();
-
+            
         }
     }
 }

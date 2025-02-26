@@ -4,7 +4,6 @@ use std::io::{ErrorKind,Read,Write};
 use std::net::TcpStream;
 use std::sync::mpsc as mspc;
 use std::thread;
-use std::time::Duration;
 
 
 pub fn client(){
@@ -83,7 +82,9 @@ fn game_loop(tx : mspc::Sender<String>, rx : mspc::Receiver<String>){
     let mut event_pump = sdl_context.event_pump().unwrap();
     let mut px: i32 = (SCREEN_WIDTH as i32)/2;
     let mut py: i32 = (SCREEN_HEIGHT as i32)/2;
+    let mut color = (255,255,255);
     let psize: u32 = 40;
+    let mut id : String = "-1".to_string();
 
     'running: loop {
         // event polling
@@ -94,19 +95,19 @@ fn game_loop(tx : mspc::Sender<String>, rx : mspc::Receiver<String>){
                     break 'running
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::UP),..} => {
-                    tx.send("UP".to_string()).unwrap();
+                    tx.send("UP ".to_string() + &id).unwrap();
                  //   py -= 15;
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::DOWN),..} => {
-                    tx.send("DOWN".to_string()).unwrap();
+                    tx.send("DOWN ".to_string() + &id).unwrap();
                  //   py += 15;
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::LEFT),..} => {
-                    tx.send("LEFT".to_string()).unwrap();
+                    tx.send("LEFT ".to_string() + &id).unwrap();
                     //px -= 15;
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::RIGHT),..} => {
-                    tx.send("RIGHT".to_string()).unwrap();
+                    tx.send("RIGHT ".to_string() + &id).unwrap();
                    // px += 15;
                 },
                 _ => {}
@@ -115,15 +116,31 @@ fn game_loop(tx : mspc::Sender<String>, rx : mspc::Receiver<String>){
 
         match rx.try_recv(){
             Ok(msg) => {
-                if msg == "UP" {
+                let prt = msg.clone();
+                let msg = msg.split(' ').collect::<Vec<&str>>();
+
+                if msg.len() <= 1 {continue}
+                if msg[0] == "UP" && msg[1] == id {
                     py -= 15;
-                } else if msg == "DOWN" {
+                } else if msg[0] == "DOWN" && msg[1] == id {
                     py += 15;
-                } else if msg == "LEFT" {
+                } else if msg[0] == "LEFT" && msg[1] == id {
                     px -= 15;
-                } else if msg == "RIGHT" {
+                } else if msg[0] == "RIGHT" && msg[1] == id {
                     px += 15;
                 }
+                else {
+                    if id == "-1"{
+                        id = msg[1].to_string();
+                        if id == "0"{
+                            color = (255,0,0);
+                        }else {
+                            color = (0,0,255);
+                        }
+                    }
+                }
+                
+                println!("{}",prt);
             },
             Err(mspc::TryRecvError::Empty) => (),
             Err(mspc::TryRecvError::Disconnected) => break,
@@ -131,7 +148,7 @@ fn game_loop(tx : mspc::Sender<String>, rx : mspc::Receiver<String>){
 
         // drawing
         canvas.clear();
-        canvas.set_draw_color(sdl2::pixels::Color::RGB(255,255,255));
+        canvas.set_draw_color(sdl2::pixels::Color::RGB(color.0,color.1,color.2));
         canvas.fill_rect(sdl2::rect::Rect::new(px,py,psize,psize)).unwrap();
         canvas.set_draw_color(sdl2::pixels::Color::RGB(0,0,0));
         canvas.present();
