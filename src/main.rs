@@ -3,7 +3,9 @@ use std::io::{ErrorKind,Read,Write};
 use std::net::{TcpListener, TcpStream};
 use std::sync::mpsc as mspc;
 use std::thread;
+use std::time::Duration;
 use sdl2;
+use sdl2::keyboard::Keycode;
 
 const LOCAL : &str = "127.0.0.1:6000";
 const MSG_SIZE: usize = 32;
@@ -117,6 +119,12 @@ fn find_sdl_gl_driver() -> Option<u32> {
     None
 }
 
+fn render(canvas : &mut sdl2::render::WindowCanvas, color : sdl2::pixels::Color){
+    canvas.set_draw_color(color);
+    canvas.clear();
+    canvas.present();
+}
+
 fn game_loop(){
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
@@ -131,17 +139,21 @@ fn game_loop(){
         .unwrap();
 
     let mut event_pump = sdl_context.event_pump().unwrap();
+    let mut i = 0;
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
-                sdl2::event::Event::Quit {..} => {
+                sdl2::event::Event::Quit {..} | 
+                sdl2::event::Event::KeyDown { keycode : Some(Keycode::ESCAPE),..} => {
                     break 'running
                 },
                 _ => {}
             }
         }
-        canvas.clear();
-        canvas.present();
+
+        i = (i+1)%255;
+        render(&mut canvas, sdl2::pixels::Color::RGB(i, 64, 255-i));
+        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32/60));
     }
 }
 
