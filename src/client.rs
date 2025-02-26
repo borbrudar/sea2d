@@ -82,7 +82,10 @@ fn game_loop(tx : mspc::Sender<String>, rx : mspc::Receiver<String>){
     let mut event_pump = sdl_context.event_pump().unwrap();
     let mut px: i32 = (SCREEN_WIDTH as i32)/2;
     let mut py: i32 = (SCREEN_HEIGHT as i32)/2;
+    let mut px2 = -10000;
+    let mut py2 = -10000;
     let mut color = (255,255,255);
+    let mut col2 = (0,0,0);
     let psize: u32 = 40;
     let mut id : String = "-1".to_string();
 
@@ -95,20 +98,24 @@ fn game_loop(tx : mspc::Sender<String>, rx : mspc::Receiver<String>){
                     break 'running
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::UP),..} => {
-                    tx.send("UP ".to_string() + &id).unwrap();
-                 //   py -= 15;
+                    py -= 15;
+                    let send = id.to_string() + " " + &px.to_string() + " " + &py.to_string();
+                    tx.send(send).unwrap();
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::DOWN),..} => {
-                    tx.send("DOWN ".to_string() + &id).unwrap();
-                 //   py += 15;
+                    py += 15;
+                    let send = id.to_string() + " " + &px.to_string() + " " + &py.to_string();
+                    tx.send(send).unwrap();
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::LEFT),..} => {
-                    tx.send("LEFT ".to_string() + &id).unwrap();
-                    //px -= 15;
+                    px -= 15;
+                    let send = id.to_string() + " " + &px.to_string() + " " + &py.to_string();
+                    tx.send(send).unwrap();
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::RIGHT),..} => {
-                    tx.send("RIGHT ".to_string() + &id).unwrap();
-                   // px += 15;
+                    px += 15;
+                    let send = id.to_string() + " " + &px.to_string() + " " + &py.to_string();
+                    tx.send(send).unwrap();
                 },
                 _ => {}
             }
@@ -120,22 +127,20 @@ fn game_loop(tx : mspc::Sender<String>, rx : mspc::Receiver<String>){
                 let msg = msg.split(' ').collect::<Vec<&str>>();
 
                 if msg.len() <= 1 {continue}
-                if msg[0] == "UP" && msg[1] == id {
-                    py -= 15;
-                } else if msg[0] == "DOWN" && msg[1] == id {
-                    py += 15;
-                } else if msg[0] == "LEFT" && msg[1] == id {
-                    px -= 15;
-                } else if msg[0] == "RIGHT" && msg[1] == id {
-                    px += 15;
+                if msg[0] != id && msg.len()>=3{
+                    px2 = msg[1].parse().unwrap();
+                    py2 = msg[2].parse().unwrap();
                 }
-                else {
+                if msg[0] == "CLIENT_ID:"  {
                     if id == "-1"{
                         id = msg[1].to_string();
+                        println!("Got an id :{}",&id);
                         if id == "0"{
                             color = (255,0,0);
+                            col2 = (0,0,255);
                         }else {
                             color = (0,0,255);
+                            col2 = (255,0,0);
                         }
                     }
                 }
@@ -148,8 +153,16 @@ fn game_loop(tx : mspc::Sender<String>, rx : mspc::Receiver<String>){
 
         // drawing
         canvas.clear();
+
+        // draw other player
+        canvas.set_draw_color(sdl2::pixels::Color::RGB(col2.0,col2.1,col2.2));
+        canvas.fill_rect(sdl2::rect::Rect::new(px2,py2,psize,psize)).unwrap();
+
+        // draw self
         canvas.set_draw_color(sdl2::pixels::Color::RGB(color.0,color.1,color.2));
         canvas.fill_rect(sdl2::rect::Rect::new(px,py,psize,psize)).unwrap();
+        
+        
         canvas.set_draw_color(sdl2::pixels::Color::RGB(0,0,0));
         canvas.present();
        // ::std::thread::sleep(Duration::new(0, 1_000_000_000u32/60));
