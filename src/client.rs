@@ -1,4 +1,4 @@
-use crate::shared::{LOCAL,MSG_SIZE};
+use crate::shared::*;
 
 use std::io::{ErrorKind,Read,Write};
 use std::net::TcpStream;
@@ -66,16 +66,11 @@ fn find_sdl_gl_driver() -> Option<u32> {
     None
 }
 
-fn render(canvas : &mut sdl2::render::WindowCanvas, color : sdl2::pixels::Color){
-    canvas.set_draw_color(color);
-    canvas.clear();
-    canvas.present();
-}
 
 fn game_loop(){
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
-    let window = video_subsystem.window("rust-sdl2 demo", 800, 600)
+    let window = video_subsystem.window("sea2d", SCREEN_WIDTH, SCREEN_HEIGHT)
         .position_centered()
         .opengl()
         .build()
@@ -86,7 +81,10 @@ fn game_loop(){
         .unwrap();
 
     let mut event_pump = sdl_context.event_pump().unwrap();
-    let mut i = 0;
+    let mut px: i32 = (SCREEN_WIDTH as i32)/2;
+    let mut py: i32 = (SCREEN_HEIGHT as i32)/2;
+    let psize: u32 = 40;
+
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -94,12 +92,27 @@ fn game_loop(){
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::ESCAPE),..} => {
                     break 'running
                 },
+                sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::UP),..} => {
+                    py -= 15;
+                },
+                sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::DOWN),..} => {
+                    py += 15;
+                },
+                sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::LEFT),..} => {
+                    px -= 15;
+                },
+                sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::RIGHT),..} => {
+                    px += 15;
+                },
                 _ => {}
             }
         }
 
-        i = (i+1)%255;
-        render(&mut canvas, sdl2::pixels::Color::RGB(i, 64, 255-i));
+        canvas.clear();
+        canvas.set_draw_color(sdl2::pixels::Color::RGB(255,255,255));
+        canvas.fill_rect(sdl2::rect::Rect::new(px,py,psize,psize)).unwrap();
+        canvas.set_draw_color(sdl2::pixels::Color::RGB(0,0,0));
+        canvas.present();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32/60));
     }
 }
