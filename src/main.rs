@@ -3,6 +3,7 @@ use std::io::{ErrorKind,Read,Write};
 use std::net::{TcpListener, TcpStream};
 use std::sync::mpsc as mspc;
 use std::thread;
+use sdl2;
 
 const LOCAL : &str = "127.0.0.1:6000";
 const MSG_SIZE: usize = 32;
@@ -101,6 +102,17 @@ fn client(){
     println!("Bye bye!");
 }
 
+
+
+fn find_sdl_gl_driver() -> Option<u32> {
+    for (index,item) in sdl2::render::drivers().enumerate(){
+        if item.name == "opengl" {
+            return Some(index as u32);
+        }
+    }
+    None
+}
+
 fn main() {
     let args = env::args().collect::<Vec<String>>();
     if args.len() < 2 {
@@ -115,4 +127,29 @@ fn main() {
         println!("Usage: {} [server|client]", args[0]);
     }
 
+    let sdl_context = sdl2::init().unwrap();
+    let video_subsystem = sdl_context.video().unwrap();
+    let window = video_subsystem.window("rust-sdl2 demo", 800, 600)
+        .position_centered()
+        .opengl()
+        .build()
+        .unwrap();
+    let mut canvas = window.into_canvas()
+        .index(find_sdl_gl_driver().unwrap())
+        .build()
+        .unwrap();
+
+    let mut event_pump = sdl_context.event_pump().unwrap();
+    'running: loop {
+        for event in event_pump.poll_iter() {
+            match event {
+                sdl2::event::Event::Quit {..} => {
+                    break 'running
+                },
+                _ => {}
+            }
+        }
+        canvas.clear();
+        canvas.present();
+    }
 }
