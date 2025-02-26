@@ -59,6 +59,10 @@ fn server(){
 
 
 fn client(){
+    thread::spawn(|| {
+        game_loop();
+    });
+
     let mut client = TcpStream::connect(LOCAL).expect("Failed to connect");
     client.set_nonblocking(true).expect("Failed to initialize non-blocking client");
 
@@ -113,20 +117,7 @@ fn find_sdl_gl_driver() -> Option<u32> {
     None
 }
 
-fn main() {
-    let args = env::args().collect::<Vec<String>>();
-    if args.len() < 2 {
-        println!("Usage: {} [server|client]", args[0]);
-        return;
-    }
-    if args[1] == "server" {
-        server();
-    } else if args[1] == "client" {
-        client();
-    } else {
-        println!("Usage: {} [server|client]", args[0]);
-    }
-
+fn game_loop(){
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     let window = video_subsystem.window("rust-sdl2 demo", 800, 600)
@@ -152,4 +143,26 @@ fn main() {
         canvas.clear();
         canvas.present();
     }
+}
+
+fn main() {
+    let args = env::args().collect::<Vec<String>>();
+   
+    if args.len() >= 2 && args[1] == "client"{ 
+        println!("Running client on localhost:6000");
+        client();
+    }else if args.len() >= 2 && args[1] == "server"{
+        println!("Running server on localhost:6000");
+        server();
+    }
+    else {
+        println!("Running server-client on localhost:6000");
+        let _server = thread::spawn(|| {
+            server();
+        });
+        let client = thread::spawn(|| {
+            client();
+        });
+        client.join().unwrap();
+    }   
 }
