@@ -1,5 +1,6 @@
 mod server;
 mod client;
+mod shared;
 use crate::server::server;
 use crate::client::client;
 use std::env;
