@@ -27,7 +27,7 @@ pub fn server(){
     let mut clients = vec![];
     let (tx,rx) = mspc::channel::<Packet>();   
 
-    let mut ip_to_uuid = HashMap::new();
+    let ip_to_uuid = HashMap::new();
     let mut uuid_to_ip = HashMap::new();
     let mut used_uuid = HashSet::new();
 
@@ -119,23 +119,22 @@ pub fn server(){
             clients = clients.into_iter().filter_map(|mut client| {
                 println!("Sending message to client {:?}", &msg.clone());
 
+                let mut send : Option<Vec<u8>> = None;
                 match msg.clone() {
                     Packet::PlayerIDPacket(inner) => {
                         let packet_int = PacketInternal::new(inner).unwrap();
-                        let mut send = bincode::serialize(&packet_int).unwrap();
-
-                        if send.len() > MSG_SIZE {
-                            panic!("Message length exceeded");
-                        }
-                        else{
-                            send.append(&mut vec![0;MSG_SIZE - send.len()]);
-                        }
-                        client.write_all(&send).map(|_| client).ok()
+                        send = Some(bincode::serialize(&packet_int).unwrap());
                     }
                     Packet::PlayerPositionPacket(inner) => {
                         let packet_int = PacketInternal::new(inner.clone()).unwrap();
-                        let mut send = bincode::serialize(&packet_int).unwrap();
+                        send = Some(bincode::serialize(&packet_int).unwrap());
                         println!("Sending player position packet {:?}", &inner);
+                    }
+                    _ => panic!("Wtf are you sending")
+                };
+                
+                match &mut send {
+                    Some (send) => {
                         if send.len() > MSG_SIZE {
                             panic!("Message length exceeded");
                         }
@@ -143,21 +142,9 @@ pub fn server(){
                             send.append(&mut vec![0;MSG_SIZE - send.len()]);
                         }
                         client.write_all(&send).map(|_| client).ok()
-                    }
-                    _ => panic!("Wtf are you sending")
+                    },
+                    None => None,
                 }
-                /*
-                let packet_int = PacketInternal::new(msg.clone()).unwrap();
-                let mut send = bincode::serialize(&packet_int).unwrap();
-                
-                if send.len() > MSG_SIZE {
-                    panic!("Message length exceeded");
-                }
-                else{
-                    send.append(&mut vec![0;MSG_SIZE - send.len()]);
-                }
-                client.write_all(&send).map(|_| client).ok()
-                */
             }).collect::<Vec<_>>();
             
         }
