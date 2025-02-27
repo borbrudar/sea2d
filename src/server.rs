@@ -51,7 +51,6 @@ pub fn server(){
             tx.send(ss).expect("Failed to send player id packet");
             let player_positions = Arc::clone(&player_positions);
 
-            // PROBLEM CHILD ---- KILL IT WITH FIRE
             {
                 let mut positions = player_positions.lock().unwrap();
                 positions.push(((SCREEN_WIDTH as i32)/2,(SCREEN_HEIGHT as i32)/2));
@@ -77,23 +76,24 @@ pub fn server(){
                                     Some(Packet::PlayerMovementPacket(PlayerMovement {mov})) => {
                                         println!("Movement: {:?}", mov);
                                         let sender_id = ref_ip_to_uuid.get(&addr).unwrap().clone();
-                                        // TODO waiting for lock and not releasing it bruh
+                                        let mut positions = player_positions.lock().unwrap();
+                                        
                                         match mov {
                                             Movement::Up => {
-                                                player_positions.lock().unwrap()[sender_id as usize].1 -= 15;
+                                                positions[sender_id as usize].1 += 15;
                                             }
                                             Movement::Down => {
-                                                player_positions.lock().unwrap()[sender_id as usize].1 += 15;
+                                                positions[sender_id as usize].1 -= 15;
                                             }
                                             Movement::Left => {
-                                                player_positions.lock().unwrap()[sender_id as usize].0 -= 15;
+                                                positions[sender_id as usize].0 -= 15;
                                             }
                                             Movement::Right => {
-                                                player_positions.lock().unwrap()[sender_id as usize].0 += 15;
+                                                positions[sender_id as usize].0 += 15;
                                             }
                                         }
                                         let packet = Packet::PlayerPositionPacket(PlayerPosition{player_id : sender_id,
-                                             x : player_positions.lock().unwrap()[sender_id as usize].0, y : player_positions.lock().unwrap()[sender_id as usize].1});
+                                             x : positions[sender_id as usize].0, y : positions[sender_id as usize].1});
                                         println!("packet received and transferred in server {:?}", packet);
                                         tx.send(packet).expect("Failed to send movement packet");
                                     }
