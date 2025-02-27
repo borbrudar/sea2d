@@ -10,7 +10,9 @@ use fnv::FnvHasher;
 #[derive(Serialize,Deserialize,Debug,Clone)]
 
 pub enum Packet{
+    PlayerIDPacket(PlayerID),
     PlayerMovementPacket(PlayerMovement),
+    PlayerPositionPacket(PlayerPosition)
 }
 
 
@@ -23,8 +25,19 @@ pub enum Movement{
 }
 
 #[derive(Serialize,Deserialize,Debug,Clone)]
+pub struct PlayerPosition{
+    pub player_id : u64,
+    pub x : i32,
+    pub y : i32,
+}
+
+#[derive(Serialize,Deserialize,Debug,Clone)]
 pub struct PlayerMovement{
     pub mov : Movement
+}
+#[derive(Serialize,Deserialize,Debug,Clone)]
+pub struct PlayerID{
+    pub id : u64
 }
 
 
@@ -50,7 +63,8 @@ impl PacketInternal{
     }
 
     pub fn try_deserialize<T: serde::de::DeserializeOwned + 'static>(&self) -> Option<T> {
-        if self.type_id != get_type_id::<T>() {
+        let check_type = get_type_id::<T>();
+        if self.type_id != check_type {
             return None;
         }
         bincode::deserialize(&self.data).map_or_else(|_| None, |data| Some(data))

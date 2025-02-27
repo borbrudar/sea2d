@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::packet::{Packet,PlayerMovement,Movement,PacketInternal};
+use crate::packet::{Movement, Packet, PacketInternal, PlayerID, PlayerMovement, PlayerPosition};
 use crate::shared::*;
 
 use std::io::{ErrorKind,Read,Write};
@@ -14,18 +14,20 @@ pub fn client(){
     client.set_nonblocking(true).expect("Failed to initialize non-blocking client");
     
     let (tx,rx) = mspc::channel::<Packet>(); // send from game thread to connection thread
-    let (tx2 , rx2) = mspc::channel::<String>(); // send to game thread from connection thread
+    let (tx2 , rx2) = mspc::channel::<PacketInternal>(); // send to game thread from connection thread
 
     thread::spawn(move || loop{
         let mut buf = vec![0; MSG_SIZE];
         // read from server
         match client.read_exact(&mut buf){
             Ok(_) => {
-                let msg = buf.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
-                
-                let msg = String::from_utf8(msg).expect("Invalid utf8 message");
-               // println!("message recv {:?}", msg);
-                tx2.send(msg).expect("Failed to send msg to game thread");
+                let received: Vec<u8> = buf.into_iter().collect::<Vec<_>>();
+                let packet_int  = bincode::deserialize(&received);
+                match packet_int{
+                    Ok(packet_int) =>
+                     tx2.send(packet_int).expect("Failed to send packet to game thread"),
+                    Err(err) => println!("Failed to deserialize packet {:?}",err)
+                }
             },
             Err(ref err) if err.kind() == ErrorKind::WouldBlock => (),
             Err(_) => {
@@ -36,21 +38,17 @@ pub fn client(){
         // send to server
         match rx.try_recv(){
             Ok(msg) => {
-                let mut packet_int = PacketInternal::new(msg.clone()).unwrap();
-                let mut buf : Vec<u8> = vec![0;0];
-                for i in 0..8 {
-                    buf.push(((packet_int.type_id>>(i*8))&((1<<8)-1)) as u8);
-                }
-                buf.append(&mut packet_int.data);
+                let packet_int = PacketInternal::new(msg.clone()).unwrap();
+                let mut send = bincode::serialize(&packet_int).unwrap();
                 
-                if buf.len() > MSG_SIZE {
+                if send.len() > MSG_SIZE {
                     panic!("Message length exceeded");
                 }
                 else{
-                    buf.append(&mut vec![0;MSG_SIZE - buf.len()]);
+                    send.append(&mut vec![0;MSG_SIZE - send.len()]);
                 }
 
-                client.write_all(&buf).expect("Writing to socket failed");
+                client.write_all(&send).expect("Writing to socket failed");
                 println!("message sent {:?}", msg);
             },
             Err(mspc::TryRecvError::Empty) => (),
@@ -83,7 +81,7 @@ fn find_sdl_gl_driver() -> Option<u32> {
 }
 
 
-fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<String>){
+fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>){
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     let window = video_subsystem.window("sea2d", SCREEN_WIDTH, SCREEN_HEIGHT)
@@ -104,7 +102,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<String>){
     let mut color = (255,255,255);
     let mut col2 = (0,0,0);
     let psize: u32 = 40;
-    let mut id : String = "-1".to_string();
+    let mut my_id : u64 = 1000000000;
 
     'running: loop {
         // event polling
@@ -140,30 +138,33 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<String>){
 
         match rx.try_recv(){
             Ok(msg) => {
-                let prt = msg.clone();
-                
-                let msg = msg.split(' ').collect::<Vec<&str>>();
-
-                if msg.len() <= 1 {continue}
-                if msg[0] != id && msg.len()>=3{
-                    px2 = msg[1].parse().unwrap();
-                    py2 = msg[2].parse().unwrap();
-                }
-                if msg[0] == "CLIENT_ID:"  {
-                    if id == "-1"{
-                        id = msg[1].to_string();
-                        println!("Got an id :{}",&id);
-                        if id == "0"{
+                match msg.try_deserialize::<PlayerID>(){
+                    Some(id) => {
+                        println!("Got an id :{}",id.id);
+                        if my_id == 1000000000{
+                            my_id = id.id;
+                        }
+                        if my_id == 0{
                             color = (255,0,0);
                             col2 = (0,0,255);
                         }else {
                             color = (0,0,255);
                             col2 = (255,0,0);
                         }
-                    }
+                    },
+                    None => println!("Not an id")
                 }
-                
-                println!("{}",prt);
+
+                match msg.try_deserialize::<PlayerPosition>(){
+                    Some(mov) => {
+                        println!("Got a position :{:?}", mov);
+                        if mov.player_id != my_id{
+                            px2 = mov.x;
+                            py2 = mov.y;
+                        }
+                    },
+                    None => println!("Not a movement")
+                }
             },
             Err(mspc::TryRecvError::Empty) => (),
             Err(mspc::TryRecvError::Disconnected) => break,
