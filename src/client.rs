@@ -1,3 +1,6 @@
+use serde::Serialize;
+
+use crate::packet::{Packet,PlayerMovement,Movement,PacketInternal};
 use crate::shared::*;
 
 use std::io::{ErrorKind,Read,Write};
@@ -10,14 +13,16 @@ pub fn client(){
     let mut client = TcpStream::connect(LOCAL).expect("Failed to connect");
     client.set_nonblocking(true).expect("Failed to initialize non-blocking client");
     
-    let (tx,rx) = mspc::channel::<String>(); // send from game thread to connection thread
+    let (tx,rx) = mspc::channel::<Packet>(); // send from game thread to connection thread
     let (tx2 , rx2) = mspc::channel::<String>(); // send to game thread from connection thread
 
     thread::spawn(move || loop{
         let mut buf = vec![0; MSG_SIZE];
+        // read from server
         match client.read_exact(&mut buf){
             Ok(_) => {
                 let msg = buf.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
+                
                 let msg = String::from_utf8(msg).expect("Invalid utf8 message");
                // println!("message recv {:?}", msg);
                 tx2.send(msg).expect("Failed to send msg to game thread");
@@ -28,11 +33,23 @@ pub fn client(){
                 break;
             }
         };
-        
+        // send to server
         match rx.try_recv(){
             Ok(msg) => {
-                let mut buf = msg.clone().into_bytes();
-                buf.resize(MSG_SIZE, 0);
+                let mut packet_int = PacketInternal::new(msg.clone()).unwrap();
+                let mut buf : Vec<u8> = vec![0;0];
+                for i in 0..8 {
+                    buf.push(((packet_int.type_id>>(i*8))&((1<<8)-1)) as u8);
+                }
+                buf.append(&mut packet_int.data);
+                
+                if buf.len() > MSG_SIZE {
+                    panic!("Message length exceeded");
+                }
+                else{
+                    buf.append(&mut vec![0;MSG_SIZE - buf.len()]);
+                }
+
                 client.write_all(&buf).expect("Writing to socket failed");
                 println!("message sent {:?}", msg);
             },
@@ -66,7 +83,7 @@ fn find_sdl_gl_driver() -> Option<u32> {
 }
 
 
-fn game_loop(tx : mspc::Sender<String>, rx : mspc::Receiver<String>){
+fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<String>){
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     let window = video_subsystem.window("sea2d", SCREEN_WIDTH, SCREEN_HEIGHT)
@@ -99,22 +116,22 @@ fn game_loop(tx : mspc::Sender<String>, rx : mspc::Receiver<String>){
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::UP),..} => {
                     py -= 15;
-                    let send = id.to_string() + " " + &px.to_string() + " " + &py.to_string();
+                    let send = Packet::PlayerMovementPacket(PlayerMovement{mov: Movement::Down});
                     tx.send(send).unwrap();
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::DOWN),..} => {
                     py += 15;
-                    let send = id.to_string() + " " + &px.to_string() + " " + &py.to_string();
+                    let send = Packet::PlayerMovementPacket(PlayerMovement{mov: Movement::Up});
                     tx.send(send).unwrap();
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::LEFT),..} => {
                     px -= 15;
-                    let send = id.to_string() + " " + &px.to_string() + " " + &py.to_string();
+                    let send = Packet::PlayerMovementPacket(PlayerMovement{mov: Movement::Left});
                     tx.send(send).unwrap();
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::RIGHT),..} => {
                     px += 15;
-                    let send = id.to_string() + " " + &px.to_string() + " " + &py.to_string();
+                    let send = Packet::PlayerMovementPacket(PlayerMovement{mov: Movement::Right});
                     tx.send(send).unwrap();
                 },
                 _ => {}
@@ -124,6 +141,7 @@ fn game_loop(tx : mspc::Sender<String>, rx : mspc::Receiver<String>){
         match rx.try_recv(){
             Ok(msg) => {
                 let prt = msg.clone();
+                
                 let msg = msg.split(' ').collect::<Vec<&str>>();
 
                 if msg.len() <= 1 {continue}

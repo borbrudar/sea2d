@@ -10,7 +10,7 @@ pub fn server(){
     listener.set_nonblocking(true).expect("Failed to initialize non-blocking");
 
     let mut clients = vec![];
-    let (tx,rx) = mspc::channel::<String>();   
+    let (tx,rx) = mspc::channel::<Vec<u8>>();   
 
     loop {
         // socket reading
