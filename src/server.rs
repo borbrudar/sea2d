@@ -66,9 +66,8 @@ pub fn server(){
                 players_lock.push(Player::new(player_id));
 
                 // packet that tells everyone each other's initial position
-                tx.send(Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{player_id : 0, x : players_lock[0].x, y : players_lock[0].y})));
-                if players_lock.len() > 1{
-                    tx.send(Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{player_id : 1, x : players_lock[1].x, y : players_lock[1].y})));
+                for i in 0..players_lock.len(){
+                    tx.send(Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{player_id : i as u64, x : players_lock[i].x, y : players_lock[i].y})));
                 }
             }
           
