@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-
+use crate::shared::{SCREEN_HEIGHT,SCREEN_WIDTH};
 
 
 pub struct Player{
@@ -10,6 +10,14 @@ pub struct Player{
 }
 
 impl Player{
+    pub fn new(id : u64) -> Player {
+        Player{
+            id : id,
+            x : (SCREEN_WIDTH as i32)/2,
+            y : (SCREEN_HEIGHT as i32)/2,
+            color : (255,255,255)
+        }
+    }
     
 }
 

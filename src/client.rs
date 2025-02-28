@@ -157,11 +157,11 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>){
                 }
 
                 match msg.try_deserialize::<PlayerPosition>(){
-                    Some(mov) => {
-                        println!("Got a position :{:?}", mov);
-                        if mov.player_id != my_id{
-                            px2 = mov.x;
-                            py2 = mov.y;
+                    Some(pos) => {
+                        println!("Got a position :{:?}", pos);
+                        if pos.player_id != my_id{
+                            px2 = pos.x;
+                            py2 = pos.y;
                         }
                     },
                     None => println!("Not a movement")

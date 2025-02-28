@@ -5,6 +5,7 @@ use std::sync::mpsc as mspc;
 use std::thread;
 use std::collections::{HashMap,HashSet};
 use crate::packet::{Packet, PacketInternal};
+use crate::player::{self, Player};
 use rand::Rng;
 
 use std::sync::{Arc,Mutex};
@@ -28,39 +29,46 @@ pub fn server(){
     let mut clients = vec![];
     let (tx,rx) = mspc::channel::<Packet>();   
 
-    let ip_to_uuid = HashMap::new();
-    let mut uuid_to_ip = HashMap::new();
+    let mut ip_to_uuid = Arc::new(Mutex::new(HashMap::new()));
+    let mut uuid_to_ip = Arc::new(Mutex::new(HashMap::new()));
+    let mut uuid_to_playerID : Arc<Mutex<HashMap<u64, u64>>> = Arc::new(Mutex::new(HashMap::new()));
     let mut used_uuid = HashSet::new();
 
-    let player_positions : Arc<Mutex<Vec<(i32,i32)>>> = Arc::new(Mutex::new(vec![]));
+    //let player_positions : Arc<Mutex<Vec<(i32,i32)>>> = Arc::new(Mutex::new(vec![]));
+
+    let players : Arc<Mutex<Vec<Player>>> = Arc::new(Mutex::new(Vec::new()));
 
     loop {
         // socket reading
         if let Ok((mut socket, addr)) = listener.accept() {
             println!("Client {} connected", addr);
             let tx= tx.clone();
-            let mut ip_to_uuid = ip_to_uuid.clone();
+            //let mut ip_to_uuid = ip_to_uuid.clone();
             
             let id = new_client_id(&used_uuid);
             used_uuid.insert(id);
-            //ip_to_uuid.insert(addr, id);
-            //uuid_to_ip.insert(id, addr);
-            ip_to_uuid.insert(addr, clients.len() as u64);
-            uuid_to_ip.insert(clients.len() as u64, addr);
+            let ip_to_uuid = Arc::clone(&ip_to_uuid);
+            let uuid_to_playerID = Arc::clone(&uuid_to_playerID);
+            ip_to_uuid.lock().unwrap().insert(addr, id);
+            uuid_to_ip.lock().unwrap().insert(id, addr);
             
-            let ss = Packet::PlayerPacket(PlayerPacket::PlayerIDPacket(PlayerID{id : clients.len() as u64}));
-            tx.send(ss).expect("Failed to send player id packet");
-            let player_positions = Arc::clone(&player_positions);
-
+            let players = Arc::clone(&players);
+            
             {
-                let mut positions = player_positions.lock().unwrap();
-                positions.push(((SCREEN_WIDTH as i32)/2,(SCREEN_HEIGHT as i32)/2));
+                let mut players_lock = players.lock().unwrap();
+                // add player id to map and send it to player so it knows its own id
+                let player_id = players_lock.len() as u64;
+                let ss = Packet::PlayerPacket(PlayerPacket::PlayerIDPacket(PlayerID{id : player_id}));
+                tx.send(ss).expect("Failed to send player id packet");
+                
+                let uuid = *ip_to_uuid.lock().unwrap().get(&addr).unwrap();
+                uuid_to_playerID.lock().unwrap().insert(uuid, player_id);
+                players_lock.push(Player::new(player_id));
             }
           
-          
             clients.push(socket.try_clone().expect("Failed to clone client"));
+            let players = Arc::clone(&players);
             
-            let player_positions = Arc::clone(&player_positions);
             // read from the socket, new thread for each client
             thread::spawn(move || loop {
                 println!("thread running");
@@ -69,32 +77,35 @@ pub fn server(){
                     Ok(_) => {
                         let raw = buf.into_iter().collect::<Vec<_>>();
                         let packet_int = bincode::deserialize::<PacketInternal>(&raw);
-                        let ref_ip_to_uuid = &ip_to_uuid;
+                        //let ref_ip_to_uuid = &ip_to_uuid;
+                        //let rep_ip_to_id = &ip_to_playerID;
 
                         match packet_int {
                             Ok(packet_int) => {
                                 match packet_int.try_deserialize() {
                                     Some(Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement {mov}))) => {
                                         println!("Movement: {:?}", mov);
-                                        let sender_id = ref_ip_to_uuid.get(&addr).unwrap().clone();
-                                        let mut positions = player_positions.lock().unwrap();
-                                        
+                                        let sender_uuid = ip_to_uuid.lock().unwrap().get(&addr).unwrap().clone();
+                                        let player_id = uuid_to_playerID.lock().unwrap().get(&sender_uuid).unwrap().clone() as usize;
+                                        //let mut positions = player_positions.lock().unwrap();
+                                        let mut players_lock = players.lock().unwrap();
+
                                         match mov {
                                             Movement::Up => {
-                                                positions[sender_id as usize].1 += 15;
+                                                players_lock[player_id].y += 15;
                                             }
                                             Movement::Down => {
-                                                positions[sender_id as usize].1 -= 15;
+                                                players_lock[player_id].y -= 15;
                                             }
                                             Movement::Left => {
-                                                positions[sender_id as usize].0 -= 15;
+                                                players_lock[player_id].x -= 15;
                                             }
                                             Movement::Right => {
-                                                positions[sender_id as usize].0 += 15;
+                                                players_lock[player_id].x += 15;
                                             }
                                         }
-                                        let packet = Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{player_id : sender_id,
-                                             x : positions[sender_id as usize].0, y : positions[sender_id as usize].1}));
+                                        let packet = Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{player_id : player_id as u64,
+                                             x : players_lock[player_id].x, y : players_lock[player_id].y}));
                                         println!("packet received and transferred in server {:?}", packet);
                                         tx.send(packet).expect("Failed to send movement packet");
                                     }

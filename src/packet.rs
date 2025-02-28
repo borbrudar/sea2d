@@ -12,7 +12,13 @@ use crate::player::{Player,PlayerPacket};
 #[derive(Serialize,Deserialize,Debug,Clone)]
 
 pub enum Packet{
+    ClientIDPacket(ClientID),
     PlayerPacket(PlayerPacket),
+}
+
+#[derive(Serialize,Deserialize,Debug,Clone)]
+pub struct ClientID{
+    pub id : u64,
 }
 
 
