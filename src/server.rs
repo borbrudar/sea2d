@@ -1,13 +1,14 @@
-use crate::shared::{LOCAL, MSG_SIZE, SCREEN_HEIGHT, SCREEN_WIDTH};
+use crate::shared::{LOCAL, MSG_SIZE, SCREEN_HEIGHT, SCREEN_WIDTH,EXTERNAL};
 use std::io::{ErrorKind,Read,Write};
 use std::net::TcpListener;
 use std::sync::mpsc as mspc;
 use std::thread;
 use std::collections::{HashMap,HashSet};
-use crate::packet::{Packet, PacketInternal, PlayerID,PlayerPosition};
+use crate::packet::{Packet, PacketInternal};
 use rand::Rng;
-use crate::packet::{PlayerMovement,Movement};
+
 use std::sync::{Arc,Mutex};
+use crate::player::{PlayerMovement,Movement,PlayerPosition,PlayerPacket,PlayerID};
 
 
 fn new_client_id(set : &HashSet<u64> ) -> u64 {
@@ -47,7 +48,7 @@ pub fn server(){
             ip_to_uuid.insert(addr, clients.len() as u64);
             uuid_to_ip.insert(clients.len() as u64, addr);
             
-            let ss = Packet::PlayerIDPacket(PlayerID{id : clients.len() as u64});
+            let ss = Packet::PlayerPacket(PlayerPacket::PlayerIDPacket(PlayerID{id : clients.len() as u64}));
             tx.send(ss).expect("Failed to send player id packet");
             let player_positions = Arc::clone(&player_positions);
 
@@ -73,7 +74,7 @@ pub fn server(){
                         match packet_int {
                             Ok(packet_int) => {
                                 match packet_int.try_deserialize() {
-                                    Some(Packet::PlayerMovementPacket(PlayerMovement {mov})) => {
+                                    Some(Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement {mov}))) => {
                                         println!("Movement: {:?}", mov);
                                         let sender_id = ref_ip_to_uuid.get(&addr).unwrap().clone();
                                         let mut positions = player_positions.lock().unwrap();
@@ -92,8 +93,8 @@ pub fn server(){
                                                 positions[sender_id as usize].0 += 15;
                                             }
                                         }
-                                        let packet = Packet::PlayerPositionPacket(PlayerPosition{player_id : sender_id,
-                                             x : positions[sender_id as usize].0, y : positions[sender_id as usize].1});
+                                        let packet = Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{player_id : sender_id,
+                                             x : positions[sender_id as usize].0, y : positions[sender_id as usize].1}));
                                         println!("packet received and transferred in server {:?}", packet);
                                         tx.send(packet).expect("Failed to send movement packet");
                                     }
@@ -121,14 +122,19 @@ pub fn server(){
 
                 let mut send : Option<Vec<u8>> = None;
                 match msg.clone() {
-                    Packet::PlayerIDPacket(inner) => {
-                        let packet_int = PacketInternal::new(inner).unwrap();
-                        send = Some(bincode::serialize(&packet_int).unwrap());
-                    }
-                    Packet::PlayerPositionPacket(inner) => {
-                        let packet_int = PacketInternal::new(inner.clone()).unwrap();
-                        send = Some(bincode::serialize(&packet_int).unwrap());
-                        println!("Sending player position packet {:?}", &inner);
+                    Packet::PlayerPacket(in2) => {
+                        match in2 {   
+                            PlayerPacket::PlayerIDPacket(inner) => {
+                                let packet_int = PacketInternal::new(inner).unwrap();
+                                send = Some(bincode::serialize(&packet_int).unwrap());
+                            }
+                            PlayerPacket::PlayerPositionPacket(inner) => {
+                                let packet_int = PacketInternal::new(inner.clone()).unwrap();
+                                send = Some(bincode::serialize(&packet_int).unwrap());
+                                println!("Sending player position packet {:?}", &inner);
+                            }
+                            _ => panic!("Wtf you doing bro")
+                        }
                     }
                     _ => panic!("Wtf are you sending")
                 };

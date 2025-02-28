@@ -2,6 +2,7 @@ mod server;
 mod client;
 mod shared;
 mod packet;
+mod player;
 use crate::server::server;
 use crate::client::client;
 use std::env;

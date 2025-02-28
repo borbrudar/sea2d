@@ -6,40 +6,14 @@ use std::hash::{Hash, Hasher};
 
 use fnv::FnvHasher;
 
+use crate::player::{Player,PlayerPacket};
+
 
 #[derive(Serialize,Deserialize,Debug,Clone)]
 
 pub enum Packet{
-    PlayerIDPacket(PlayerID),
-    PlayerMovementPacket(PlayerMovement),
-    PlayerPositionPacket(PlayerPosition)
+    PlayerPacket(PlayerPacket),
 }
-
-
-#[derive(Serialize,Deserialize,Debug,Clone)]
-pub enum Movement{
-    Left,
-    Right,
-    Up,
-    Down
-}
-
-#[derive(Serialize,Deserialize,Debug,Clone)]
-pub struct PlayerPosition{
-    pub player_id : u64,
-    pub x : i32,
-    pub y : i32,
-}
-
-#[derive(Serialize,Deserialize,Debug,Clone)]
-pub struct PlayerMovement{
-    pub mov : Movement
-}
-#[derive(Serialize,Deserialize,Debug,Clone)]
-pub struct PlayerID{
-    pub id : u64
-}
-
 
 
 fn get_type_id<Type: 'static>() -> u64 {

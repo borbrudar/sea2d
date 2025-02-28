@@ -1,7 +1,8 @@
 use serde::Serialize;
 
-use crate::packet::{Movement, Packet, PacketInternal, PlayerID, PlayerMovement, PlayerPosition};
+use crate::packet::{Packet, PacketInternal};
 use crate::shared::*;
+use crate::player::{Movement,PlayerID,PlayerMovement,PlayerPosition,Player,PlayerPacket};
 
 use std::io::{ErrorKind,Read,Write};
 use std::net::TcpStream;
@@ -114,22 +115,22 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>){
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::UP),..} => {
                     py -= 15;
-                    let send = Packet::PlayerMovementPacket(PlayerMovement{mov: Movement::Down});
+                    let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Down}));
                     tx.send(send).unwrap();
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::DOWN),..} => {
                     py += 15;
-                    let send = Packet::PlayerMovementPacket(PlayerMovement{mov: Movement::Up});
+                    let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Up}));
                     tx.send(send).unwrap();
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::LEFT),..} => {
                     px -= 15;
-                    let send = Packet::PlayerMovementPacket(PlayerMovement{mov: Movement::Left});
+                    let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Left}));
                     tx.send(send).unwrap();
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::RIGHT),..} => {
                     px += 15;
-                    let send = Packet::PlayerMovementPacket(PlayerMovement{mov: Movement::Right});
+                    let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Right}));
                     tx.send(send).unwrap();
                 },
                 _ => {}
