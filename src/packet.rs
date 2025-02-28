@@ -6,7 +6,7 @@ use std::hash::{Hash, Hasher};
 
 use fnv::FnvHasher;
 
-use crate::player::{Player,PlayerPacket};
+use crate::player::PlayerPacket;
 
 
 #[derive(Serialize,Deserialize,Debug,Clone)]

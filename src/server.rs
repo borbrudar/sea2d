@@ -1,11 +1,11 @@
-use crate::shared::{LOCAL, MSG_SIZE, SCREEN_HEIGHT, SCREEN_WIDTH,EXTERNAL};
+use crate::shared::{LOCAL, MSG_SIZE};
 use std::io::{ErrorKind,Read,Write};
 use std::net::TcpListener;
 use std::sync::mpsc as mspc;
 use std::thread;
 use std::collections::{HashMap,HashSet};
 use crate::packet::{Packet, PacketInternal};
-use crate::player::{self, Player, PlayerWelcome};
+use crate::player::{Player, PlayerWelcome};
 use rand::Rng;
 
 use std::sync::{Arc,Mutex};
@@ -31,10 +31,9 @@ pub fn server(){
 
     let ip_to_uuid = Arc::new(Mutex::new(HashMap::new()));
     let uuid_to_ip = Arc::new(Mutex::new(HashMap::new()));
-    let uuid_to_playerID : Arc<Mutex<HashMap<u64, u64>>> = Arc::new(Mutex::new(HashMap::new()));
+    let uuid_to_player_id : Arc<Mutex<HashMap<u64, u64>>> = Arc::new(Mutex::new(HashMap::new()));
     let mut used_uuid = HashSet::new();
 
-    //let player_positions : Arc<Mutex<Vec<(i32,i32)>>> = Arc::new(Mutex::new(vec![]));
 
     let players : Arc<Mutex<Vec<Player>>> = Arc::new(Mutex::new(Vec::new()));
 
@@ -43,12 +42,11 @@ pub fn server(){
         if let Ok((mut socket, addr)) = listener.accept() {
             println!("Client {} connected", addr);
             let tx= tx.clone();
-            //let mut ip_to_uuid = ip_to_uuid.clone();
             
             let id = new_client_id(&used_uuid);
             used_uuid.insert(id);
             let ip_to_uuid = Arc::clone(&ip_to_uuid);
-            let uuid_to_playerID = Arc::clone(&uuid_to_playerID);
+            let uuid_to_player_id = Arc::clone(&uuid_to_player_id);
             ip_to_uuid.lock().unwrap().insert(addr, id);
             uuid_to_ip.lock().unwrap().insert(id, addr);
             
@@ -62,12 +60,12 @@ pub fn server(){
                 tx.send(ss).expect("Failed to send player id packet");
                 
                 let uuid = *ip_to_uuid.lock().unwrap().get(&addr).unwrap();
-                uuid_to_playerID.lock().unwrap().insert(uuid, player_id);
+                uuid_to_player_id.lock().unwrap().insert(uuid, player_id);
                 players_lock.push(Player::new(player_id));
 
                 // packet that tells everyone each other's initial position
                 for i in 0..players_lock.len(){
-                    tx.send(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id : i as u64, x : players_lock[i].x, y : players_lock[i].y})));
+                    tx.send(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id : i as u64, x : players_lock[i].x, y : players_lock[i].y}))).unwrap();
                 }
             }
           
@@ -82,8 +80,6 @@ pub fn server(){
                     Ok(_) => {
                         let raw = buf.into_iter().collect::<Vec<_>>();
                         let packet_int = bincode::deserialize::<PacketInternal>(&raw);
-                        //let ref_ip_to_uuid = &ip_to_uuid;
-                        //let rep_ip_to_id = &ip_to_playerID;
 
                         match packet_int {
                             Ok(packet_int) => {
@@ -91,8 +87,7 @@ pub fn server(){
                                     Some(Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement {mov}))) => {
                                         println!("Movement: {:?}", mov);
                                         let sender_uuid = ip_to_uuid.lock().unwrap().get(&addr).unwrap().clone();
-                                        let player_id = uuid_to_playerID.lock().unwrap().get(&sender_uuid).unwrap().clone() as usize;
-                                        //let mut positions = player_positions.lock().unwrap();
+                                        let player_id = uuid_to_player_id.lock().unwrap().get(&sender_uuid).unwrap().clone() as usize;
                                         let mut players_lock = players.lock().unwrap();
 
                                         match mov {
@@ -127,8 +122,6 @@ pub fn server(){
                         break;
                     }
                 }
-
-                //thread::sleep(::std::time::Duration::from_millis(100));
             });
         }
         // socket writing
@@ -136,7 +129,7 @@ pub fn server(){
             clients = clients.into_iter().filter_map(|mut client| {
                 println!("Sending message to client {:?}", &msg.clone());
 
-                let mut send : Option<Vec<u8>> = None;
+                let mut send : Option<Vec<u8>>;
                 match msg.clone() {
                     Packet::PlayerPacket(in2) => {
                         match in2 {   

@@ -1,5 +1,3 @@
-use serde::Serialize;
-
 use crate::packet::{Packet, PacketInternal};
 use crate::shared::*;
 use crate::player::{Movement, Player, PlayerID, PlayerMovement, PlayerPacket, PlayerPosition, PlayerWelcome};
@@ -55,18 +53,10 @@ pub fn client(){
             Err(mspc::TryRecvError::Empty) => (),
             Err(mspc::TryRecvError::Disconnected) => break,
         }
-    //thread::sleep(::std::time::Duration::from_millis(100));
     });
     
     println!("Write a message:");
     game_loop(tx,rx2);
-
-    /*
-    let mut buf = String::new();
-        std::io::stdin().read_line(&mut buf).expect("Failed to read from stdin");
-        let msg = buf.trim().to_string();
-        if msg == ":quit" || tx.send(msg).is_err() {break}
-     */
     println!("Bye bye!");
 }
 
