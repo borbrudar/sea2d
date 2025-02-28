@@ -1,7 +1,7 @@
 use crate::shared::{LOCAL, MSG_SIZE};
 use std::io::{ErrorKind,Read,Write};
 use std::net::TcpListener;
-use std::sync::mpsc as mspc;
+use std::sync::{mpsc as mspc, MutexGuard};
 use std::thread;
 use std::collections::{HashMap,HashSet};
 use crate::packet::{Packet, PacketInternal};
@@ -21,7 +21,7 @@ fn new_client_id(set : &HashSet<u64> ) -> u64 {
     random_u64
 }
 
-fn handle_player_packets(packet : Packet) -> Option<Vec<u8>>{
+fn handle_player_receive(packet : Packet) -> Option<Vec<u8>>{
     match packet {
         Packet::PlayerPacket(in2) => {
             match in2 {   
@@ -41,6 +41,31 @@ fn handle_player_packets(packet : Packet) -> Option<Vec<u8>>{
             }
         }
         _ => panic!("Wtf are you sending")
+    }
+}
+
+fn handle_player_send(packet : PlayerPacket, player_id : usize, players : &mut MutexGuard<'_,Vec<Player>>) -> Packet {
+    match packet {
+        PlayerPacket::PlayerMovementPacket(PlayerMovement{mov }) => {
+            println!("Movement: {:?}", mov);     
+            match mov {
+                Movement::Up => {
+                    players[player_id].y += 15;
+                }
+                Movement::Down => {
+                    players[player_id].y -= 15;
+                }
+                Movement::Left => {
+                    players[player_id].x -= 15;
+                }
+                Movement::Right => {
+                    players[player_id].x += 15;
+                }
+            }
+            return Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{player_id : player_id as u64,
+                 x : players[player_id].x, y : players[player_id].y}));
+        },
+        _ => panic!("Wtf you doing bro")
     }
 }
 
@@ -86,7 +111,7 @@ pub fn server(){
             let uuid = *ip_to_uuid.lock().unwrap().get(&addr).unwrap();
             uuid_to_player_id.lock().unwrap().insert(uuid, player_id);
             players_lock.push(Player::new(player_id));
-            
+
             // packet that tells everyone each other's initial position
             for i in 0..players_lock.len(){
                 tx.send(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id : i as u64, x : players_lock[i].x, y : players_lock[i].y}))).unwrap();
@@ -108,29 +133,11 @@ pub fn server(){
                         match packet_int {
                             Ok(packet_int) => {
                                 match packet_int.try_deserialize() {
-                                    Some(Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement {mov}))) => {
-                                        println!("Movement: {:?}", mov);
+                                    Some(Packet::PlayerPacket(packet)) => {
                                         let sender_uuid = ip_to_uuid.lock().unwrap().get(&addr).unwrap().clone();
                                         let player_id = uuid_to_player_id.lock().unwrap().get(&sender_uuid).unwrap().clone() as usize;
                                         let mut players_lock = players.lock().unwrap();
-
-                                        match mov {
-                                            Movement::Up => {
-                                                players_lock[player_id].y += 15;
-                                            }
-                                            Movement::Down => {
-                                                players_lock[player_id].y -= 15;
-                                            }
-                                            Movement::Left => {
-                                                players_lock[player_id].x -= 15;
-                                            }
-                                            Movement::Right => {
-                                                players_lock[player_id].x += 15;
-                                            }
-                                        }
-                                        let packet = Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{player_id : player_id as u64,
-                                             x : players_lock[player_id].x, y : players_lock[player_id].y}));
-                                        println!("packet received and transferred in server {:?}", packet);
+                                        let packet = handle_player_send(packet, player_id, &mut players_lock);
                                         tx.send(packet).expect("Failed to send movement packet");
                                     }
                                     _ => println!("Unknown packet"),
@@ -156,7 +163,7 @@ pub fn server(){
                 let mut send : Option<Vec<u8>>;
                 match msg.clone() {
                     Packet::PlayerPacket(packet) => {
-                        send = handle_player_packets(Packet::PlayerPacket(packet));
+                        send = handle_player_receive(Packet::PlayerPacket(packet));
                     }
                     _ => panic!("Wtf are you sending")
                 };
