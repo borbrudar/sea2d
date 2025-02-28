@@ -5,7 +5,7 @@ use std::sync::mpsc as mspc;
 use std::thread;
 use std::collections::{HashMap,HashSet};
 use crate::packet::{Packet, PacketInternal};
-use crate::player::{self, Player};
+use crate::player::{self, Player, PlayerWelcome};
 use rand::Rng;
 
 use std::sync::{Arc,Mutex};
@@ -29,9 +29,9 @@ pub fn server(){
     let mut clients = vec![];
     let (tx,rx) = mspc::channel::<Packet>();   
 
-    let mut ip_to_uuid = Arc::new(Mutex::new(HashMap::new()));
-    let mut uuid_to_ip = Arc::new(Mutex::new(HashMap::new()));
-    let mut uuid_to_playerID : Arc<Mutex<HashMap<u64, u64>>> = Arc::new(Mutex::new(HashMap::new()));
+    let ip_to_uuid = Arc::new(Mutex::new(HashMap::new()));
+    let uuid_to_ip = Arc::new(Mutex::new(HashMap::new()));
+    let uuid_to_playerID : Arc<Mutex<HashMap<u64, u64>>> = Arc::new(Mutex::new(HashMap::new()));
     let mut used_uuid = HashSet::new();
 
     //let player_positions : Arc<Mutex<Vec<(i32,i32)>>> = Arc::new(Mutex::new(vec![]));
@@ -67,7 +67,7 @@ pub fn server(){
 
                 // packet that tells everyone each other's initial position
                 for i in 0..players_lock.len(){
-                    tx.send(Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{player_id : i as u64, x : players_lock[i].x, y : players_lock[i].y})));
+                    tx.send(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id : i as u64, x : players_lock[i].x, y : players_lock[i].y})));
                 }
             }
           
@@ -148,6 +148,11 @@ pub fn server(){
                                 let packet_int = PacketInternal::new(inner.clone()).unwrap();
                                 send = Some(bincode::serialize(&packet_int).unwrap());
                                 println!("Sending player position packet {:?}", &inner);
+                            }
+                            PlayerPacket::PlayerWelcomePacket(inner) => {
+                                let packet_int = PacketInternal::new(inner.clone()).unwrap();
+                                send = Some(bincode::serialize(&packet_int).unwrap());
+                                println!("Sending player welcome packet {:?}", &inner);
                             }
                             _ => panic!("Wtf you doing bro")
                         }

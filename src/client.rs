@@ -2,7 +2,7 @@ use serde::Serialize;
 
 use crate::packet::{Packet, PacketInternal};
 use crate::shared::*;
-use crate::player::{Movement,PlayerID,PlayerMovement,PlayerPosition,Player,PlayerPacket};
+use crate::player::{Movement, Player, PlayerID, PlayerMovement, PlayerPacket, PlayerPosition, PlayerWelcome};
 
 use std::io::{ErrorKind,Read,Write};
 use std::net::TcpStream;
@@ -96,15 +96,11 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>){
         .unwrap();
 
     let mut event_pump = sdl_context.event_pump().unwrap();
-    let mut px: i32 = (SCREEN_WIDTH as i32)/2;
-    let mut py: i32 = (SCREEN_HEIGHT as i32)/2;
-    let mut px2 = -10000;
-    let mut py2 = -10000;
-    let mut color = (255,255,255);
-    let mut col2 = (0,0,0);
-    let psize: u32 = 40;
-    let mut my_id : u64 = 1000000000;
 
+    let mut player = Player::new(1_000_000);
+    let mut other_players : Vec<Player> = Vec::new();
+
+    
     'running: loop {
         // event polling
         for event in event_pump.poll_iter() {
@@ -114,22 +110,22 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>){
                     break 'running
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::UP),..} => {
-                    py -= 15;
+                    player.y -= 15;
                     let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Down}));
                     tx.send(send).unwrap();
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::DOWN),..} => {
-                    py += 15;
+                    player.y += 15;
                     let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Up}));
                     tx.send(send).unwrap();
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::LEFT),..} => {
-                    px -= 15;
+                    player.x -= 15;
                     let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Left}));
                     tx.send(send).unwrap();
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::RIGHT),..} => {
-                    px += 15;
+                    player.x += 15;
                     let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Right}));
                     tx.send(send).unwrap();
                 },
@@ -142,15 +138,13 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>){
                 match msg.try_deserialize::<PlayerID>(){
                     Some(id) => {
                         println!("Got an id :{}",id.id);
-                        if my_id == 1000000000{
-                            my_id = id.id;
+                        if player.id == 1_000_000{
+                            player.id = id.id;
                         }
-                        if my_id == 0{
-                            color = (255,0,0);
-                            col2 = (0,0,255);
+                        if player.id == 0{
+                            player.color = (255,0,0);
                         }else {
-                            color = (0,0,255);
-                            col2 = (255,0,0);
+                            player.color = (0,0,255);
                         }
                     },
                     None => println!("Not an id")
@@ -159,12 +153,30 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>){
                 match msg.try_deserialize::<PlayerPosition>(){
                     Some(pos) => {
                         println!("Got a position :{:?}", pos);
-                        if pos.player_id != my_id{
-                            px2 = pos.x;
-                            py2 = pos.y;
+                        for i in 0..other_players.len(){
+                            if other_players[i].id == pos.player_id {
+                                other_players[i].x = pos.x;
+                                other_players[i].y = pos.y;
+                            }
                         }
                     },
                     None => println!("Not a movement")
+                }
+
+                match msg.try_deserialize::<PlayerWelcome>(){
+                    Some( welc) =>{
+                        println!("Got a welcome packet");
+                        // if self or already received return
+                        if welc.player_id == player.id {()} 
+                        for i in 0..other_players.len(){
+                            if other_players[i].id == welc.player_id {()}
+                        }
+                        // else add to vector of other players
+                        let mut temp = Player::new(welc.player_id);
+                        temp.x = welc.x; temp.y = welc.y;
+                        other_players.push(temp);
+                    },
+                    None => println!("Not a welcome packet")
                 }
             },
             Err(mspc::TryRecvError::Empty) => (),
@@ -175,14 +187,14 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>){
         canvas.clear();
 
         // draw other player
-        canvas.set_draw_color(sdl2::pixels::Color::RGB(col2.0,col2.1,col2.2));
-        canvas.fill_rect(sdl2::rect::Rect::new(px2,py2,psize,psize)).unwrap();
-
+        for i in 0..other_players.len(){
+            other_players[i].draw(&mut canvas);
+        }
         // draw self
-        canvas.set_draw_color(sdl2::pixels::Color::RGB(color.0,color.1,color.2));
-        canvas.fill_rect(sdl2::rect::Rect::new(px,py,psize,psize)).unwrap();
+        player.draw(&mut canvas);
         
         
+        // clear screen
         canvas.set_draw_color(sdl2::pixels::Color::RGB(0,0,0));
         canvas.present();
        // ::std::thread::sleep(Duration::new(0, 1_000_000_000u32/60));
