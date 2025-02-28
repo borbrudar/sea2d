@@ -21,6 +21,30 @@ fn new_client_id(set : &HashSet<u64> ) -> u64 {
     random_u64
 }
 
+fn handle_player_packets(packet : Packet) -> Option<Vec<u8>>{
+    match packet {
+        Packet::PlayerPacket(in2) => {
+            match in2 {   
+                PlayerPacket::PlayerIDPacket(inner) => {
+                    let packet_int = PacketInternal::new(inner).unwrap();
+                    return Some(bincode::serialize(&packet_int).unwrap());
+                }
+                PlayerPacket::PlayerPositionPacket(inner) => {
+                    let packet_int = PacketInternal::new(inner.clone()).unwrap();
+                    return Some(bincode::serialize(&packet_int).unwrap());
+                }
+                PlayerPacket::PlayerWelcomePacket(inner) => {
+                    let packet_int = PacketInternal::new(inner.clone()).unwrap();
+                    return Some(bincode::serialize(&packet_int).unwrap());
+                }
+                _ => panic!("Wtf you doing bro")
+            }
+        }
+        _ => panic!("Wtf are you sending")
+    }
+}
+
+
 pub fn server(){
     // create a listener
     let listener = TcpListener::bind(LOCAL).expect("Failed to bind");
@@ -52,22 +76,22 @@ pub fn server(){
             
             let players = Arc::clone(&players);
             
-            {
-                let mut players_lock = players.lock().unwrap();
-                // add player id to map and send it to player so it knows its own id
-                let player_id = players_lock.len() as u64;
-                let ss = Packet::PlayerPacket(PlayerPacket::PlayerIDPacket(PlayerID{id : player_id}));
-                tx.send(ss).expect("Failed to send player id packet");
-                
-                let uuid = *ip_to_uuid.lock().unwrap().get(&addr).unwrap();
-                uuid_to_player_id.lock().unwrap().insert(uuid, player_id);
-                players_lock.push(Player::new(player_id));
-
-                // packet that tells everyone each other's initial position
-                for i in 0..players_lock.len(){
-                    tx.send(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id : i as u64, x : players_lock[i].x, y : players_lock[i].y}))).unwrap();
-                }
+            
+            let mut players_lock = players.lock().unwrap();
+            // add player id to map and send it to player so it knows its own id
+            let player_id = players_lock.len() as u64;
+            let ss = Packet::PlayerPacket(PlayerPacket::PlayerIDPacket(PlayerID{id : player_id}));
+            tx.send(ss).expect("Failed to send player id packet");
+            
+            let uuid = *ip_to_uuid.lock().unwrap().get(&addr).unwrap();
+            uuid_to_player_id.lock().unwrap().insert(uuid, player_id);
+            players_lock.push(Player::new(player_id));
+            
+            // packet that tells everyone each other's initial position
+            for i in 0..players_lock.len(){
+                tx.send(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id : i as u64, x : players_lock[i].x, y : players_lock[i].y}))).unwrap();
             }
+            
           
             clients.push(socket.try_clone().expect("Failed to clone client"));
             let players = Arc::clone(&players);
@@ -131,24 +155,8 @@ pub fn server(){
 
                 let mut send : Option<Vec<u8>>;
                 match msg.clone() {
-                    Packet::PlayerPacket(in2) => {
-                        match in2 {   
-                            PlayerPacket::PlayerIDPacket(inner) => {
-                                let packet_int = PacketInternal::new(inner).unwrap();
-                                send = Some(bincode::serialize(&packet_int).unwrap());
-                            }
-                            PlayerPacket::PlayerPositionPacket(inner) => {
-                                let packet_int = PacketInternal::new(inner.clone()).unwrap();
-                                send = Some(bincode::serialize(&packet_int).unwrap());
-                                println!("Sending player position packet {:?}", &inner);
-                            }
-                            PlayerPacket::PlayerWelcomePacket(inner) => {
-                                let packet_int = PacketInternal::new(inner.clone()).unwrap();
-                                send = Some(bincode::serialize(&packet_int).unwrap());
-                                println!("Sending player welcome packet {:?}", &inner);
-                            }
-                            _ => panic!("Wtf you doing bro")
-                        }
+                    Packet::PlayerPacket(packet) => {
+                        send = handle_player_packets(Packet::PlayerPacket(packet));
                     }
                     _ => panic!("Wtf are you sending")
                 };
