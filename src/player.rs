@@ -25,7 +25,7 @@ impl Player{
 pub enum PlayerPacket{
     PlayerIDPacket(PlayerID),
     PlayerMovementPacket(PlayerMovement),
-    PlayerPositionPacket(PlayerPosition)
+    PlayerPositionPacket(PlayerPosition),
 }
 
 

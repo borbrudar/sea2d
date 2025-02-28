@@ -64,6 +64,12 @@ pub fn server(){
                 let uuid = *ip_to_uuid.lock().unwrap().get(&addr).unwrap();
                 uuid_to_playerID.lock().unwrap().insert(uuid, player_id);
                 players_lock.push(Player::new(player_id));
+
+                // packet that tells everyone each other's initial position
+                tx.send(Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{player_id : 0, x : players_lock[0].x, y : players_lock[0].y})));
+                if players_lock.len() > 1{
+                    tx.send(Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{player_id : 1, x : players_lock[1].x, y : players_lock[1].y})));
+                }
             }
           
             clients.push(socket.try_clone().expect("Failed to clone client"));
