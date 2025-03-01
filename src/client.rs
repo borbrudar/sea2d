@@ -1,6 +1,6 @@
-use crate::packet::{Packet, PacketInternal};
+use crate::packet::{ClientID, Packet, PacketInternal};
 use crate::{player, shared::*, texture_data};
-use crate::player::{Movement, Player, PlayerID, PlayerMovement, PlayerPacket, PlayerPosition, PlayerWelcome,PlayerTextureData};
+use crate::player::{Movement, Player, PlayerDisconnect, PlayerMovement, PlayerPacket, PlayerPosition, PlayerTextureData, PlayerWelcome};
 
 use std::io::{ErrorKind,Read,Write};
 use std::net::TcpStream;
@@ -93,7 +93,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
     
     let mut event_pump = sdl_context.event_pump().unwrap();
     
-    let mut other_players : Vec<Player> = Vec::new();
+    let mut other_players : HashMap<u64,Player> = HashMap::new();
     
     image::init(image::InitFlag::PNG | image::InitFlag::JPG).unwrap();
     // let texture = load_texture_from_file(&sdl_context, "path/to/your/image.png")?;
@@ -145,7 +145,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
 
         match rx.try_recv(){
             Ok(msg) => {
-                match msg.try_deserialize::<PlayerID>(){
+                match msg.try_deserialize::<ClientID>(){
                     Some(id) => {
                         println!("Got an id :{}",id.id);
                         if player.id == 1_000_000{
@@ -164,38 +164,32 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
                 match msg.try_deserialize::<PlayerPosition>(){
                     Some(pos) => {
                         println!("Got a position :{:?}", pos);
-                        for i in 0..other_players.len(){
-                            if other_players[i].id == pos.player_id {
-                                other_players[i].x = pos.x;
-                                other_players[i].y = pos.y;
-                            }
+                        if let Some(other_player) = other_players.get_mut(&pos.player_id) {
+                            other_player.x = pos.x;
+                            other_player.y = pos.y;
                         }
                     },
-                    None => ()
+                    None => ()  
                 }
 
                 match msg.try_deserialize::<PlayerWelcome>(){
                     Some( welc) =>{
                         println!("Got a welcome packet");
                         // if self or already received return
-                        let mut found = false;
-                        if welc.player_id == player.id {
-                            found = true;
-                        } 
-                        for i in 0..other_players.len(){
-                            if other_players[i].id == welc.player_id {found = true;}
+                        let found = other_players.contains_key(&welc.player_id);
+                        if !found {
+                            let mut temp = Player::new(welc.player_id);
+                            temp.x = welc.x;
+                            temp.y = welc.y;
+                            temp.texture_data = welc.texture_data;
+                
+                            if let Some(mut texture_data) = temp.texture_data.clone() {
+                                texture_data.load_texture(&texture_creator, &mut texture_map);
+                            } else {
+                                println!("No texture data");
+                            }
+                            other_players.insert(temp.id, temp);
                         }
-                        // else add to vector of other players
-                        if (found) {continue;}
-                        let mut temp = Player::new(welc.player_id);
-                        temp.x = welc.x; temp.y = welc.y; temp.texture_data = welc.texture_data;
-                        match temp.texture_data.clone(){
-                            Some( mut texture_data) => {
-                                texture_data.load_texture(&texture_creator,&mut texture_map);
-                            },
-                            None => println!("No texture data")
-                        }
-                        other_players.push(temp);
                     },
                     None => ()
                 }
@@ -203,16 +197,24 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
                 match msg.try_deserialize::<PlayerTextureData>(){
                     Some(texture_data) => {
                         println!("Got a texture data packet");
-                        for i in 0..other_players.len(){
-                            if other_players[i].id == texture_data.id {
-                                other_players[i].texture_data = Some(texture_data.texture_data.clone());
-                                match other_players[i].texture_data.clone(){
-                                    Some( mut texture_data) => {
-                                        texture_data.load_texture(&texture_creator,&mut texture_map);
-                                    },
-                                    None => println!("No texture data")
-                                }
+                        if let Some(other_player) = other_players.get_mut(&texture_data.id) {
+                            other_player.texture_data = Some(texture_data.texture_data.clone());
+                            match other_player.texture_data.clone() {
+                                Some(mut texture_data) => {
+                                    texture_data.load_texture(&texture_creator, &mut texture_map);
+                                },
+                                None => println!("No texture data")
                             }
+                        }
+                    },
+                    None => ()
+                }
+
+                match msg.try_deserialize::<PlayerDisconnect>(){
+                    Some(disconnected) => {
+                        println!("Got a disconnect packet");
+                        if let Some(other_player) = other_players.get_mut(&disconnected.id){
+                            other_players.remove(&disconnected.id);
                         }
                     },
                     None => ()
@@ -226,8 +228,8 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
         canvas.clear();
 
         //draw other player
-        for i in 0..other_players.len(){
-            other_players[i].draw(&mut canvas,&texture_map);
+        for (_,other_player) in &other_players{
+            other_player.draw(&mut canvas,&texture_map);
         }
         // draw self
         player.draw(&mut canvas,&texture_map);

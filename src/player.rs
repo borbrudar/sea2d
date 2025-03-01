@@ -51,10 +51,10 @@ impl Player{
 #[derive(Serialize,Deserialize,Debug,Clone)]
 pub enum PlayerPacket{
     PlayerWelcomePacket(PlayerWelcome),
-    PlayerIDPacket(PlayerID),
     PlayerMovementPacket(PlayerMovement),
     PlayerPositionPacket(PlayerPosition),
     PlayerTextureDataPacket(PlayerTextureData),
+    PlayerDisconnectPacket(PlayerDisconnect),
 }
 
 
@@ -86,13 +86,14 @@ pub struct PlayerWelcome {
 pub struct PlayerMovement{
     pub mov : Movement
 }
-#[derive(Serialize,Deserialize,Debug,Clone)]
-pub struct PlayerID{
-    pub id : u64
-}
 
 #[derive(Serialize,Deserialize,Debug,Clone)]
 pub struct PlayerTextureData{
     pub texture_data : TextureData,
     pub id : u64,
+}
+
+#[derive(Serialize,Deserialize,Debug,Clone)]
+pub struct PlayerDisconnect{
+    pub id : u64
 }
