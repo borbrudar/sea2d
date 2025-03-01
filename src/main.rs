@@ -3,7 +3,7 @@ mod client;
 mod shared;
 mod packet;
 mod player;
-mod thread_safe_texture;
+mod texture_data;
 use crate::server::server;
 use crate::client::client;
 use std::env;

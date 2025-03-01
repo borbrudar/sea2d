@@ -114,7 +114,7 @@ pub fn server(){
 
             // packet that tells everyone each other's initial position
             for i in 0..players_lock.len(){
-                tx.send(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id : i as u64, x : players_lock[i].x, y : players_lock[i].y}))).unwrap();
+                tx.send(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id : i as u64, x : players_lock[i].x, y : players_lock[i].y, texture_data : players_lock[i].texture_data.clone()}))).unwrap();
             }
             
           

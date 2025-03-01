@@ -1,5 +1,5 @@
 use crate::packet::{Packet, PacketInternal};
-use crate::shared::*;
+use crate::{player, shared::*, texture_data};
 use crate::player::{Movement, Player, PlayerID, PlayerMovement, PlayerPacket, PlayerPosition, PlayerWelcome};
 
 use std::io::{ErrorKind,Read,Write};
@@ -7,6 +7,10 @@ use std::net::TcpStream;
 use std::sync::mpsc as mspc;
 use std::thread;
 use sdl2::image::{self, LoadTexture};
+use std::collections::HashMap;
+use crate::texture_data::TextureData;
+use sdl2::render::Texture;
+
 
 pub fn client(){
     let mut client = TcpStream::connect(LOCAL).expect("Failed to connect");
@@ -72,7 +76,7 @@ fn find_sdl_gl_driver() -> Option<u32> {
 }
 
 
-fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>){
+fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     let window = video_subsystem.window("sea2d", SCREEN_WIDTH, SCREEN_HEIGHT)
@@ -94,8 +98,11 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>){
     image::init(image::InitFlag::PNG | image::InitFlag::JPG).unwrap();
     // let texture = load_texture_from_file(&sdl_context, "path/to/your/image.png")?;
     let texture_creator = canvas.texture_creator();
+    let mut texture_map: HashMap<TextureData, Texture> = HashMap::new();
     let mut player = Player::new(1_000_000);
-    player.texture.load_texture(&texture_creator,"resources/textures/test.png").unwrap();
+    player.texture_data = Some(TextureData::new("resources/textures/test.png".to_string()));
+    player.texture_data.clone().unwrap().load_texture(&texture_creator, &mut texture_map);
+    //player.texture.load_texture(&texture_creator,"resources/textures/test.png").unwrap();
 
 
     'running: loop {
@@ -183,14 +190,14 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>){
         // drawing
         canvas.clear();
 
-        // draw other player
+        //draw other player
         for i in 0..other_players.len(){
-            other_players[i].draw(&mut canvas);
+            other_players[i].draw(&mut canvas,&texture_map);
         }
         // draw self
-        player.draw(&mut canvas);
+        player.draw(&mut canvas,&texture_map);
         
-        
+        // Draw self (player)
         // clear screen
         canvas.set_draw_color(sdl2::pixels::Color::RGB(0,0,0));
         canvas.present();
