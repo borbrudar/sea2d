@@ -4,6 +4,7 @@ mod shared;
 mod packet;
 mod player;
 mod texture_data;
+mod player_packets;
 use crate::server::server;
 use crate::client::client;
 use std::env;

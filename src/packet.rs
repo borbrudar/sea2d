@@ -5,8 +5,7 @@ use std::any::TypeId;
 use std::hash::{Hash, Hasher};
 
 use fnv::FnvHasher;
-
-use crate::player::PlayerPacket;
+use crate::player_packets::PlayerPacket;
 
 
 #[derive(Serialize,Deserialize,Debug,Clone)]

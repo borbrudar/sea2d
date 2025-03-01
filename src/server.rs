@@ -5,11 +5,11 @@ use std::sync::{mpsc as mspc, MutexGuard};
 use std::thread;
 use std::collections::{HashMap,HashSet};
 use crate::packet::{ClientID, Packet, PacketInternal};
-use crate::player::{Player, PlayerDisconnect, PlayerWelcome};
+use crate::player::Player;
+use crate::player_packets::*;
 use rand::Rng;
 
 use std::sync::{Arc,Mutex};
-use crate::player::{PlayerMovement,Movement,PlayerPosition,PlayerPacket,PlayerTextureData};
 
 
 fn new_client_id(set : &HashSet<u64> ) -> u64 {

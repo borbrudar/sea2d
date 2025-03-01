@@ -1,6 +1,7 @@
 use crate::packet::{ClientID, Packet, PacketInternal};
+use crate::player::Player;
 use crate::shared::*;
-use crate::player::{Movement, Player, PlayerDisconnect, PlayerMovement, PlayerPacket, PlayerPosition, PlayerTextureData, PlayerWelcome};
+use crate::player_packets::*;
 
 use std::io::{ErrorKind,Read,Write};
 use std::net::TcpStream;
