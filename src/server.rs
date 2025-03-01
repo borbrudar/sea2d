@@ -1,4 +1,5 @@
 use crate::shared::{LOCAL, MSG_SIZE};
+use crate::texture_data::TextureData;
 use std::io::{ErrorKind,Read,Write};
 use std::net::TcpListener;
 use std::sync::{mpsc as mspc, MutexGuard};
@@ -9,7 +10,7 @@ use crate::player::{Player, PlayerWelcome};
 use rand::Rng;
 
 use std::sync::{Arc,Mutex};
-use crate::player::{PlayerMovement,Movement,PlayerPosition,PlayerPacket,PlayerID};
+use crate::player::{PlayerMovement,Movement,PlayerPosition,PlayerPacket,PlayerID,PlayerTextureData};
 
 
 fn new_client_id(set : &HashSet<u64> ) -> u64 {
@@ -34,6 +35,10 @@ fn handle_player_receive(packet : Packet) -> Option<Vec<u8>>{
                     return Some(bincode::serialize(&packet_int).unwrap());
                 }
                 PlayerPacket::PlayerWelcomePacket(inner) => {
+                    let packet_int = PacketInternal::new(inner.clone()).unwrap();
+                    return Some(bincode::serialize(&packet_int).unwrap());
+                }
+                PlayerPacket::PlayerTextureDataPacket(inner) => {
                     let packet_int = PacketInternal::new(inner.clone()).unwrap();
                     return Some(bincode::serialize(&packet_int).unwrap());
                 }
@@ -64,6 +69,10 @@ fn handle_player_send(packet : PlayerPacket, player_id : usize, players : &mut M
             }
             return Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{player_id : player_id as u64,
                  x : players[player_id].x, y : players[player_id].y}));
+        },
+        PlayerPacket::PlayerTextureDataPacket(PlayerTextureData{texture_data,id}) => {
+            players[player_id].texture_data = Some(texture_data);
+            return Packet::PlayerPacket(PlayerPacket::PlayerTextureDataPacket(PlayerTextureData{texture_data : players[player_id].texture_data.clone().unwrap(), id}));
         },
         _ => panic!("Wtf you doing bro")
     }
@@ -114,7 +123,8 @@ pub fn server(){
 
             // packet that tells everyone each other's initial position
             for i in 0..players_lock.len(){
-                tx.send(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id : i as u64, x : players_lock[i].x, y : players_lock[i].y, texture_data : players_lock[i].texture_data.clone()}))).unwrap();
+                tx.send(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id : i as u64, x : players_lock[i].x, y : players_lock[i].y, 
+                    texture_data : players_lock[i].texture_data.clone()}))).unwrap();
             }
             
           

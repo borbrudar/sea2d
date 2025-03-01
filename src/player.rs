@@ -34,15 +34,15 @@ impl Player{
                 let res = texture_data.draw(canvas,texture_map,self.x,self.y,self.size,self.size);
                 match res {
                     Err(..) => {
-                        canvas.fill_rect(sdl2::rect::Rect::new(self.x,self.y,self.size,self.size)).unwrap();
                         canvas.set_draw_color(sdl2::pixels::Color::RGB(self.color.0,self.color.1,self.color.2));
+                        canvas.fill_rect(sdl2::rect::Rect::new(self.x,self.y,self.size,self.size)).unwrap();
                     },
                     Ok(..) => ()
                 }
             },
             None => {
+                canvas.set_draw_color(sdl2::pixels::Color::RGB(255,192,203));
                 canvas.fill_rect(sdl2::rect::Rect::new(self.x,self.y,self.size,self.size)).unwrap();
-                canvas.set_draw_color(sdl2::pixels::Color::RGB(self.color.0,self.color.1,self.color.2));
             }
         }
     }
@@ -54,6 +54,7 @@ pub enum PlayerPacket{
     PlayerIDPacket(PlayerID),
     PlayerMovementPacket(PlayerMovement),
     PlayerPositionPacket(PlayerPosition),
+    PlayerTextureDataPacket(PlayerTextureData),
 }
 
 
@@ -88,4 +89,10 @@ pub struct PlayerMovement{
 #[derive(Serialize,Deserialize,Debug,Clone)]
 pub struct PlayerID{
     pub id : u64
+}
+
+#[derive(Serialize,Deserialize,Debug,Clone)]
+pub struct PlayerTextureData{
+    pub texture_data : TextureData,
+    pub id : u64,
 }

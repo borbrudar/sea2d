@@ -1,6 +1,6 @@
 use crate::packet::{Packet, PacketInternal};
 use crate::{player, shared::*, texture_data};
-use crate::player::{Movement, Player, PlayerID, PlayerMovement, PlayerPacket, PlayerPosition, PlayerWelcome};
+use crate::player::{Movement, Player, PlayerID, PlayerMovement, PlayerPacket, PlayerPosition, PlayerWelcome,PlayerTextureData};
 
 use std::io::{ErrorKind,Read,Write};
 use std::net::TcpStream;
@@ -133,6 +133,12 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
                     let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Right}));
                     tx.send(send).unwrap();
                 },
+                sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::C), .. } => {
+                    player.texture_data = Some(TextureData::new("resources/textures/lmao.png".to_string()));
+                    player.texture_data.clone().unwrap().load_texture(&texture_creator, &mut texture_map);
+                    let send = Packet::PlayerPacket(PlayerPacket::PlayerTextureDataPacket(PlayerTextureData{texture_data : player.texture_data.clone().unwrap(), id : player.id}));
+                    tx.send(send).unwrap();
+                }
                 _ => {}
             }
         }
@@ -150,6 +156,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
                         }else {
                             player.color = (0,0,255);
                         }
+                        tx.send(Packet::PlayerPacket(PlayerPacket::PlayerTextureDataPacket(PlayerTextureData{texture_data : player.texture_data.clone().unwrap(),id : player.id}))).unwrap();
                     },
                     None => ()
                 }
@@ -171,14 +178,42 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
                     Some( welc) =>{
                         println!("Got a welcome packet");
                         // if self or already received return
-                        if welc.player_id == player.id {()} 
+                        let mut found = false;
+                        if welc.player_id == player.id {
+                            found = true;
+                        } 
                         for i in 0..other_players.len(){
-                            if other_players[i].id == welc.player_id {()}
+                            if other_players[i].id == welc.player_id {found = true;}
                         }
                         // else add to vector of other players
+                        if (found) {continue;}
                         let mut temp = Player::new(welc.player_id);
-                        temp.x = welc.x; temp.y = welc.y;
+                        temp.x = welc.x; temp.y = welc.y; temp.texture_data = welc.texture_data;
+                        match temp.texture_data.clone(){
+                            Some( mut texture_data) => {
+                                texture_data.load_texture(&texture_creator,&mut texture_map);
+                            },
+                            None => println!("No texture data")
+                        }
                         other_players.push(temp);
+                    },
+                    None => ()
+                }
+
+                match msg.try_deserialize::<PlayerTextureData>(){
+                    Some(texture_data) => {
+                        println!("Got a texture data packet");
+                        for i in 0..other_players.len(){
+                            if other_players[i].id == texture_data.id {
+                                other_players[i].texture_data = Some(texture_data.texture_data.clone());
+                                match other_players[i].texture_data.clone(){
+                                    Some( mut texture_data) => {
+                                        texture_data.load_texture(&texture_creator,&mut texture_map);
+                                    },
+                                    None => println!("No texture data")
+                                }
+                            }
+                        }
                     },
                     None => ()
                 }
