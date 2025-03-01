@@ -99,10 +99,10 @@ pub fn server(){
             ip_to_uuid.lock().unwrap().insert(addr, id);
             uuid_to_ip.lock().unwrap().insert(id, addr);
             
-            let players = Arc::clone(&players);
+            let players_loop = Arc::clone(&players);
             
             
-            let mut players_lock = players.lock().unwrap();
+            let mut players_lock = players_loop.lock().unwrap();
             // add player id to map and send it to player so it knows its own id
             let player_id = players_lock.len() as u64;
             let ss = Packet::PlayerPacket(PlayerPacket::PlayerIDPacket(PlayerID{id : player_id}));
@@ -119,7 +119,7 @@ pub fn server(){
             
           
             clients.push(socket.try_clone().expect("Failed to clone client"));
-            let players = Arc::clone(&players);
+            let players_thr = Arc::clone(&players);
             
             // read from the socket, new thread for each client
             thread::spawn(move || loop {
@@ -127,7 +127,7 @@ pub fn server(){
                 let mut buf = vec![0; MSG_SIZE];
                 match socket.read_exact(&mut buf) {
                     Ok(_) => {
-                        let raw = buf.into_iter().collect::<Vec<_>>();
+                        let raw = buf;
                         let packet_int = bincode::deserialize::<PacketInternal>(&raw);
 
                         match packet_int {
@@ -136,7 +136,7 @@ pub fn server(){
                                     Some(Packet::PlayerPacket(packet)) => {
                                         let sender_uuid = ip_to_uuid.lock().unwrap().get(&addr).unwrap().clone();
                                         let player_id = uuid_to_player_id.lock().unwrap().get(&sender_uuid).unwrap().clone() as usize;
-                                        let mut players_lock = players.lock().unwrap();
+                                        let mut players_lock = players_thr.lock().unwrap();
                                         let packet = handle_player_send(packet, player_id, &mut players_lock);
                                         tx.send(packet).expect("Failed to send movement packet");
                                     }

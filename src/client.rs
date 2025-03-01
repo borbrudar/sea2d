@@ -6,7 +6,7 @@ use std::io::{ErrorKind,Read,Write};
 use std::net::TcpStream;
 use std::sync::mpsc as mspc;
 use std::thread;
-
+use sdl2::image::{self, LoadTexture};
 
 pub fn client(){
     let mut client = TcpStream::connect(LOCAL).expect("Failed to connect");
@@ -84,13 +84,20 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>){
         .index(find_sdl_gl_driver().unwrap())
         .build()
         .unwrap();
-
-    let mut event_pump = sdl_context.event_pump().unwrap();
-
-    let mut player = Player::new(1_000_000);
-    let mut other_players : Vec<Player> = Vec::new();
-
     
+    
+    
+    let mut event_pump = sdl_context.event_pump().unwrap();
+    
+    let mut other_players : Vec<Player> = Vec::new();
+    
+    image::init(image::InitFlag::PNG | image::InitFlag::JPG).unwrap();
+    // let texture = load_texture_from_file(&sdl_context, "path/to/your/image.png")?;
+    let texture_creator = canvas.texture_creator();
+    let mut player = Player::new(1_000_000);
+    player.texture.load_texture(&texture_creator,"resources/textures/test.png").unwrap();
+
+
     'running: loop {
         // event polling
         for event in event_pump.poll_iter() {
@@ -137,7 +144,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>){
                             player.color = (0,0,255);
                         }
                     },
-                    None => println!("Not an id")
+                    None => ()
                 }
 
                 match msg.try_deserialize::<PlayerPosition>(){
@@ -150,7 +157,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>){
                             }
                         }
                     },
-                    None => println!("Not a movement")
+                    None => ()
                 }
 
                 match msg.try_deserialize::<PlayerWelcome>(){
@@ -166,7 +173,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>){
                         temp.x = welc.x; temp.y = welc.y;
                         other_players.push(temp);
                     },
-                    None => println!("Not a welcome packet")
+                    None => ()
                 }
             },
             Err(mspc::TryRecvError::Empty) => (),
