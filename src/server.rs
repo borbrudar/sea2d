@@ -1,12 +1,11 @@
 use crate::shared::{LOCAL, MSG_SIZE};
-use crate::texture_data::TextureData;
 use std::io::{ErrorKind,Read,Write};
 use std::net::{TcpListener, TcpStream};
 use std::sync::{mpsc as mspc, MutexGuard};
 use std::thread;
 use std::collections::{HashMap,HashSet};
 use crate::packet::{ClientID, Packet, PacketInternal};
-use crate::player::{self, Player, PlayerDisconnect, PlayerWelcome};
+use crate::player::{Player, PlayerDisconnect, PlayerWelcome};
 use rand::Rng;
 
 use std::sync::{Arc,Mutex};
@@ -183,7 +182,6 @@ pub fn server(){
                     let packet_int = PacketInternal::new(packet.clone()).unwrap();
                     send = Some(bincode::serialize(&packet_int).unwrap());
                 }
-                _ => panic!("Wtf are you sending")
             };
             
             match &mut send {

@@ -1,8 +1,6 @@
-use sdl2::image::{self, LoadTexture};
-use sdl2::libc::pid_t;
 use serde::{Deserialize, Serialize};
 use crate::shared::{SCREEN_HEIGHT,SCREEN_WIDTH};
-use sdl2::render::{Canvas, TextureCreator};
+use sdl2::render::Canvas;
 use sdl2::video::Window;
 use crate::texture_data::TextureData;
 use sdl2::render::Texture;

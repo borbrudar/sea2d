@@ -1,12 +1,12 @@
 use crate::packet::{ClientID, Packet, PacketInternal};
-use crate::{player, shared::*, texture_data};
+use crate::shared::*;
 use crate::player::{Movement, Player, PlayerDisconnect, PlayerMovement, PlayerPacket, PlayerPosition, PlayerTextureData, PlayerWelcome};
 
 use std::io::{ErrorKind,Read,Write};
 use std::net::TcpStream;
 use std::sync::mpsc as mspc;
 use std::thread;
-use sdl2::image::{self, LoadTexture};
+use sdl2::image::{self};
 use std::collections::HashMap;
 use crate::texture_data::TextureData;
 use sdl2::render::Texture;
@@ -151,11 +151,6 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
                         if player.id == 1_000_000{
                             player.id = id.id;
                         }
-                        if player.id == 0{
-                            player.color = (255,0,0);
-                        }else {
-                            player.color = (0,0,255);
-                        }
                         tx.send(Packet::PlayerPacket(PlayerPacket::PlayerTextureDataPacket(PlayerTextureData{texture_data : player.texture_data.clone().unwrap(),id : player.id}))).unwrap();
                     },
                     None => ()
@@ -213,9 +208,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
                 match msg.try_deserialize::<PlayerDisconnect>(){
                     Some(disconnected) => {
                         println!("Got a disconnect packet");
-                        if let Some(other_player) = other_players.get_mut(&disconnected.id){
-                            other_players.remove(&disconnected.id);
-                        }
+                        other_players.remove(&disconnected.id);
                     },
                     None => ()
                 }

@@ -2,7 +2,6 @@ use serde::{Deserialize,Serialize};
 use sdl2::render::TextureCreator;
 use sdl2::render::Texture;
 use sdl2::image::LoadTexture;
-use std::hash::Hasher;
 
 
 #[derive(Serialize,Deserialize,Debug,Clone,Eq,PartialEq,Hash)]
