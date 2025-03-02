@@ -5,6 +5,8 @@ mod packet;
 mod player;
 mod texture_data;
 mod player_packets;
+mod tile;
+mod level;
 use crate::server::server;
 use crate::client::client;
 use std::env;

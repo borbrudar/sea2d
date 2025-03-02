@@ -16,7 +16,7 @@ impl<'a> TextureData{
         }
     }
     
-    pub fn load_texture<'b>(& 'b mut self,texture_creator : & 'a TextureCreator<sdl2::video::WindowContext>, texture_map : & mut std::collections::HashMap<TextureData,Texture<'a>>){
+    pub fn load_texture(& mut self,texture_creator : & 'a TextureCreator<sdl2::video::WindowContext>, texture_map : & mut std::collections::HashMap<TextureData,Texture<'a>>){
         match texture_map.get(&self){
             Some(..) => (),
             None => {

@@ -11,6 +11,7 @@ use sdl2::image::{self};
 use std::collections::HashMap;
 use crate::texture_data::TextureData;
 use sdl2::render::Texture;
+use crate::level::Level;
 
 
 pub fn client(){
@@ -103,8 +104,9 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
     let mut player = Player::new(1_000_000);
     player.texture_data = Some(TextureData::new("resources/textures/test.png".to_string()));
     player.texture_data.clone().unwrap().load_texture(&texture_creator, &mut texture_map);
-    //player.texture.load_texture(&texture_creator,"resources/textures/test.png").unwrap();
 
+    let level = Level::new(20,20,&texture_creator,&mut texture_map);
+    
 
     'running: loop {
         // event polling
@@ -221,6 +223,9 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
         // drawing
         canvas.clear();
 
+        // draw level
+        level.draw(&mut canvas,&texture_map);
+
         //draw other player
         for (_,other_player) in &other_players{
             other_player.draw(&mut canvas,&texture_map);
@@ -230,7 +235,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
         
         // Draw self (player)
         // clear screen
-        canvas.set_draw_color(sdl2::pixels::Color::RGB(0,0,0));
+        //canvas.set_draw_color(sdl2::pixels::Color::RGB(0,0,0));
         canvas.present();
        // ::std::thread::sleep(Duration::new(0, 1_000_000_000u32/60));
     }
