@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use sdl2::render::{Texture, TextureCreator};
 
-use crate::{texture_data::TextureData, tile::Tile};
+use crate::{camera::Camera, texture_data::TextureData, tile::Tile};
 
 pub struct Level{
     pub tiles : Vec<Tile>,
@@ -16,8 +16,6 @@ impl<'a> Level{
         for x in 0..width{
             for y in 0..height{
                 tiles.push(Tile::new(x as i32 * 32,y as i32 * 32,32));
-                // call texture_data.load_texture() on the last element 
-                // of the tiles vector
                 tiles.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/tile.png".to_string()));
                 tiles.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map);
             }
@@ -29,9 +27,9 @@ impl<'a> Level{
         }
     }
 
-    pub fn draw(&self,canvas : &mut sdl2::render::Canvas<sdl2::video::Window>, texture_map : &std::collections::HashMap<crate::texture_data::TextureData,sdl2::render::Texture>){
+    pub fn draw(&self,canvas : &mut sdl2::render::Canvas<sdl2::video::Window>, texture_map : &std::collections::HashMap<crate::texture_data::TextureData,sdl2::render::Texture>, camera : &Camera){
         for tile in &self.tiles{
-            tile.draw(canvas,texture_map);
+            tile.draw(canvas,texture_map,camera);
         }
     }
 }

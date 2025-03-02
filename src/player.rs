@@ -3,6 +3,7 @@ use sdl2::render::Canvas;
 use sdl2::video::Window;
 use crate::texture_data::TextureData;
 use sdl2::render::Texture;
+use crate::camera::Camera;
 
 pub struct Player{
     pub id : u64,
@@ -25,21 +26,21 @@ impl Player{
         }
     }
 
-    pub fn draw(&self,canvas : &mut Canvas<Window>, texture_map : &std::collections::HashMap<TextureData,Texture>) {
+    pub fn draw(&self,canvas : &mut Canvas<Window>, texture_map : &std::collections::HashMap<TextureData,Texture>, camera : &Camera){ 
         match self.texture_data {
             Some (ref texture_data) => {
-                let res = texture_data.draw(canvas,texture_map,self.x,self.y,self.size,self.size);
+                let res = texture_data.draw(canvas,texture_map,self.x-camera.x,self.y-camera.y,self.size,self.size);
                 match res {
                     Err(..) => {
                         canvas.set_draw_color(sdl2::pixels::Color::RGB(self.color.0,self.color.1,self.color.2));
-                        canvas.fill_rect(sdl2::rect::Rect::new(self.x,self.y,self.size,self.size)).unwrap();
+                        canvas.fill_rect(sdl2::rect::Rect::new(self.x-camera.x,self.y-camera.y,self.size,self.size)).unwrap();
                     },
                     Ok(..) => ()
                 }
             },
             None => {
                 canvas.set_draw_color(sdl2::pixels::Color::RGB(255,192,203));
-                canvas.fill_rect(sdl2::rect::Rect::new(self.x,self.y,self.size,self.size)).unwrap();
+                canvas.fill_rect(sdl2::rect::Rect::new(self.x-camera.x,self.y-camera.y,self.size,self.size)).unwrap();
             }
         }
     }

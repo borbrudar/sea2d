@@ -12,6 +12,7 @@ use std::collections::HashMap;
 use crate::texture_data::TextureData;
 use sdl2::render::Texture;
 use crate::level::Level;
+use crate::camera::Camera;
 
 
 pub fn client(){
@@ -106,7 +107,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
     player.texture_data.clone().unwrap().load_texture(&texture_creator, &mut texture_map);
 
     let level = Level::new(20,20,&texture_creator,&mut texture_map);
-    
+    let mut camera = Camera::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
 
     'running: loop {
         // event polling
@@ -117,22 +118,26 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
                     break 'running
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::UP),..} => {
+                    camera.move_camera(0, -15);
                     player.y -= 15;
                     let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Down}));
                     tx.send(send).unwrap();
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::DOWN),..} => {
+                    camera.move_camera(0, 15);
                     player.y += 15;
                     let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Up}));
                     tx.send(send).unwrap();
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::LEFT),..} => {
+                    camera.move_camera(-15, 0);
                     player.x -= 15;
                     let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Left}));
                     tx.send(send).unwrap();
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::RIGHT),..} => {
                     player.x += 15;
+                    camera.move_camera(15, 0);
                     let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Right}));
                     tx.send(send).unwrap();
                 },
@@ -145,7 +150,26 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
                 _ => {}
             }
         }
-
+        
+        // drawing
+        canvas.clear();
+        
+        // draw level
+        level.draw(&mut canvas,&texture_map,&camera);
+        
+        //draw other player
+        for (_,other_player) in &other_players{
+            other_player.draw(&mut canvas,&texture_map,&camera);
+        }
+        // draw self
+        player.draw(&mut canvas,&texture_map,&camera);
+        
+        // Draw self (player)
+        // clear screen
+        //canvas.set_draw_color(sdl2::pixels::Color::RGB(0,0,0));
+        canvas.present();
+        // ::std::thread::sleep(Duration::new(0, 1_000_000_000u32/60));
+        
         match rx.try_recv(){
             Ok(msg) => {
                 match msg.try_deserialize::<ClientID>(){
@@ -174,7 +198,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
                     Some( welc) =>{
                         println!("Got a welcome packet");
                         // if self or already received return
-                        let found = other_players.contains_key(&welc.player_id);
+                        let found = other_players.contains_key(&welc.player_id) || welc.player_id == player.id;
                         if !found {
                             let mut temp = Player::new(welc.player_id);
                             temp.x = welc.x;
@@ -219,24 +243,5 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
             Err(mspc::TryRecvError::Empty) => (),
             Err(mspc::TryRecvError::Disconnected) => break,
         }
-
-        // drawing
-        canvas.clear();
-
-        // draw level
-        level.draw(&mut canvas,&texture_map);
-
-        //draw other player
-        for (_,other_player) in &other_players{
-            other_player.draw(&mut canvas,&texture_map);
-        }
-        // draw self
-        player.draw(&mut canvas,&texture_map);
-        
-        // Draw self (player)
-        // clear screen
-        //canvas.set_draw_color(sdl2::pixels::Color::RGB(0,0,0));
-        canvas.present();
-       // ::std::thread::sleep(Duration::new(0, 1_000_000_000u32/60));
     }
 }

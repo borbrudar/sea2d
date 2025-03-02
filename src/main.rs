@@ -7,6 +7,7 @@ mod texture_data;
 mod player_packets;
 mod tile;
 mod level;
+mod camera;
 use crate::server::server;
 use crate::client::client;
 use std::env;
