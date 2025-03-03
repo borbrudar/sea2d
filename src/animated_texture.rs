@@ -30,7 +30,7 @@ impl<'a> AnimatedTexture{
         }
     }
 
-    pub fn draw(&self, canvas : &mut sdl2::render::Canvas<sdl2::video::Window>, texture_map : &std::collections::HashMap<TextureData,sdl2::render::Texture>, x : i32, y : i32, w : u32, h : u32){
+    pub fn draw(&self, canvas : &mut sdl2::render::Canvas<sdl2::video::Window>, texture_map : &std::collections::HashMap<String,sdl2::render::Texture>, x : i32, y : i32, w : u32, h : u32){
         //println!("Drawing frame: {:?}",self.frames);
         self.frames[self.current_frame].draw(canvas,texture_map,x,y,w,h);
     }
@@ -39,7 +39,7 @@ impl<'a> AnimatedTexture{
         start_x : i32, start_y : i32, width : u32, height : u32,
         frame_count : u32,
         texture_creator : &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>, 
-        texture_map : &mut std::collections::HashMap<TextureData,sdl2::render::Texture<'a>>){
+        texture_map : &mut std::collections::HashMap<String,sdl2::render::Texture<'a>>){
 
         for i in 0..frame_count{
             let mut frame = TextureData::new(path.clone());

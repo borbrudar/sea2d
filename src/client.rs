@@ -102,10 +102,10 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
     image::init(image::InitFlag::PNG | image::InitFlag::JPG).unwrap();
     // let texture = load_texture_from_file(&sdl_context, "path/to/your/image.png")?;
     let texture_creator = canvas.texture_creator();
-    let mut texture_map: HashMap<TextureData, Texture> = HashMap::new();
+    let mut texture_map: HashMap<String, Texture> = HashMap::new();
     let mut player = Player::new(1_000_000);
     player.texture_data = Some(TextureData::new("resources/textures/test.png".to_string()));
-    player.texture_data.clone().unwrap().load_texture(&texture_creator, &mut texture_map);
+    player.texture_data.as_mut().unwrap().load_texture(&texture_creator, &mut texture_map);
 
     let level = Level::new(20,20,&texture_creator,&mut texture_map);
     let mut camera = Camera::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
@@ -150,7 +150,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::C), .. } => {
                     player.texture_data = Some(TextureData::new("resources/textures/lmao.png".to_string()));
-                    player.texture_data.clone().unwrap().load_texture(&texture_creator, &mut texture_map);
+                    player.texture_data.as_mut().unwrap().load_texture(&texture_creator, &mut texture_map);
                     let send = Packet::PlayerPacket(PlayerPacket::PlayerTextureDataPacket(PlayerTextureData{texture_data : player.texture_data.clone().unwrap(), id : player.id}));
                     tx.send(send).unwrap();
                 }
@@ -183,7 +183,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
         
         // Draw self (player)
         // clear screen
-        //canvas.set_draw_color(sdl2::pixels::Color::RGB(0,0,0));
+        canvas.set_draw_color(sdl2::pixels::Color::RGB(0,0,0));
         canvas.present();
         // ::std::thread::sleep(Duration::new(0, 1_000_000_000u32/60));
         
@@ -195,7 +195,8 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
                         if player.id == 1_000_000{
                             player.id = id.id;
                         }
-                        tx.send(Packet::PlayerPacket(PlayerPacket::PlayerTextureDataPacket(PlayerTextureData{texture_data : player.texture_data.clone().unwrap(),id : player.id}))).unwrap();
+                        tx.send(Packet::PlayerPacket(PlayerPacket::PlayerTextureDataPacket(
+                            PlayerTextureData{texture_data : player.texture_data.clone().unwrap(),id : player.id}))).unwrap();
                     },
                     None => ()
                 }

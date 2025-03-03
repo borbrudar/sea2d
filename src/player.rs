@@ -29,7 +29,7 @@ impl Player{
         }
     }
 
-    pub fn draw(&self,canvas : &mut Canvas<Window>, texture_map : &std::collections::HashMap<TextureData,Texture>, camera : &Camera){ 
+    pub fn draw(&self,canvas : &mut Canvas<Window>, texture_map : &std::collections::HashMap<String,Texture>, camera : &Camera){ 
         match self.animation_data {
             Some(ref animation_data) => {
                 animation_data.draw(canvas,texture_map,self.x-camera.x,self.y-camera.y,self.size,self.size);

@@ -11,7 +11,7 @@ pub struct Level{
 }
 
 impl<'a> Level{
-    pub fn new(width : u32, height : u32, texture_creator : &'a TextureCreator<sdl2::video::WindowContext>, texture_map : &mut HashMap<TextureData,Texture<'a>>) -> Level{
+    pub fn new(width : u32, height : u32, texture_creator : &'a TextureCreator<sdl2::video::WindowContext>, texture_map : &mut HashMap<String,Texture<'a>>) -> Level{
         let mut tiles = Vec::new();
         for x in 0..width{
             for y in 0..height{
@@ -27,7 +27,7 @@ impl<'a> Level{
         }
     }
 
-    pub fn draw(&self,canvas : &mut sdl2::render::Canvas<sdl2::video::Window>, texture_map : &std::collections::HashMap<crate::texture_data::TextureData,sdl2::render::Texture>, camera : &Camera){
+    pub fn draw(&self,canvas : &mut sdl2::render::Canvas<sdl2::video::Window>, texture_map : &std::collections::HashMap<String,sdl2::render::Texture>, camera : &Camera){
         for tile in &self.tiles{
             tile.draw(canvas,texture_map,camera);
         }

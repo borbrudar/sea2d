@@ -18,7 +18,7 @@ impl Tile{
         }
     }
 
-    pub fn draw(&self,canvas : &mut sdl2::render::Canvas<sdl2::video::Window>, texture_map : &std::collections::HashMap<TextureData,sdl2::render::Texture>, camera : &Camera){
+    pub fn draw(&self,canvas : &mut sdl2::render::Canvas<sdl2::video::Window>, texture_map : &std::collections::HashMap<String,sdl2::render::Texture>, camera : &Camera){
         match self.texture_data {
             Some(ref texture_data) => {
                 let res = texture_data.draw(canvas,texture_map,self.x-camera.x,self.y-camera.y,self.size,self.size);
