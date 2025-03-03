@@ -109,12 +109,13 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
     player.texture_data = Some(TextureData::new("resources/textures/test.png".to_string()));
     player.texture_data.as_mut().unwrap().load_texture(&texture_creator, &mut texture_map);
 
-    player.animation_data = Some(AnimatedTexture::new(1.0/2.));
+    player.animation_data = Some(AnimatedTexture::new(1.0/1.));
     player.animation_data.as_mut().unwrap().load_animation("resources/player_animation/woman.png".to_string(),0,0,626/4,313/2,4,
     &texture_creator,&mut texture_map);
                         
 
-    let level = Level::new(20,20,&texture_creator,&mut texture_map);
+    let mut level = Level::new();
+    level.load_from_file("resources/levels/level1.png".to_string(),&texture_creator,&mut texture_map);
     let mut camera = Camera::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
 
     let start_time = std::time::Instant::now();

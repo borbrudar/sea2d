@@ -33,11 +33,7 @@ impl<'a> AnimatedTexture{
     }
 
     pub fn draw(&self, canvas : &mut sdl2::render::Canvas<sdl2::video::Window>, texture_map : &std::collections::HashMap<String,sdl2::render::Texture>, x : i32, y : i32, w : u32, h : u32){
-        //println!("Drawing frame: {:?}",self.frames);
-        match self.frames[self.current_frame].draw(canvas,texture_map,x,y,w,h){
-            Ok(..) => (),//println!("ok"),
-            Err(..) => ()//println!("not ok")
-        }
+        self.frames[self.current_frame].draw(canvas,texture_map,x,y,w,h).unwrap();
     }
 
     pub fn load_animation(&mut self, path : String,
