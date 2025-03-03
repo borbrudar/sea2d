@@ -6,13 +6,21 @@ use sdl2::image::LoadTexture;
 
 #[derive(Serialize,Deserialize,Debug,Clone,Eq,PartialEq,Hash)]
 pub struct TextureData {
-    pub path : String
+    pub path : String,
+    pub width : u32,
+    pub height : u32,
+    pub x : i32,
+    pub y : i32,
 }
 
 impl<'a> TextureData{
     pub fn new(path : String) -> TextureData{
         TextureData{
-            path 
+            path,
+            width : 0,
+            height : 0,
+            x : 0,
+            y : 0,
         }
     }
     
@@ -20,10 +28,15 @@ impl<'a> TextureData{
         match texture_map.get(&self){
             Some(..) => (),
             None => {
-                println!("Path: {:?}",self.path);
+                //println!("Path: {:?}",self.path);
                 let loaded_texture = texture_creator.load_texture(&self.path);
                 match loaded_texture{
                     Ok(texture) => {
+                        if self.width == 0 || self.height == 0{
+                            let query = texture.query();
+                            self.width = query.width;
+                            self.height = query.height;
+                        }
                         texture_map.insert(self.clone(),texture);
                     },
                     Err(..) => println!("couldnt load texture for some reason")
@@ -34,7 +47,7 @@ impl<'a> TextureData{
     pub fn draw(&self, canvas : &mut sdl2::render::Canvas<sdl2::video::Window>, texture_map : &std::collections::HashMap<TextureData,Texture>, x : i32, y : i32, width : u32, height : u32) -> Result<(),String>{
         match texture_map.get(&self.clone()){
             Some(texture) => {
-                canvas.copy(texture,None,sdl2::rect::Rect::new(x,y,width,height))
+                canvas.copy(texture,sdl2::rect::Rect::new(self.x,self.y,self.width,self.height),sdl2::rect::Rect::new(x,y,width,height)).map_err(|e| e.to_string())
             },
             None => Err("Texture not loaded".into())
         }

@@ -1,3 +1,4 @@
+use crate::animated_texture::AnimatedTexture;
 use crate::shared::{SCREEN_HEIGHT,SCREEN_WIDTH};
 use sdl2::render::Canvas;
 use sdl2::video::Window;
@@ -12,6 +13,7 @@ pub struct Player{
     pub color : (u8,u8,u8),
     size : u32,
     pub texture_data : Option<TextureData>,
+    pub animation_data : Option<AnimatedTexture>
 }
 
 impl Player{
@@ -22,25 +24,32 @@ impl Player{
             y : (SCREEN_HEIGHT as i32)/2,
             color : (255,255,255),
             size : 40,
-            texture_data : None
+            texture_data : None,
+            animation_data : None
         }
     }
 
     pub fn draw(&self,canvas : &mut Canvas<Window>, texture_map : &std::collections::HashMap<TextureData,Texture>, camera : &Camera){ 
-        match self.texture_data {
-            Some (ref texture_data) => {
-                let res = texture_data.draw(canvas,texture_map,self.x-camera.x,self.y-camera.y,self.size,self.size);
-                match res {
-                    Err(..) => {
-                        canvas.set_draw_color(sdl2::pixels::Color::RGB(self.color.0,self.color.1,self.color.2));
-                        canvas.fill_rect(sdl2::rect::Rect::new(self.x-camera.x,self.y-camera.y,self.size,self.size)).unwrap();
-                    },
-                    Ok(..) => ()
-                }
+        match self.animation_data {
+            Some(ref animation_data) => {
+                animation_data.draw(canvas,texture_map,self.x-camera.x,self.y-camera.y,self.size,self.size);
+                println!("Drawing animation");
             },
-            None => {
-                canvas.set_draw_color(sdl2::pixels::Color::RGB(255,192,203));
-                canvas.fill_rect(sdl2::rect::Rect::new(self.x-camera.x,self.y-camera.y,self.size,self.size)).unwrap();
+            None => match self.texture_data {
+                Some (ref texture_data) => {
+                    let res = texture_data.draw(canvas,texture_map,self.x-camera.x,self.y-camera.y,self.size,self.size);
+                    match res {
+                        Err(..) => {
+                            canvas.set_draw_color(sdl2::pixels::Color::RGB(self.color.0,self.color.1,self.color.2));
+                            canvas.fill_rect(sdl2::rect::Rect::new(self.x-camera.x,self.y-camera.y,self.size,self.size)).unwrap();
+                        },
+                        Ok(..) => ()
+                    }
+                },
+                None => {
+                    canvas.set_draw_color(sdl2::pixels::Color::RGB(255,192,203));
+                    canvas.fill_rect(sdl2::rect::Rect::new(self.x-camera.x,self.y-camera.y,self.size,self.size)).unwrap();
+                }
             }
         }
     }

@@ -8,6 +8,7 @@ mod player_packets;
 mod tile;
 mod level;
 mod camera;
+mod animated_texture;
 use crate::server::server;
 use crate::client::client;
 use std::env;

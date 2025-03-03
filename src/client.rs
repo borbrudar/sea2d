@@ -1,3 +1,4 @@
+use crate::animated_texture::AnimatedTexture;
 use crate::packet::{ClientID, Packet, PacketInternal};
 use crate::player::Player;
 use crate::shared::*;
@@ -109,6 +110,12 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
     let level = Level::new(20,20,&texture_creator,&mut texture_map);
     let mut camera = Camera::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
 
+    //player.animation_data = Some(AnimatedTexture::new(1.0/2.0));
+    //player.animation_data.as_mut().unwrap().load_animation("resources/player_animation/bro.png".to_string(),0,0,398/6,10,6,
+    //&texture_creator,&mut texture_map);
+
+    let start_time = std::time::Instant::now();
+    let time_step = 1.0/60.0;
     'running: loop {
         // event polling
         for event in event_pump.poll_iter() {
@@ -150,7 +157,14 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
                 _ => {}
             }
         }
-        
+
+
+        // time handling
+        let elapsed_time = start_time.elapsed().as_secs_f64();
+        let mut time_since_last_frame = elapsed_time - time_step;
+        while time_since_last_frame >= time_step {
+            time_since_last_frame -= time_step;
+        }
         // drawing
         canvas.clear();
         
@@ -162,6 +176,9 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
             other_player.draw(&mut canvas,&texture_map,&camera);
         }
         // draw self
+        // calc time since last frame
+
+        //player.animation_data.as_mut().unwrap().update(time_since_last_frame);
         player.draw(&mut canvas,&texture_map,&camera);
         
         // Draw self (player)
