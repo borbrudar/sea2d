@@ -41,6 +41,10 @@ fn handle_player_receive(packet : Packet) -> Option<Vec<u8>>{
                     let packet_int = PacketInternal::new(inner.clone()).unwrap();
                     return Some(bincode::serialize(&packet_int).unwrap());
                 }
+                PlayerPacket::PlayerAnimationPacket(inner) => {
+                    let packet_int = PacketInternal::new(inner.clone()).unwrap();
+                    return Some(bincode::serialize(&packet_int).unwrap());
+                }
                 _ => panic!("Wtf you doing bro")
             }
         }
@@ -75,6 +79,10 @@ fn handle_player_send(packet : PlayerPacket, player_id : u64, players : &mut Mut
         },
         PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect{id}) => {
             return Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect{id}));
+        },
+        PlayerPacket::PlayerAnimationPacket(PlayerAnimation{id,animation_data}) => {
+            players.get_mut(&player_id).unwrap().animation_data = Some(animation_data.clone());
+            return Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(PlayerAnimation{id,animation_data}));
         },
         _ => panic!("Wtf you doing bro")
     }

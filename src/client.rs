@@ -38,7 +38,7 @@ pub fn client(){
             },
             Err(ref err) if err.kind() == ErrorKind::WouldBlock => (),
             Err(_) => {
-                println!("Connection lost");
+                println!("Connection lost client2");
                 break;
             }
         };
@@ -59,11 +59,13 @@ pub fn client(){
                 println!("message sent {:?}", msg);
             },
             Err(mspc::TryRecvError::Empty) => (),
-            Err(mspc::TryRecvError::Disconnected) => break,
+            Err(mspc::TryRecvError::Disconnected) => {
+                println!("Connection lost client");
+                break;
+            }
         }
     });
     
-    println!("Write a message:");
     game_loop(tx,rx2);
     println!("Bye bye!");
 }
@@ -106,14 +108,14 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
     let mut player = Player::new(1_000_000);
     player.texture_data = Some(TextureData::new("resources/textures/test.png".to_string()));
     player.texture_data.as_mut().unwrap().load_texture(&texture_creator, &mut texture_map);
-    
-    let level = Level::new(20,20,&texture_creator,&mut texture_map);
-    let mut camera = Camera::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
-    
-    // 626, 313
+
     player.animation_data = Some(AnimatedTexture::new(1.0/2.));
     player.animation_data.as_mut().unwrap().load_animation("resources/player_animation/woman.png".to_string(),0,0,626/4,313/2,4,
     &texture_creator,&mut texture_map);
+                        
+
+    let level = Level::new(20,20,&texture_creator,&mut texture_map);
+    let mut camera = Camera::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
 
     let start_time = std::time::Instant::now();
     let time_step = 1.0/60.0;
@@ -172,13 +174,18 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
         level.draw(&mut canvas,&texture_map,&camera);
         
         //draw other player
-        for (_,other_player) in &other_players{
+        for (_,other_player) in &mut other_players{
+            if !other_player.animation_data.is_none(){
+                other_player.animation_data.as_mut().unwrap().update(time_since_last_frame);
+            }
             other_player.draw(&mut canvas,&texture_map,&camera);
         }
         // draw self
         // calc time since last frame
 
-        player.animation_data.as_mut().unwrap().update(time_since_last_frame);
+        if !player.animation_data.is_none(){
+            player.animation_data.as_mut().unwrap().update(time_since_last_frame);
+        }
         player.draw(&mut canvas,&texture_map,&camera);
         
         // Draw self (player)
@@ -197,6 +204,11 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
                         }
                         tx.send(Packet::PlayerPacket(PlayerPacket::PlayerTextureDataPacket(
                             PlayerTextureData{texture_data : player.texture_data.clone().unwrap(),id : player.id}))).unwrap();
+
+                        let data = PlayerAnimation{id : player.id, animation_data : player.animation_data.clone().unwrap()};
+                        println!("Sending animation packet");
+                        tx.send(Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(data))).unwrap();
+                        
                     },
                     None => ()
                 }
@@ -254,6 +266,18 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
                     Some(disconnected) => {
                         println!("Got a disconnect packet");
                         other_players.remove(&disconnected.id);
+                    },
+                    None => ()
+                }
+
+                match msg.try_deserialize::<PlayerAnimation>(){
+                    Some(animation) => {
+                        println!("Got an animation packet");
+                        if let Some(other_player) = other_players.get_mut(&animation.id) {
+                            println!("Processed animation packet");
+                            other_player.animation_data = Some(animation.animation_data.clone());
+                            other_player.animation_data.as_mut().unwrap().load_animation(animation.animation_data.path, 0, 0, 626/4, 313/2, 4, &texture_creator, &mut texture_map);
+                        }
                     },
                     None => ()
                 }

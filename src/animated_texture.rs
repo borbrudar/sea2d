@@ -1,8 +1,11 @@
+use serde::{Serialize,Deserialize};
+
 use crate::texture_data::TextureData;
 
 
-
+#[derive(Clone,Debug,Serialize,Deserialize)]
 pub struct AnimatedTexture{
+    pub path : String,
     pub frames : Vec<TextureData>,
     pub current_frame : usize,
     pub frame_time : f64,
@@ -12,6 +15,7 @@ pub struct AnimatedTexture{
 impl<'a> AnimatedTexture{
     pub fn new(frame_time : f64) -> AnimatedTexture{
         AnimatedTexture{
+            path : String::new(),
             frames : Vec::new(),
             current_frame : 0,
             frame_time,
