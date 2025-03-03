@@ -106,13 +106,14 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
     let mut player = Player::new(1_000_000);
     player.texture_data = Some(TextureData::new("resources/textures/test.png".to_string()));
     player.texture_data.as_mut().unwrap().load_texture(&texture_creator, &mut texture_map);
-
+    
     let level = Level::new(20,20,&texture_creator,&mut texture_map);
     let mut camera = Camera::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
-
-    //player.animation_data = Some(AnimatedTexture::new(1.0/2.0));
-    //player.animation_data.as_mut().unwrap().load_animation("resources/player_animation/bro.png".to_string(),0,0,398/6,10,6,
-    //&texture_creator,&mut texture_map);
+    
+    // 626, 313
+    player.animation_data = Some(AnimatedTexture::new(1.0/2.));
+    player.animation_data.as_mut().unwrap().load_animation("resources/player_animation/woman.png".to_string(),0,0,626/4,313/2,4,
+    &texture_creator,&mut texture_map);
 
     let start_time = std::time::Instant::now();
     let time_step = 1.0/60.0;
@@ -167,7 +168,6 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
         }
         // drawing
         canvas.clear();
-        
         // draw level
         level.draw(&mut canvas,&texture_map,&camera);
         
@@ -178,7 +178,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
         // draw self
         // calc time since last frame
 
-        //player.animation_data.as_mut().unwrap().update(time_since_last_frame);
+        player.animation_data.as_mut().unwrap().update(time_since_last_frame);
         player.draw(&mut canvas,&texture_map,&camera);
         
         // Draw self (player)

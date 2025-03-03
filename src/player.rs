@@ -23,7 +23,7 @@ impl Player{
             x : (SCREEN_WIDTH as i32)/2,
             y : (SCREEN_HEIGHT as i32)/2,
             color : (255,255,255),
-            size : 40,
+            size : 120,
             texture_data : None,
             animation_data : None
         }
@@ -32,8 +32,8 @@ impl Player{
     pub fn draw(&self,canvas : &mut Canvas<Window>, texture_map : &std::collections::HashMap<String,Texture>, camera : &Camera){ 
         match self.animation_data {
             Some(ref animation_data) => {
+                //println!("Drawing animation");
                 animation_data.draw(canvas,texture_map,self.x-camera.x,self.y-camera.y,self.size,self.size);
-                println!("Drawing animation");
             },
             None => match self.texture_data {
                 Some (ref texture_data) => {
