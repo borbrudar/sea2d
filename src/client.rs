@@ -177,12 +177,11 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
         for (_,other_player) in &mut other_players{
             if !other_player.animation_data.is_none(){
                 other_player.animation_data.as_mut().unwrap().update(time_since_last_frame);
+                //println!("debug: {:?}",&other_player.animation_data);
             }
             other_player.draw(&mut canvas,&texture_map,&camera);
         }
         // draw self
-        // calc time since last frame
-
         if !player.animation_data.is_none(){
             player.animation_data.as_mut().unwrap().update(time_since_last_frame);
         }
@@ -276,7 +275,9 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
                         if let Some(other_player) = other_players.get_mut(&animation.id) {
                             println!("Processed animation packet");
                             other_player.animation_data = Some(animation.animation_data.clone());
-                            other_player.animation_data.as_mut().unwrap().load_animation(animation.animation_data.path, 0, 0, 626/4, 313/2, 4, &texture_creator, &mut texture_map);
+                            println!("Received animation data {:?}", &other_player.animation_data);
+                            other_player.animation_data.as_mut().unwrap().load_animation(animation.animation_data.frames[0].path.clone(), 0, 0, 626/4, 313/2, 4, &texture_creator, &mut texture_map);
+                            println!("Received animation data2 {:?}", &other_player.animation_data);
                         }
                     },
                     None => ()

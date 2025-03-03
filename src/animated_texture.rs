@@ -5,7 +5,6 @@ use crate::texture_data::TextureData;
 
 #[derive(Clone,Debug,Serialize,Deserialize)]
 pub struct AnimatedTexture{
-    pub path : String,
     pub frames : Vec<TextureData>,
     pub current_frame : usize,
     pub frame_time : f64,
@@ -15,7 +14,6 @@ pub struct AnimatedTexture{
 impl<'a> AnimatedTexture{
     pub fn new(frame_time : f64) -> AnimatedTexture{
         AnimatedTexture{
-            path : String::new(),
             frames : Vec::new(),
             current_frame : 0,
             frame_time,
@@ -36,7 +34,10 @@ impl<'a> AnimatedTexture{
 
     pub fn draw(&self, canvas : &mut sdl2::render::Canvas<sdl2::video::Window>, texture_map : &std::collections::HashMap<String,sdl2::render::Texture>, x : i32, y : i32, w : u32, h : u32){
         //println!("Drawing frame: {:?}",self.frames);
-        self.frames[self.current_frame].draw(canvas,texture_map,x,y,w,h);
+        match self.frames[self.current_frame].draw(canvas,texture_map,x,y,w,h){
+            Ok(..) => (),//println!("ok"),
+            Err(..) => ()//println!("not ok")
+        }
     }
 
     pub fn load_animation(&mut self, path : String,
