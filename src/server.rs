@@ -71,7 +71,7 @@ fn handle_player_send(packet : PlayerPacket, player_id : u64, players : &mut Mut
                 }
             }
             return Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{player_id : player_id as u64,
-                 x : players[&player_id].x, y : players[&player_id].y}));
+                 x : players[&player_id].x as i32, y : players[&player_id].y}));
         },
         PlayerPacket::PlayerTextureDataPacket(PlayerTextureData{texture_data,id}) => {
             players.get_mut(&player_id).unwrap().texture_data = Some(texture_data);

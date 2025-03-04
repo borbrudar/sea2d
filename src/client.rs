@@ -18,7 +18,7 @@ use crate::camera::Camera;
 
 
 pub fn client(){
-    let mut client = TcpStream::connect(LOCAL).expect("Failed to connect");
+    let mut client = TcpStream::connect(PRIVATE).expect("Failed to connect");
     client.set_nonblocking(true).expect("Failed to initialize non-blocking client");
     
     let (tx,rx) = mspc::channel::<Packet>(); // send from game thread to connection thread
