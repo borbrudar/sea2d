@@ -4,6 +4,7 @@ use crate::player::Player;
 use crate::shared::*;
 use crate::player_packets::*;
 
+use std::cmp::min;
 use std::io::{ErrorKind,Read,Write};
 use std::net::TcpStream;
 use std::sync::mpsc as mspc;
@@ -109,7 +110,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
     player.texture_data = Some(TextureData::new("resources/textures/test.png".to_string()));
     player.texture_data.as_mut().unwrap().load_texture(&texture_creator, &mut texture_map);
 
-    player.animation_data = Some(AnimatedTexture::new(1.0/1.));
+    player.animation_data = Some(AnimatedTexture::new(1.0/4.));
     player.animation_data.as_mut().unwrap().load_animation("resources/player_animation/woman.png".to_string(),0,0,626/4,313/2,4,
     &texture_creator,&mut texture_map);
                         
@@ -118,7 +119,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
     level.load_from_file("resources/levels/level1.png".to_string(),&texture_creator,&mut texture_map);
     let mut camera = Camera::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
 
-    let start_time = std::time::Instant::now();
+    let mut current_time = std::time::Instant::now();
     let time_step = 1.0/60.0;
     'running: loop {
         // event polling
@@ -164,11 +165,26 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
 
 
         // time handling
-        let elapsed_time = start_time.elapsed().as_secs_f64();
-        let mut time_since_last_frame = elapsed_time - time_step;
-        while time_since_last_frame >= time_step {
-            time_since_last_frame -= time_step;
+        let new_time = std::time::Instant::now();
+        let mut frame_time = new_time - current_time;
+        current_time = new_time;
+
+        // update
+        while frame_time > std::time::Duration::from_secs_f64(0.0){
+            let delta_time = f64::min(frame_time.as_secs_f64(), time_step);
+            
+            if !player.animation_data.is_none(){
+                player.animation_data.as_mut().unwrap().update(delta_time);
+            }
+            for (_,other_player) in &mut other_players{
+                if !other_player.animation_data.is_none(){
+                    other_player.animation_data.as_mut().unwrap().update(delta_time);
+                }
+            }
+
+            frame_time -= std::time::Duration::from_secs_f64(delta_time);
         }
+
         // drawing
         canvas.clear();
         // draw level
@@ -176,16 +192,9 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
         
         //draw other player
         for (_,other_player) in &mut other_players{
-            if !other_player.animation_data.is_none(){
-                other_player.animation_data.as_mut().unwrap().update(time_since_last_frame);
-                //println!("debug: {:?}",&other_player.animation_data);
-            }
             other_player.draw(&mut canvas,&texture_map,&camera);
         }
         // draw self
-        if !player.animation_data.is_none(){
-            player.animation_data.as_mut().unwrap().update(time_since_last_frame);
-        }
         player.draw(&mut canvas,&texture_map,&camera);
         
         // Draw self (player)
