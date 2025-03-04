@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use ::image::{Rgba, RgbaImage};
-use sdl2::{image, libc::IEXTEN, render::{Texture, TextureCreator}};
+use ::image::RgbaImage;
+use sdl2::render::{Texture, TextureCreator};
 
 use crate::{camera::Camera, texture_data::TextureData, tile::Tile};
 

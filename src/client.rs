@@ -4,7 +4,6 @@ use crate::player::Player;
 use crate::shared::*;
 use crate::player_packets::*;
 
-use std::cmp::min;
 use std::io::{ErrorKind,Read,Write};
 use std::net::TcpStream;
 use std::sync::mpsc as mspc;
@@ -17,8 +16,8 @@ use crate::level::Level;
 use crate::camera::Camera;
 
 
-pub fn client(){
-    let mut client = TcpStream::connect(PRIVATE).expect("Failed to connect");
+pub fn client(address : &str ) {
+    let mut client = TcpStream::connect(address).expect("Failed to connect");
     client.set_nonblocking(true).expect("Failed to initialize non-blocking client");
     
     let (tx,rx) = mspc::channel::<Packet>(); // send from game thread to connection thread

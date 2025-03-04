@@ -13,6 +13,7 @@ use crate::server::server;
 use crate::client::client;
 use std::env;
 use std::thread;
+use crate::shared::LOCAL;
 
 
 fn main() {
@@ -20,7 +21,9 @@ fn main() {
    
     if args.len() >= 2 && args[1] == "client"{ 
         println!("Running client on localhost:6000");
-        client();
+        if args.len() == 3{
+            client(&args[2]);
+        } else {client(LOCAL);}
     }else if args.len() >= 2 && args[1] == "server"{
         println!("Running server on localhost:6000");
         server();
@@ -31,7 +34,7 @@ fn main() {
             server();
         });
         let client = thread::spawn(|| {
-            client();
+            client(LOCAL);
         });
         client.join().unwrap();
     }   
