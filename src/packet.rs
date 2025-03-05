@@ -45,10 +45,10 @@ impl PacketInternal{
     #[must_use]
     pub fn try_deserialize<T: serde::de::DeserializeOwned + 'static>(&self) -> Option<T> {
         if self.type_id == get_type_id::<T>() {
-            println!("Type match");
+            //println!("Type match");
             bincode::deserialize(&self.data).map_or_else(|_| None, |data| Some(data))
         } else {
-            println!("Type mismatch");
+            //println!("Type mismatch");
             None
         }
     }

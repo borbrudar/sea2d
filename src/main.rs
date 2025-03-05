@@ -20,7 +20,6 @@ fn main() {
     let args = env::args().collect::<Vec<String>>();
    
     if args.len() >= 2 && args[1] == "client"{ 
-        println!("Running client on localhost:6000");
         if args.len() == 3{
             client(&args[2]);
         } else {client(LOCAL);}
