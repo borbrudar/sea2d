@@ -13,3 +13,5 @@ You are one of the scientists on a research trip to the depths of the ocean when
 It is your and your partner's job to navigate your way out of the malfunctioned vessel, escape dangers of the vast ocean and find a way back to civilization after being standed on a tropical island. 
 
 And perhaps even solve some ancient mysteries in the process...
+
+![Current state of the game](resources/screenshots/image.png)
