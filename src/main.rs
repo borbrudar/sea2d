@@ -9,6 +9,7 @@ mod tile;
 mod level;
 mod camera;
 mod animated_texture;
+mod tile_type;
 use crate::server::server;
 use crate::client::client;
 use std::env;

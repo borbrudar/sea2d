@@ -1,20 +1,22 @@
 use crate::{camera::Camera, texture_data::TextureData};
-
+use crate::tile_type::{self, TileType};
 
 pub struct Tile{
     pub x : i32,
     pub y : i32,
     pub size : u32,
     pub texture_data : Option<TextureData>,
+    pub tile_type : TileType,
 }
 
 impl Tile{
-    pub fn new(x : i32, y : i32, size : u32) -> Tile{
+    pub fn new(x : i32, y : i32, size : u32, tile_type : TileType) -> Tile{
         Tile{
             x,
             y,
             size,
-            texture_data : None
+            texture_data : None,
+            tile_type,
         }
     }
 
