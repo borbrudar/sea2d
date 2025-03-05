@@ -23,9 +23,10 @@ pub struct ClientID{
 
 fn get_type_id<Type: 'static>() -> u64 {
     let mut hasher = FnvHasher::default();
-    let type_id = TypeId::of::<Type>();
-    println!("Type id: {:?}",type_id);
-    type_id.hash(&mut hasher);
+    //let type_id = TypeId::of::<Type>();
+    let type_name = std::any::type_name::<Type>();
+    //println!("Type id: {:?}",type_id);
+    type_name.hash(&mut hasher);
     hasher.finish()
 }
 
