@@ -24,7 +24,6 @@ pub fn client(address : &str ) {
     let (tx2 , rx2) = mspc::channel::<PacketInternal>(); // send to game thread from connection thread
 
     thread::spawn(move || loop{
-        
         // read from server
         let mut size = vec![0;2];
         match client.read_exact(&mut size){
@@ -34,7 +33,7 @@ pub fn client(address : &str ) {
 
                 match client.read_exact(&mut buf){
                     Ok(_) => {
-                        let received: Vec<u8> = buf.into_iter().collect::<Vec<_>>();
+                        let received: Vec<u8> = buf;
                         let packet_int  = bincode::deserialize(&received);
                         match packet_int{
                             Ok(packet_int) =>
@@ -69,6 +68,40 @@ pub fn client(address : &str ) {
                 if send.len() > MAX_PACKET_SIZE {
                     panic!("Max packet size exceeded");
                 }
+
+                /*
+                let mut size = vec![0;2];
+                match client.read_exact(&mut size){
+                    Ok(_) => {
+                        let size = u16::from_le_bytes([size[0],size[1]]) as usize;
+                        let mut buf = vec![0;size];
+                        
+                        match client.read_exact(&mut buf){
+                            Ok(_) => {
+                                let received: Vec<u8> = buf.into_iter().collect::<Vec<_>>();
+                                let packet_int  = bincode::deserialize(&received);
+                                match packet_int{
+                                    Ok(packet_int) =>
+                                    tx2.send(packet_int).expect("Failed to send packet to game thread"),
+                                    Err(err) => println!("Failed to deserialize packet {:?}",err)
+                                }
+                            },
+                            Err(ref err) if err.kind() == ErrorKind::WouldBlock => (),
+                            Err(_) => {
+                                println!("Connection lost client2");
+                                break;
+                            }
+                        };
+                    },
+                    Err(ref err) if err.kind() == ErrorKind::WouldBlock => (),
+                    Err(_) => {
+                        println!("Connection lost client1");
+                        break;
+                    }
+                };
+                */
+
+
 
                 client.write_all(&send).expect("Writing to socket failed");
                 println!("message sent {:?}", msg);

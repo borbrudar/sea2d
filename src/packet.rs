@@ -1,11 +1,11 @@
+use fnv::FnvHasher;
 use serde_derive::{Deserialize, Serialize};
 use std::error::Error;
 
 use std::any::TypeId;
-use std::hash::{Hash, Hasher};
-
-use fnv::FnvHasher;
 use crate::player_packets::PlayerPacket;
+
+use std::hash::{Hash,Hasher};
 
 
 #[derive(Serialize,Deserialize,Debug,Clone)]
@@ -40,13 +40,14 @@ impl PacketInternal{
         let data = bincode::serialize(&data)?;
         Ok(Self{type_id,data})
     }
-
+    #[must_use]
     pub fn try_deserialize<T: serde::de::DeserializeOwned + 'static>(&self) -> Option<T> {
-        let check_type = get_type_id::<T>();
-        if self.type_id != check_type {
-            return None;
+        if self.type_id == get_type_id::<T>() {
+            println!("Type match");
+            bincode::deserialize(&self.data).map_or_else(|_| None, |data| Some(data))
+        } else {
+            println!("Type mismatch");
+            None
         }
-        bincode::deserialize(&self.data).map_or_else(|_| None, |data| Some(data))
     }
 }
-

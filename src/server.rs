@@ -139,7 +139,10 @@ pub fn server(){
                 let mut size = vec![0; 2];
                 match socket.read_exact(&mut size) {
                     Ok(_) => {
+                        //println!("size gotten: {:?}", size);
                         let size = u16::from_le_bytes([size[0],size[1]]) as usize;
+                        println!("size gotten : {:?}", size);
+
                         let mut buf = vec![0;size];
 
                         match socket.read_exact(&mut buf) {
@@ -156,7 +159,7 @@ pub fn server(){
                                                 let sender_uuid = ip_to_uuid.lock().unwrap().get(&addr).unwrap().clone();
                                                 let mut players_lock = players_thr.lock().unwrap();
                                                 let packet = handle_player_send(packet, sender_uuid, &mut players_lock);
-                                                tx.send(packet).expect("Failed to send movement packet");
+                                                tx.send(packet).expect("Failed to send player packet");
                                             }
                                             _ => println!("Unknown packet"),
                                         }
@@ -215,6 +218,7 @@ pub fn server(){
                     if send.len() > MAX_PACKET_SIZE {
                         panic!("Max packet size exceeded");
                     }
+                   // println!("sending data : {:?}", &send);
                     client.1.write_all(&send).map(|_| client).ok()
                 },
                 None => None,
