@@ -181,6 +181,9 @@ pub fn server(){
                     Err(ref err) if err.kind() == ErrorKind::WouldBlock => (),
                     Err(_) => {
                         println!("Closing connection with: {}", addr);
+                        // send packet that signals client disconnect
+                        let sender_uuid = ip_to_uuid.lock().unwrap().get(&addr).unwrap().clone();
+                        tx.send(Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect{id : sender_uuid as u64}))).expect("Failed to send disconnect packet");
                         break;
                     }
                 }
