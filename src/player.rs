@@ -72,24 +72,28 @@ impl Player{
                     sdl2::keyboard::Keycode::Up => {
                         camera.y -= self.speed;
                         self.y -= self.speed;
+                        self.hitbox.y -= self.speed;
                         let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Down}));
                         tx.send(send).unwrap();
                     },
                     sdl2::keyboard::Keycode::Down => {
                         camera.y += self.speed;
                         self.y += self.speed;
+                        self.hitbox.y += self.speed;
                         let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Up}));
                         tx.send(send).unwrap();
                     },
                     sdl2::keyboard::Keycode::Left => {
                         camera.x -= self.speed;
                         self.x -= self.speed;
+                        self.hitbox.x -= self.speed;
                         let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Left}));
                         tx.send(send).unwrap();
                     },
                     sdl2::keyboard::Keycode::Right => {
                         camera.x += self.speed;
                         self.x += self.speed;
+                        self.hitbox.x += self.speed;
                         let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Right}));
                         tx.send(send).unwrap();
                     },
@@ -100,6 +104,8 @@ impl Player{
         }
         if self.check_collision(level) {
             self.colliding = true;
+        }else {
+            self.colliding = false;
         }
     }
     fn check_collision(&self, level : &Level) -> bool{

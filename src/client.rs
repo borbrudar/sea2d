@@ -189,7 +189,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
         // draw self
         player.draw(&mut canvas,&texture_map,&camera);
         let player_hitbox_color = if player.colliding {Color::RED} else {Color::GREEN};
-        player.hitbox.draw(&mut canvas,player_hitbox_color,&Camera::new(0,0,0,0));
+        player.hitbox.draw(&mut canvas,player_hitbox_color,&camera);
         
         // Draw self (player)
         // clear screen

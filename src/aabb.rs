@@ -27,10 +27,10 @@ impl AABB{
     }
 
     pub fn intersects(&self, other : &AABB) -> bool{
-        self.x < other.x + other.w as i32 &&
-        self.x + self.w as i32 > other.x &&
-        self.y < other.y + other.h as i32 &&
-        self.y + self.h as i32 > other.y
+        self.x < other.x + (other.w as i32) &&
+        self.x + (self.w as i32) > other.x &&
+        self.y < other.y + (other.h as i32) &&
+        self.y + (self.h as i32) > other.y
     }
     pub fn contains(&self, other : &AABB) -> bool{
         self.x < other.x &&
