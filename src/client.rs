@@ -138,34 +138,11 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
     'running: loop {
         // event polling
         for event in event_pump.poll_iter() {
+            player.on_event(event.clone(), &tx, &level, &mut camera);
             match event {
                 sdl2::event::Event::Quit {..} | 
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::ESCAPE),..} => {
                     break 'running
-                },
-                sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::UP),..} => {
-                    camera.move_camera(0, -15);
-                    player.y -= 15;
-                    let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Down}));
-                    tx.send(send).unwrap();
-                },
-                sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::DOWN),..} => {
-                    camera.move_camera(0, 15);
-                    player.y += 15;
-                    let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Up}));
-                    tx.send(send).unwrap();
-                },
-                sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::LEFT),..} => {
-                    camera.move_camera(-15, 0);
-                    player.x -= 15;
-                    let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Left}));
-                    tx.send(send).unwrap();
-                },
-                sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::RIGHT),..} => {
-                    player.x += 15;
-                    camera.move_camera(15, 0);
-                    let send = Packet::PlayerPacket(PlayerPacket::PlayerMovementPacket(PlayerMovement{mov : Movement::Right}));
-                    tx.send(send).unwrap();
                 },
                 sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::C), .. } => {
                     player.texture_data = Some(TextureData::new("resources/textures/lmao.png".to_string()));
@@ -211,7 +188,8 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
         }
         // draw self
         player.draw(&mut canvas,&texture_map,&camera);
-        player.hitbox.draw(&mut canvas,Color::RED,&Camera::new(0,0,0,0));
+        let player_hitbox_color = if player.colliding {Color::RED} else {Color::GREEN};
+        player.hitbox.draw(&mut canvas,player_hitbox_color,&Camera::new(0,0,0,0));
         
         // Draw self (player)
         // clear screen
