@@ -9,6 +9,7 @@ use std::net::TcpStream;
 use std::sync::mpsc as mspc;
 use std::thread;
 use sdl2::image::{self};
+use sdl2::pixels::Color;
 use std::collections::HashMap;
 use crate::texture_data::TextureData;
 use sdl2::render::Texture;
@@ -202,6 +203,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
         canvas.clear();
         // draw level
         level.draw(&mut canvas,&texture_map,&camera);
+        level.draw_hitboxes(&mut canvas,&camera);
         
         //draw other player
         for (_,other_player) in &mut other_players{
@@ -209,6 +211,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
         }
         // draw self
         player.draw(&mut canvas,&texture_map,&camera);
+        player.hitbox.draw(&mut canvas,Color::RED,&Camera::new(0,0,0,0));
         
         // Draw self (player)
         // clear screen

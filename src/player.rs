@@ -1,3 +1,4 @@
+use crate::aabb::AABB;
 use crate::animated_texture::AnimatedTexture;
 use crate::shared::{SCREEN_HEIGHT,SCREEN_WIDTH};
 use sdl2::render::Canvas;
@@ -13,7 +14,8 @@ pub struct Player{
     pub color : (u8,u8,u8),
     size : u32,
     pub texture_data : Option<TextureData>,
-    pub animation_data : Option<AnimatedTexture>
+    pub animation_data : Option<AnimatedTexture>,
+    pub hitbox : AABB,
 }
 
 impl Player{
@@ -25,7 +27,8 @@ impl Player{
             color : (255,255,255),
             size : 120,
             texture_data : None,
-            animation_data : None
+            animation_data : None,
+            hitbox : AABB::new((SCREEN_WIDTH as i32)/2+40,(SCREEN_HEIGHT as i32)/2+80,40,40),
         }
     }
 

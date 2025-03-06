@@ -1,3 +1,5 @@
+use crate::aabb::AABB;
+
 pub struct TileTypeInfo {
     pub name: String,
     pub texture_name: String,

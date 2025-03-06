@@ -4,7 +4,7 @@ use image::imageops::FilterType::Lanczos3;
 use ::image::RgbaImage;
 use sdl2::render::{Texture, TextureCreator};
 
-use crate::{camera::Camera, texture_data::TextureData, tile::Tile, tile_type::{TileType, TileTypeInfo}};
+use crate::{aabb::AABB, camera::Camera, texture_data::TextureData, tile::Tile, tile_type::{TileType, TileTypeInfo}};
 
 pub struct Level{
     pub tiles : Vec<Vec<Tile>>,
@@ -52,32 +52,32 @@ impl<'a> Level{
                 //println!("Pixel: {:?}",pixel);
                 match pixel{
                     TileType::STONE_COLOR => {
-                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Grass));
+                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Grass, None));
                         layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/tile.png".to_string()));
-                        layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map);
+                        layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map, );
                     },
                     TileType::WATER_COLOR => {
-                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Water));
+                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Water, Some(AABB::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, tile_size as u32))));
                         layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/water.png".to_string()));
                         layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map);
                     },
                     TileType::GRASS_COLOR => {
-                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Grass));
+                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Grass, None));
                         layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/grass.png".to_string()));
                         layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map);
                     },
                     TileType::SAND_COLOR => {
-                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Sand));
+                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Sand, None));
                         layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/sand.jpg".to_string()));
                         layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map);
                     },
                     TileType::ROCK_COLOR => {
-                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Rock));
+                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Rock, Some(AABB::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, tile_size as u32))));
                         layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/rock.png".to_string()));
                         layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map);
                     },
                     TileType::TREE_COLOR => {
-                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Tree));
+                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Tree, Some(AABB::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, tile_size as u32))));
                         layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/tree.png".to_string()));
                         layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map);
                     },
@@ -94,6 +94,19 @@ impl<'a> Level{
         for layer in &self.tiles{
             for tile in layer{
                 tile.draw(canvas,texture_map,camera);
+            }
+        }
+    }
+
+    pub fn draw_hitboxes(&self,canvas : &mut sdl2::render::Canvas<sdl2::video::Window>, camera : &Camera){
+        for layer in &self.tiles{
+            for tile in layer{
+                match tile.bounding_box{
+                    Some(ref bounding_box) => {
+                        bounding_box.draw(canvas,sdl2::pixels::Color::RGB(255,0,0),camera);
+                    },
+                    None => ()
+                }
             }
         }
     }
