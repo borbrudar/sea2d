@@ -36,7 +36,7 @@ impl TileType {
     pub const SAND_COLOR: (u8, u8, u8) = (255, 255, 0);
     pub const ROCK_COLOR: (u8, u8, u8) = (128, 128, 128);
     pub const TREE_COLOR: (u8, u8, u8) = (34, 139, 34);
-    pub const STONE_COLOR : (u8,u8,u8) = (0,0,0);
+    pub const STONE_COLOR : (u8,u8,u8) = (192,192,192);
     // Other colors for each type can be defined here...
 
     pub fn get_color(&self) -> (u8, u8, u8) {

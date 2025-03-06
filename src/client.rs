@@ -129,7 +129,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
                         
 
     let mut level = Level::new();
-    level.load_from_file("resources/levels/level1.png".to_string(),&texture_creator,&mut texture_map);
+    level.load_from_file("resources/levels/level1_1.png".to_string(),&texture_creator,&mut texture_map);
     let mut camera = Camera::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
 
     let mut current_time = std::time::Instant::now();
