@@ -66,31 +66,38 @@ impl Player{
     }
 
     pub fn on_event(&mut self, event : sdl2::event::Event, tx : &std::sync::mpsc::Sender<Packet>, level : &Level, camera : &mut Camera){
+        let mut updated = false;
         match event {
             sdl2::event::Event::KeyDown { keycode: Some(keycode), .. } => {
                 match keycode {
                     sdl2::keyboard::Keycode::Up => {
                         self.y -= self.speed;
                         self.hitbox.y -= self.speed;
+                        updated = true;
                     },
                     sdl2::keyboard::Keycode::Down => {
                         self.y += self.speed;
                         self.hitbox.y += self.speed;
+                        updated = true;
                     },
                     sdl2::keyboard::Keycode::Left => {
                         self.x -= self.speed;
                         self.hitbox.x -= self.speed;
+                        updated = true;
                     },
                     sdl2::keyboard::Keycode::Right => {
                         self.x += self.speed;
                         self.hitbox.x += self.speed;
+                        updated = true;
                     },
                     _ => ()
                 }
             },
             _ => ()
         }
-
+        if !updated {
+            return;
+        }
         self.resolve_collision(level);
         let send = Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{x : self.x, y : self.y, player_id: self.id}));
         tx.send(send).unwrap();
