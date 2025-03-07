@@ -54,24 +54,10 @@ fn handle_player_receive(packet : Packet) -> Option<Vec<u8>>{
 
 fn handle_player_send(packet : PlayerPacket, player_id : u64, players : &mut MutexGuard<'_,HashMap<u64,Player>>) -> Packet {
     match packet {
-        PlayerPacket::PlayerMovementPacket(PlayerMovement{mov }) => {
-            println!("Movement: {:?}", mov);     
-            match mov {
-                Movement::Up => {
-                    players.get_mut(&player_id).unwrap().y += 15;
-                }
-                Movement::Down => {
-                    players.get_mut(&player_id).unwrap().y -= 15;
-                }
-                Movement::Left => {
-                    players.get_mut(&player_id).unwrap().x -= 15;
-                }
-                Movement::Right => {
-                    players.get_mut(&player_id).unwrap().x += 15;
-                }
-            }
-            return Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{player_id : player_id as u64,
-                 x : players[&player_id].x as i32, y : players[&player_id].y}));
+        PlayerPacket::PlayerPositionPacket(PlayerPosition{x,y, player_id}) => {
+            players.get_mut(&player_id).unwrap().x = x as i32;
+            players.get_mut(&player_id).unwrap().y = y as i32;
+            return Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{player_id : player_id as u64, x : x, y : y}));
         },
         PlayerPacket::PlayerTextureDataPacket(PlayerTextureData{texture_data,id}) => {
             players.get_mut(&player_id).unwrap().texture_data = Some(texture_data);

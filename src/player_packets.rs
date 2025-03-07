@@ -5,7 +5,6 @@ use crate::{animated_texture::AnimatedTexture, texture_data::TextureData};
 #[derive(Serialize,Deserialize,Debug,Clone)]
 pub enum PlayerPacket{
     PlayerWelcomePacket(PlayerWelcome),
-    PlayerMovementPacket(PlayerMovement),
     PlayerPositionPacket(PlayerPosition),
     PlayerTextureDataPacket(PlayerTextureData),
     PlayerDisconnectPacket(PlayerDisconnect),
@@ -36,11 +35,6 @@ pub struct PlayerWelcome {
     pub texture_data : Option<TextureData>,
 }
 
-
-#[derive(Serialize,Deserialize,Debug,Clone)]
-pub struct PlayerMovement{
-    pub mov : Movement
-}
 
 #[derive(Serialize,Deserialize,Debug,Clone)]
 pub struct PlayerTextureData{
