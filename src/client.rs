@@ -16,6 +16,7 @@ use sdl2::render::Texture;
 use crate::level::Level;
 use crate::camera::Camera;
 use crate::hud::Hud;
+use crate::animated_texture::AnimationType;
 
 
 pub fn client(address : &str ) {
@@ -125,14 +126,17 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
     player.texture_data = Some(TextureData::new("resources/textures/test.png".to_string()));
     player.texture_data.as_mut().unwrap().load_texture(&texture_creator, &mut texture_map);
 
-    player.animation_data = Some(AnimatedTexture::new(1.0/4.));
-    player.animation_data.as_mut().unwrap().load_animation("resources/player_animation/woman.png".to_string(),0,0,626/4,313/2,4,
+    player.animation_data = Some(AnimatedTexture::new(1.0/6.));
+    player.animation_data.as_mut().unwrap().load_animation("resources/player_animation/player.png".to_string(),0,0,16,16,3, 
     &texture_creator,&mut texture_map);
-                        
+    player.animation_data.as_mut().unwrap().animation_type = AnimationType::PingPong;                    
+
 
     let mut level = Level::new();
     level.load_from_file("resources/levels/level1_1.png".to_string(),&texture_creator,&mut texture_map);
     let mut camera = Camera::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
+    camera.x = player.x - SCREEN_WIDTH as i32/2;
+    camera.y = player.y - SCREEN_HEIGHT as i32/2;
 
     // hud
     let hud = Hud::new();

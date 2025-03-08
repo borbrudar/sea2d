@@ -1,1 +1,5 @@
 /target
+/resoures/*.aseprite
+/resoures/levels/*.aseprite
+/resources/player_animation/*.aseprite
+/resources/textures/*.aseprite

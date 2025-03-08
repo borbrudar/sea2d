@@ -4,11 +4,19 @@ use crate::texture_data::TextureData;
 
 
 #[derive(Clone,Debug,Serialize,Deserialize)]
+pub enum AnimationType{
+    Loop,
+    PingPong,
+}
+
+#[derive(Clone,Debug,Serialize,Deserialize)]
 pub struct AnimatedTexture{
     pub frames : Vec<TextureData>,
-    pub current_frame : usize,
+    pub current_frame : i32,
+    pub previous_frame : i32,
     pub frame_time : f64,
     pub current_time : f64,
+    pub animation_type : AnimationType,
 }
 
 impl<'a> AnimatedTexture{
@@ -16,8 +24,10 @@ impl<'a> AnimatedTexture{
         AnimatedTexture{
             frames : Vec::new(),
             current_frame : 0,
+            previous_frame : 0,
             frame_time,
             current_time : 0.0,
+            animation_type : AnimationType::Loop,
         }
     }
 
@@ -25,15 +35,29 @@ impl<'a> AnimatedTexture{
         self.current_time += dt;
         if self.current_time >= self.frame_time{
             self.current_time = 0.0;
-            self.current_frame += 1;
-            if self.current_frame >= self.frames.len(){
-                self.current_frame = 0;
+            let dir = self.current_frame as i32 - self.previous_frame as i32;
+            self.previous_frame = self.current_frame;
+            if dir != 0{
+                self.current_frame += dir;
+            }else{
+                self.current_frame += 1;
             }
+            if self.current_frame as usize >= self.frames.len() || self.current_frame < 0{
+                match self.animation_type {
+                    AnimationType::Loop => {
+                        self.current_frame = 0;
+                    },
+                    AnimationType::PingPong => {
+                        self.current_frame = self.frames.len() as i32 - 2;
+                    }
+                }
+            }
+
         }
     }
 
     pub fn draw(&self, canvas : &mut sdl2::render::Canvas<sdl2::video::Window>, texture_map : &std::collections::HashMap<String,sdl2::render::Texture>, x : i32, y : i32, w : u32, h : u32){
-        self.frames[self.current_frame].draw(canvas,texture_map,x,y,w,h).unwrap();
+        self.frames[self.current_frame as usize].draw(canvas,texture_map,x,y,w,h).unwrap();
     }
 
     pub fn load_animation(&mut self, path : String,

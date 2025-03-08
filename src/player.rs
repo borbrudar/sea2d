@@ -31,10 +31,10 @@ impl Player{
             x : (SCREEN_WIDTH as i32)/2,
             y : (SCREEN_HEIGHT as i32)/2,
             color : (255,255,255),
-            size : 120,
+            size : 50,
             texture_data : None,
             animation_data : None,
-            hitbox : AABB::new((SCREEN_WIDTH as i32)/2+40,(SCREEN_HEIGHT as i32)/2+80,40,40),
+            hitbox : AABB::new((SCREEN_WIDTH as i32)/2 + 10,(SCREEN_HEIGHT as i32)/2+10,30,30),
             colliding : false,
             speed : 15,
         }
