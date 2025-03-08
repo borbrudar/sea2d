@@ -136,7 +136,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
 
     // hud
     let hud = Hud::new();
-
+    let mut draw_hitboxes = false;
 
     let mut current_time = std::time::Instant::now();
     let time_step = 1.0/60.0;
@@ -154,6 +154,9 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
                     player.texture_data.as_mut().unwrap().load_texture(&texture_creator, &mut texture_map);
                     let send = Packet::PlayerPacket(PlayerPacket::PlayerTextureDataPacket(PlayerTextureData{texture_data : player.texture_data.clone().unwrap(), id : player.id}));
                     tx.send(send).unwrap();
+                }
+                sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::H), .. } => {
+                    draw_hitboxes = !draw_hitboxes;
                 }
                 _ => {}
             }
@@ -185,8 +188,9 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
         canvas.clear();
         // draw level
         level.draw(&mut canvas,&texture_map,&camera);
-        level.draw_hitboxes(&mut canvas,&camera);
-        
+        if draw_hitboxes {
+            level.draw_hitboxes(&mut canvas,&camera);
+        }
         //draw other player
         for (_,other_player) in &mut other_players{
             other_player.draw(&mut canvas,&texture_map,&camera);
@@ -194,7 +198,10 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
         // draw self
         player.draw(&mut canvas,&texture_map,&camera);
         let player_hitbox_color = if player.colliding {Color::RED} else {Color::GREEN};
-        player.hitbox.draw(&mut canvas,player_hitbox_color,&camera);
+        
+        if draw_hitboxes{
+            player.hitbox.draw(&mut canvas,player_hitbox_color,&camera);
+        }
         
         hud.draw(&mut canvas);
 

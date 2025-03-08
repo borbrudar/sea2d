@@ -68,7 +68,7 @@ impl<'a> Level{
                     },
                     TileType::SAND_COLOR => {
                         layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Sand, None));
-                        layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/sand.jpg".to_string()));
+                        layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/sand.png".to_string()));
                         layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map);
                     },
                     TileType::ROCK_COLOR => {
