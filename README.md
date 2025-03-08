@@ -1,12 +1,6 @@
 # sea2d
 Project authors: Bor Brudar, Lara Velkavrh
 
-## General description:
-
-A 2D multiplayer (2-player) computer game:
-- level based game with puzzle solving,
-- pixel art aesthetics.
-
 ## Running instructions 
 
 The program can be run as either the server, the client, or both at the same time by using `cargo r server`, `cargo r client` or just 
@@ -14,6 +8,13 @@ The program can be run as either the server, the client, or both at the same tim
 separated by a colon, e.g. `cargo r client 127.0.0.1:6000`. By running on localhost the default port is 6000. Remember to have devel versions
 of sdl2 and sdl2_image installed on your system or you won't be able to compile the program. Arch users: `sudo pacman -S sdl2-compat sdl2_image`,
 everyone else figure it out :P
+
+## General description:
+
+A 2D multiplayer (2-player) computer game:
+- level based game with puzzle solving,
+- pixel art aesthetics.
+
 
 
 ### Storyline:
