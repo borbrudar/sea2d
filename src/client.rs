@@ -1,3 +1,4 @@
+use crate::networking::{try_read_tcp, NetworkResult};
 use crate::packet::{Packet, PacketInternal};
 use crate::shared::*;
 use std::io::{ErrorKind,Read,Write};
@@ -16,32 +17,18 @@ pub fn client(address : &str ) {
 
     thread::spawn(move || loop{
         // read from server
-        let mut size = vec![0;2];
-        match client.read_exact(&mut size){
-            Ok(_) => {
-                let size = u16::from_le_bytes([size[0],size[1]]) as usize;
-                let mut buf = vec![0;size];
-
-                match client.read_exact(&mut buf){
-                    Ok(_) => {
-                        let received: Vec<u8> = buf;
-                        let packet_int  = bincode::deserialize(&received);
-                        match packet_int{
-                            Ok(packet_int) =>
-                             tx2.send(packet_int).expect("Failed to send packet to game thread"),
-                            Err(err) => println!("Failed to deserialize packet {:?}",err)
-                        }
-                    },
-                    Err(ref err) if err.kind() == ErrorKind::WouldBlock => (),
-                    Err(_) => {
-                        println!("Connection lost client2");
-                        break;
-                    }
-                };
+        match try_read_tcp(&mut client){
+            NetworkResult::Ok(buf) => {
+                let packet_int  = bincode::deserialize(&buf);
+                match packet_int{
+                    Ok(packet_int) =>
+                     tx2.send(packet_int).expect("Failed to send packet to game thread"),
+                    Err(err) => println!("Failed to deserialize packet {:?}",err)
+                }
             },
-            Err(ref err) if err.kind() == ErrorKind::WouldBlock => (),
-            Err(_) => {
-                println!("Connection lost client1");
+            NetworkResult::WouldBlock => (),
+            NetworkResult::ConnectionLost => {
+                println!("Connection lost client");
                 break;
             }
         };

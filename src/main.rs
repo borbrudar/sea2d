@@ -14,6 +14,7 @@ mod aabb;
 mod hud;
 mod button;
 mod game;
+mod networking;
 use crate::server::server;
 use crate::client::client;
 use std::env;

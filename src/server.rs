@@ -1,3 +1,4 @@
+use crate::networking::{try_read_tcp, NetworkResult};
 use crate::shared::{LOCAL, MAX_PACKET_SIZE};
 use std::io::{ErrorKind,Read,Write};
 use std::net::{TcpListener, TcpStream};
@@ -114,50 +115,27 @@ pub fn server(){
             
             // read from the socket, new thread for each client
             thread::spawn(move || loop {
-                let mut size = vec![0; 2];
-                match socket.read_exact(&mut size) {
-                    Ok(_) => {
-                        //println!("size gotten: {:?}", size);
-                        let size = u16::from_le_bytes([size[0],size[1]]) as usize;
-                        println!("size gotten : {:?}", size);
-
-                        let mut buf = vec![0;size];
-
-                        match socket.read_exact(&mut buf) {
-                            Ok(_) => {
-                                //println!("Received a packet");
-                                //println!("{:?}",buf);
-                                let raw = buf;
-                                let packet_int = bincode::deserialize::<PacketInternal>(&raw);
-        
-                                match packet_int {
-                                    Ok(packet_int) => {
-                                        match packet_int.try_deserialize() {
-                                            Some(Packet::PlayerPacket(packet)) => {
-                                                let sender_uuid = ip_to_uuid.lock().unwrap().get(&addr).unwrap().clone();
-                                                let mut players_lock = players_thr.lock().unwrap();
-                                                let packet = handle_player_send(packet, sender_uuid, &mut players_lock);
-                                                tx.send(packet).expect("Failed to send player packet");
-                                            }
-                                            _ => println!("Unknown packet"),
-                                        }
-                                    },
-                                    Err(err) => 
-                                    println!("Failed to deserialize packet on server: {:?}", err),
+                match try_read_tcp(&mut socket){
+                    NetworkResult::Ok(buf) => {
+                        let packet_int  = bincode::deserialize::<PacketInternal>(&buf);
+                        match packet_int{
+                            Ok(packet_int) => {
+                                match packet_int.try_deserialize() {
+                                    Some(Packet::PlayerPacket(packet)) => {
+                                        let sender_uuid = ip_to_uuid.lock().unwrap().get(&addr).unwrap().clone();
+                                        let mut players_lock = players_thr.lock().unwrap();
+                                        let packet = handle_player_send(packet, sender_uuid, &mut players_lock);
+                                        tx.send(packet).expect("Failed to send player packet");
+                                    }
+                                    _ => println!("Unknown packet"),
                                 }
-                            }
-                            Err(ref err) if err.kind() == ErrorKind::WouldBlock => (),
-                            Err(_) => {
-                                println!("Closing connection with: {}", addr);
-                                // send packet that signals client disconnect
-                                let sender_uuid = ip_to_uuid.lock().unwrap().get(&addr).unwrap().clone();
-                                tx.send(Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect{id : sender_uuid as u64}))).expect("Failed to send disconnect packet");
-                                break;
-                            }
+                            },
+                            Err(err) => 
+                            println!("Failed to deserialize packet on server: {:?}", err),
                         }
-                    }
-                    Err(ref err) if err.kind() == ErrorKind::WouldBlock => (),
-                    Err(_) => {
+                    },
+                    NetworkResult::WouldBlock => (),
+                    NetworkResult::ConnectionLost => {
                         println!("Closing connection with: {}", addr);
                         // send packet that signals client disconnect
                         let sender_uuid = ip_to_uuid.lock().unwrap().get(&addr).unwrap().clone();
@@ -165,7 +143,6 @@ pub fn server(){
                         break;
                     }
                 }
-
                 
             });
         }
