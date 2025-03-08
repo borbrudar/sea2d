@@ -21,43 +21,35 @@ fn new_client_id(set : &HashSet<u64> ) -> u64 {
     random_u64
 }
 
-fn handle_player_receive(packet : Packet) -> Option<Vec<u8>>{
+fn serialize_player_packet<T : 'static>(inner: T) -> Option<Vec<u8>>
+where
+    T: serde::Serialize,
+{
+    let packet_int = PacketInternal::new(inner).unwrap();
+    Some(bincode::serialize(&packet_int).unwrap())
+}
+
+fn handle_player_receive(packet: Packet) -> Option<Vec<u8>> {
     match packet {
-        Packet::PlayerPacket(in2) => {
-            match in2 {   
-                PlayerPacket::PlayerPositionPacket(inner) => {
-                    let packet_int = PacketInternal::new(inner.clone()).unwrap();
-                    return Some(bincode::serialize(&packet_int).unwrap());
-                }
-                PlayerPacket::PlayerWelcomePacket(inner) => {
-                    let packet_int = PacketInternal::new(inner.clone()).unwrap();
-                    return Some(bincode::serialize(&packet_int).unwrap());
-                }
-                PlayerPacket::PlayerTextureDataPacket(inner) => {
-                    let packet_int = PacketInternal::new(inner.clone()).unwrap();
-                    return Some(bincode::serialize(&packet_int).unwrap());
-                }
-                PlayerPacket::PlayerDisconnectPacket(inner) => {
-                    let packet_int = PacketInternal::new(inner.clone()).unwrap();
-                    return Some(bincode::serialize(&packet_int).unwrap());
-                }
-                PlayerPacket::PlayerAnimationPacket(inner) => {
-                    let packet_int = PacketInternal::new(inner.clone()).unwrap();
-                    return Some(bincode::serialize(&packet_int).unwrap());
-                }
-                _ => panic!("Wtf you doing bro")
-            }
-        }
-        _ => panic!("Wtf are you sending")
+        Packet::PlayerPacket(player_packet) => match player_packet {
+            PlayerPacket::PlayerPositionPacket(inner) => serialize_player_packet(inner),
+            PlayerPacket::PlayerWelcomePacket(inner) => serialize_player_packet(inner),
+            PlayerPacket::PlayerTextureDataPacket(inner) => serialize_player_packet(inner),
+            PlayerPacket::PlayerDisconnectPacket(inner) => serialize_player_packet(inner),
+            PlayerPacket::PlayerAnimationPacket(inner) => serialize_player_packet(inner),
+            _ => panic!("Unexpected player packet type"),
+        },
+        _ => panic!("Unexpected packet type"),
     }
 }
+
 
 fn handle_player_send(packet : PlayerPacket, player_id : u64, players : &mut MutexGuard<'_,HashMap<u64,Player>>) -> Packet {
     match packet {
         PlayerPacket::PlayerPositionPacket(PlayerPosition{x,y, player_id}) => {
             players.get_mut(&player_id).unwrap().x = x as i32;
             players.get_mut(&player_id).unwrap().y = y as i32;
-            return Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{player_id : player_id as u64, x : x, y : y}));
+            return Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{player_id : player_id as u64, x, y}));
         },
         PlayerPacket::PlayerTextureDataPacket(PlayerTextureData{texture_data,id}) => {
             players.get_mut(&player_id).unwrap().texture_data = Some(texture_data);
