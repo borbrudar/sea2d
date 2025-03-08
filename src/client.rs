@@ -298,7 +298,7 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
                             println!("Processed animation packet");
                             other_player.animation_data = Some(animation.animation_data.clone());
                             println!("Received animation data {:?}", &other_player.animation_data);
-                            other_player.animation_data.as_mut().unwrap().load_animation(animation.animation_data.frames[0].path.clone(), 0, 0, 626/4, 313/2, 4, &texture_creator, &mut texture_map);
+                            other_player.animation_data.as_mut().unwrap().load_animation(animation.animation_data.frames[0].path.clone(), 0, 0, 16, 16, 3, &texture_creator, &mut texture_map);
                             println!("Received animation data2 {:?}", &other_player.animation_data);
                         }
                     },
