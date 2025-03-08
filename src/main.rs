@@ -13,6 +13,7 @@ mod tile_type;
 mod aabb;
 mod hud;
 mod button;
+mod game;
 use crate::server::server;
 use crate::client::client;
 use std::env;
