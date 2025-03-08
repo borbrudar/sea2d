@@ -11,6 +11,8 @@ mod camera;
 mod animated_texture;
 mod tile_type;
 mod aabb;
+mod hud;
+mod button;
 use crate::server::server;
 use crate::client::client;
 use std::env;

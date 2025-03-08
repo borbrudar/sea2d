@@ -15,6 +15,7 @@ use crate::texture_data::TextureData;
 use sdl2::render::Texture;
 use crate::level::Level;
 use crate::camera::Camera;
+use crate::hud::Hud;
 
 
 pub fn client(address : &str ) {
@@ -133,6 +134,10 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
     level.load_from_file("resources/levels/level1_1.png".to_string(),&texture_creator,&mut texture_map);
     let mut camera = Camera::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
 
+    // hud
+    let hud = Hud::new();
+
+
     let mut current_time = std::time::Instant::now();
     let time_step = 1.0/60.0;
     'running: loop {
@@ -191,6 +196,8 @@ fn game_loop(tx : mspc::Sender<Packet>, rx : mspc::Receiver<PacketInternal>) {
         let player_hitbox_color = if player.colliding {Color::RED} else {Color::GREEN};
         player.hitbox.draw(&mut canvas,player_hitbox_color,&camera);
         
+        hud.draw(&mut canvas);
+
         // Draw self (player)
         // clear screen
         canvas.set_draw_color(sdl2::pixels::Color::RGB(0,0,0));

@@ -8,7 +8,7 @@ use sdl2::video::Window;
 use crate::texture_data::TextureData;
 use sdl2::render::Texture;
 use crate::camera::Camera;
-use crate::player_packets::{Movement, PlayerPacket, PlayerPosition};
+use crate::player_packets::{PlayerPacket, PlayerPosition};
 
 
 pub struct Player{
