@@ -1,6 +1,6 @@
 use crate::networking::{prepend_size, serialize_and_send, try_read_tcp, NetworkResult};
-use crate::shared::{LOCAL, MAX_PACKET_SIZE};
-use std::io::{ErrorKind,Read,Write};
+use crate::shared::LOCAL;
+use std::io::Write;
 use std::net::{TcpListener, TcpStream};
 use std::sync::{mpsc as mspc, MutexGuard};
 use std::thread;
@@ -99,7 +99,7 @@ pub fn server(){
             
             
             let mut players_lock = players_loop.lock().unwrap();
-            tx.send(Packet::ClientIDPacket(ClientID{id : new_id})).expect("Failed to send player id packet");
+            tx.send(Packet::ClientIDPacket(ClientID{id : new_id})).expect("Failed to send client id packet");
             
             let uuid = *ip_to_uuid.lock().unwrap().get(&addr).unwrap();
             players_lock.insert(new_id, Player::new(uuid));
@@ -154,31 +154,41 @@ pub fn server(){
                 },
                 _ => ()
             }
-            clients = clients.into_iter().filter_map(|mut client| {                
-            println!("Sending message to client {:?}", &msg.clone());
-            
-            let mut send : Option<Vec<u8>>;
-            match msg.clone() {
-                Packet::PlayerPacket(packet) => {
-                    send = handle_player_receive(Packet::PlayerPacket(packet));
-                }
-                Packet::ClientIDPacket(packet) => {
-                    let packet_int = PacketInternal::new(packet.clone()).unwrap();
-                    send = Some(bincode::serialize(&packet_int).unwrap());
-                }
-            };
-            
-            match &mut send {
-                Some (send) => {
-                    prepend_size(send);
-                    println!("sending data : {:?}", &send);
-                    client.1.write_all(&send).map(|_| client).ok()
-                },
-                None => None,
+
+            for (_,mut client) in clients.iter_mut(){
+                serialize_and_send(&mut client, msg.clone());
             }
+            
+            
+            
+            /*
+            clients = clients.into_iter().filter_map(|mut client| {                
+                println!("Sending message to client {:?}", &msg.clone());
+                
+                let mut send : Option<Vec<u8>>;
+                match msg.clone() {
+                    Packet::PlayerPacket(packet) => {
+                        send = handle_player_receive(Packet::PlayerPacket(packet));
+                    }
+                    Packet::ClientIDPacket(packet) => {
+                        let packet_int = PacketInternal::new(packet.clone()).unwrap();
+                        send = Some(bincode::serialize(&packet_int).unwrap());
+                    }
+                };
+                
+                match &mut send {
+                    Some (send) => {
+                        prepend_size(send);
+                        println!("sending data : {:?}", &send);
+                        client.1.write_all(&send).map(|_| client).ok()
+                    },
+                    None => None,
+                }
             }).collect::<HashMap<u64,TcpStream>>();
+            */
         
-        }
+        
+    }
     }
 }
 

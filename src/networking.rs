@@ -2,6 +2,7 @@ use std::net::TcpStream;
 use std::io::{ErrorKind,Read,Write};
 
 use crate::packet::{Packet, PacketInternal};
+use crate::player_packets::PlayerPacket;
 use crate::shared::MAX_PACKET_SIZE;
 
 
@@ -40,7 +41,16 @@ pub fn prepend_size(buf : &mut Vec<u8>) {
 }
 
 pub fn serialize_and_send(stream : &mut TcpStream, packet : Packet) -> Option<()> {
-    let packet_int = PacketInternal::new(packet.clone()).unwrap();
+    let packet_int = match packet.clone(){
+        Packet::ClientIDPacket(inner) => PacketInternal::new(inner).unwrap(),
+        Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(inner)) => PacketInternal::new(inner).unwrap(),
+        Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(inner)) => PacketInternal::new(inner).unwrap(),
+        Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(inner)) => PacketInternal::new(inner).unwrap(),
+        Packet::PlayerPacket(PlayerPacket::PlayerTextureDataPacket(inner)) => PacketInternal::new(inner).unwrap(),
+        Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(inner)) => PacketInternal::new(inner).unwrap(),
+        _ => panic!("Unexpected packet type"),
+    };
+
     let mut send = bincode::serialize(&packet_int).unwrap();
     prepend_size(&mut send);
     println!("message sent {:?}", packet);

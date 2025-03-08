@@ -35,6 +35,7 @@ pub fn client(address : &str ) {
         
         // send to server
         match rx.try_recv(){
+            // not ok, types not preserved
             Ok(packet) => serialize_and_send(&mut client, packet).unwrap(),
             Err(mspc::TryRecvError::Empty) => (),
             Err(mspc::TryRecvError::Disconnected) => {
@@ -44,6 +45,7 @@ pub fn client(address : &str ) {
         }
     });
     
+    // run game in main thread
     let mut game = Game::new(tx,rx2);
     game.run();
     println!("Bye bye!");
