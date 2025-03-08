@@ -1,4 +1,4 @@
-use crate::networking::{try_read_tcp, NetworkResult};
+use crate::networking::{serialize_and_send, try_read_tcp, NetworkResult};
 use crate::packet::{Packet, PacketInternal};
 use crate::shared::*;
 use std::io::{ErrorKind,Read,Write};
@@ -35,20 +35,7 @@ pub fn client(address : &str ) {
         
         // send to server
         match rx.try_recv(){
-            Ok(msg) => {
-                let packet_int = PacketInternal::new(msg.clone()).unwrap();
-                let mut send = bincode::serialize(&packet_int).unwrap();
-                let size = (send.len() as u16).to_le_bytes();
-                send.insert(0, size[1]);
-                send.insert(0, size[0]);
-
-                if send.len() > MAX_PACKET_SIZE {
-                    panic!("Max packet size exceeded");
-                }
-
-                client.write_all(&send).expect("Writing to socket failed");
-                println!("message sent {:?}", msg);
-            },
+            Ok(packet) => serialize_and_send(&mut client, packet).unwrap(),
             Err(mspc::TryRecvError::Empty) => (),
             Err(mspc::TryRecvError::Disconnected) => {
                 println!("Connection lost client");

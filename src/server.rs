@@ -1,4 +1,4 @@
-use crate::networking::{try_read_tcp, NetworkResult};
+use crate::networking::{prepend_size, serialize_and_send, try_read_tcp, NetworkResult};
 use crate::shared::{LOCAL, MAX_PACKET_SIZE};
 use std::io::{ErrorKind,Read,Write};
 use std::net::{TcpListener, TcpStream};
@@ -154,7 +154,7 @@ pub fn server(){
                 },
                 _ => ()
             }
-            clients = clients.into_iter().filter_map(|mut client| {
+            clients = clients.into_iter().filter_map(|mut client| {                
             println!("Sending message to client {:?}", &msg.clone());
             
             let mut send : Option<Vec<u8>>;
@@ -170,13 +170,8 @@ pub fn server(){
             
             match &mut send {
                 Some (send) => {
-                    let size = (send.len() as u16).to_le_bytes();
-                    send.insert(0, size[1]);
-                    send.insert(0, size[0]);
-                    if send.len() > MAX_PACKET_SIZE {
-                        panic!("Max packet size exceeded");
-                    }
-                   // println!("sending data : {:?}", &send);
+                    prepend_size(send);
+                    println!("sending data : {:?}", &send);
                     client.1.write_all(&send).map(|_| client).ok()
                 },
                 None => None,

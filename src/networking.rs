@@ -1,5 +1,8 @@
 use std::net::TcpStream;
-use std::io::{ErrorKind,Read};
+use std::io::{ErrorKind,Read,Write};
+
+use crate::packet::{Packet, PacketInternal};
+use crate::shared::MAX_PACKET_SIZE;
 
 
 pub enum NetworkResult{
@@ -25,4 +28,21 @@ pub fn try_read_tcp(stream : &mut TcpStream) -> NetworkResult {
         Err(ref err) if err.kind() == ErrorKind::WouldBlock => NetworkResult::WouldBlock,
         Err(_) => NetworkResult::ConnectionLost
     }
+}
+
+pub fn prepend_size(buf : &mut Vec<u8>) {
+    let size = (buf.len() as u16).to_le_bytes();
+    buf.insert(0,size[0]);
+    buf.insert(1,size[1]);
+    if buf.len() > MAX_PACKET_SIZE {
+        panic!("Packet too large");
+    }
+}
+
+pub fn serialize_and_send(stream : &mut TcpStream, packet : Packet) -> Option<()> {
+    let packet_int = PacketInternal::new(packet.clone()).unwrap();
+    let mut send = bincode::serialize(&packet_int).unwrap();
+    prepend_size(&mut send);
+    println!("message sent {:?}", packet);
+    stream.write_all(&send).ok()
 }
