@@ -1,6 +1,4 @@
-use sdl2::{event::Event, keyboard::Keycode};
-
-
+//use sdl2::{event::Event, keyboard::Keycode};
 
 
 pub struct Camera{
@@ -8,7 +6,7 @@ pub struct Camera{
     pub y : i32,
     pub width : u32,
     pub height : u32,
-    zoom : f32,
+    //zoom : f32,
 }
 
 impl Camera{
@@ -18,7 +16,7 @@ impl Camera{
             y,
             width,
             height,
-            zoom : 1.0
+            //zoom : 1.0
         }
     }
     /*

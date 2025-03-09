@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use image::imageops::FilterType::Lanczos3;
 use ::image::RgbaImage;
 use sdl2::render::{Texture, TextureCreator};
 
@@ -79,6 +78,11 @@ impl<'a> Level{
                     TileType::TREE_COLOR => {
                         layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Tree, Some(AABB::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, tile_size as u32))));
                         layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/tree.png".to_string()));
+                        layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map);
+                    },
+                    TileType::WALL_COLOR => {
+                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Wall, Some(AABB::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, tile_size as u32))));
+                        layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/wall.png".to_string()));
                         layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map);
                     },
                     _ => ()
