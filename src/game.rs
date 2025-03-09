@@ -154,9 +154,8 @@ impl Game{
 
         let mut level = Level::new();
         level.load_from_file("resources/levels/level1_1.png".to_string(),&texture_creator,&mut texture_map);
-        let mut camera = Camera::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
-        camera.x = player.x - SCREEN_WIDTH as i32/2;
-        camera.y = player.y - SCREEN_HEIGHT as i32/2;
+        let mut camera = Camera::new(player.x + player.size as i32/2 - SCREEN_WIDTH as i32/2,
+            player.y + player.size as i32/2 - SCREEN_HEIGHT as i32/2, SCREEN_WIDTH,SCREEN_HEIGHT);
 
         // hud
         let hud = Hud::new();
@@ -175,12 +174,6 @@ impl Game{
                     sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::ESCAPE),..} => {
                         break 'running
                     },
-                    sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::C), .. } => {
-                        player.texture_data = Some(TextureData::new("resources/textures/lmao.png".to_string()));
-                        player.texture_data.as_mut().unwrap().load_texture(&texture_creator, &mut texture_map);
-                        let send = Packet::PlayerPacket(PlayerPacket::PlayerTextureDataPacket(PlayerTextureData{texture_data : player.texture_data.clone().unwrap(), id : player.id}));
-                        self.packet_sender.send(send).unwrap();
-                    }
                     sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::H), .. } => {
                         draw_hitboxes = !draw_hitboxes;
                     }
@@ -235,8 +228,7 @@ impl Game{
             }
             
             hud.draw(&mut canvas);
-    
-            // Draw self (player)
+
             // clear screen
             canvas.set_draw_color(sdl2::pixels::Color::RGB(0,0,0));
             canvas.present();

@@ -16,7 +16,7 @@ pub struct Player{
     pub x : i32,
     pub y : i32,
     pub color : (u8,u8,u8),
-    size : u32,
+    pub size : u32,
     pub texture_data : Option<TextureData>,
     pub animation_data : Option<AnimatedTexture>,
     pub hitbox : AABB,
