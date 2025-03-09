@@ -1,4 +1,4 @@
-use crate::networking::{prepend_size, serialize_and_send, try_read_tcp, NetworkResult};
+use crate::networking::{deserialize_to_packet, prepend_size, serialize_and_send, try_read_tcp, NetworkResult};
 use crate::shared::LOCAL;
 use std::io::Write;
 use std::net::{TcpListener, TcpStream};
@@ -9,6 +9,8 @@ use crate::packet::{ClientID, Packet, PacketInternal};
 use crate::player::Player;
 use crate::player_packets::*;
 use rand::Rng;
+use std::any::TypeId;
+
 
 use std::sync::{Arc,Mutex};
 
@@ -22,27 +24,6 @@ fn new_client_id(set : &HashSet<u64> ) -> u64 {
     random_u64
 }
 
-fn serialize_player_packet<T : 'static>(inner: T) -> Option<Vec<u8>>
-where
-    T: serde::Serialize,
-{
-    let packet_int = PacketInternal::new(inner).unwrap();
-    Some(bincode::serialize(&packet_int).unwrap())
-}
-
-fn handle_player_receive(packet: Packet) -> Option<Vec<u8>> {
-    match packet {
-        Packet::PlayerPacket(player_packet) => match player_packet {
-            PlayerPacket::PlayerPositionPacket(inner) => serialize_player_packet(inner),
-            PlayerPacket::PlayerWelcomePacket(inner) => serialize_player_packet(inner),
-            PlayerPacket::PlayerTextureDataPacket(inner) => serialize_player_packet(inner),
-            PlayerPacket::PlayerDisconnectPacket(inner) => serialize_player_packet(inner),
-            PlayerPacket::PlayerAnimationPacket(inner) => serialize_player_packet(inner),
-            _ => panic!("Unexpected player packet type"),
-        },
-        _ => panic!("Unexpected packet type"),
-    }
-}
 
 
 fn handle_player_send(packet : PlayerPacket, player_id : u64, players : &mut MutexGuard<'_,HashMap<u64,Player>>) -> Packet {
@@ -117,21 +98,14 @@ pub fn server(){
             thread::spawn(move || loop {
                 match try_read_tcp(&mut socket){
                     NetworkResult::Ok(buf) => {
-                        let packet_int  = bincode::deserialize::<PacketInternal>(&buf);
-                        match packet_int{
-                            Ok(packet_int) => {
-                                match packet_int.try_deserialize() {
-                                    Some(Packet::PlayerPacket(packet)) => {
-                                        let sender_uuid = ip_to_uuid.lock().unwrap().get(&addr).unwrap().clone();
-                                        let mut players_lock = players_thr.lock().unwrap();
-                                        let packet = handle_player_send(packet, sender_uuid, &mut players_lock);
-                                        tx.send(packet).expect("Failed to send player packet");
-                                    }
-                                    _ => println!("Unknown packet"),
-                                }
+                        match deserialize_to_packet(buf){
+                            Some(Packet::PlayerPacket(packet)) => {
+                                let sender_uuid = ip_to_uuid.lock().unwrap().get(&addr).unwrap().clone();
+                                let mut players_lock = players_thr.lock().unwrap();
+                                let packet = handle_player_send(packet, sender_uuid, &mut players_lock); 
+                                tx.send(packet).expect("Failed to send player packet");
                             },
-                            Err(err) => 
-                            println!("Failed to deserialize packet on server: {:?}", err),
+                            _ => println!("Unknown packet"),
                         }
                     },
                     NetworkResult::WouldBlock => (),
@@ -157,38 +131,8 @@ pub fn server(){
 
             for (_,mut client) in clients.iter_mut(){
                 serialize_and_send(&mut client, msg.clone());
-            }
-            
-            
-            
-            /*
-            clients = clients.into_iter().filter_map(|mut client| {                
-                println!("Sending message to client {:?}", &msg.clone());
-                
-                let mut send : Option<Vec<u8>>;
-                match msg.clone() {
-                    Packet::PlayerPacket(packet) => {
-                        send = handle_player_receive(Packet::PlayerPacket(packet));
-                    }
-                    Packet::ClientIDPacket(packet) => {
-                        let packet_int = PacketInternal::new(packet.clone()).unwrap();
-                        send = Some(bincode::serialize(&packet_int).unwrap());
-                    }
-                };
-                
-                match &mut send {
-                    Some (send) => {
-                        prepend_size(send);
-                        println!("sending data : {:?}", &send);
-                        client.1.write_all(&send).map(|_| client).ok()
-                    },
-                    None => None,
-                }
-            }).collect::<HashMap<u64,TcpStream>>();
-            */
-        
-        
-    }
+            }        
+        }
     }
 }
 

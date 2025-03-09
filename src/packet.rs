@@ -25,7 +25,7 @@ fn get_type_id<Type: 'static>() -> u64 {
     let mut hasher = FnvHasher::default();
     //let type_id = TypeId::of::<Type>();
     let type_name = std::any::type_name::<Type>();
-    println!("Type name: {:?}",type_name);
+    //println!("Type name: {:?}",type_name);
     type_name.hash(&mut hasher);
     //type_id.hash(&mut hasher);
     hasher.finish()

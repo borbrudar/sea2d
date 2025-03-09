@@ -1,8 +1,9 @@
 use std::net::TcpStream;
 use std::io::{ErrorKind,Read,Write};
 
-use crate::packet::{Packet, PacketInternal};
-use crate::player_packets::PlayerPacket;
+use crate::packet::{ClientID, Packet, PacketInternal};
+use crate::player::Player;
+use crate::player_packets::{PlayerAnimation, PlayerDisconnect, PlayerPacket, PlayerPosition, PlayerTextureData, PlayerWelcome};
 use crate::shared::MAX_PACKET_SIZE;
 
 
@@ -41,6 +42,7 @@ pub fn prepend_size(buf : &mut Vec<u8>) {
 }
 
 pub fn serialize_and_send(stream : &mut TcpStream, packet : Packet) -> Option<()> {
+    //println!("serializing packet {:?}", packet);
     let packet_int = match packet.clone(){
         Packet::ClientIDPacket(inner) => PacketInternal::new(inner).unwrap(),
         Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(inner)) => PacketInternal::new(inner).unwrap(),
@@ -50,9 +52,51 @@ pub fn serialize_and_send(stream : &mut TcpStream, packet : Packet) -> Option<()
         Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(inner)) => PacketInternal::new(inner).unwrap(),
         _ => panic!("Unexpected packet type"),
     };
-
+    //println!("internal packet {:?}", packet_int);
     let mut send = bincode::serialize(&packet_int).unwrap();
     prepend_size(&mut send);
-    println!("message sent {:?}", packet);
+    //println!("message sent {:?}", packet);
+    //println!("data sent {:?}", send);
     stream.write_all(&send).ok()
+}
+
+pub fn deserialize_to_packet(buf : Vec<u8>) -> Option<Packet> {
+    let packet_int  = bincode::deserialize::<PacketInternal>(&buf);
+    //println!("Received packet: {:?}", packet_int);
+
+    match packet_int {
+        Ok(packet_int) =>{
+            match packet_int.try_deserialize::<ClientID>() {
+                Some(packet) => return Some(Packet::ClientIDPacket(packet)),
+                None => (),
+            };
+            
+            match packet_int.try_deserialize::<PlayerAnimation>() {
+                Some(packet) => return Some(Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(packet))),
+                None => (),
+            };
+
+            match packet_int.try_deserialize::<PlayerPosition>(){
+                Some(packet) => return Some(Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(packet))),
+                None => (),
+            };
+
+            match packet_int.try_deserialize::<PlayerWelcome>(){
+                Some(packet) => return Some(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(packet))),
+                None => (),
+            };
+
+            match packet_int.try_deserialize::<PlayerTextureData>(){
+                Some(packet) => return Some(Packet::PlayerPacket(PlayerPacket::PlayerTextureDataPacket(packet))),
+                None => (),
+            };
+
+            match packet_int.try_deserialize::<PlayerDisconnect>(){
+                Some(packet) => return Some(Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(packet))),
+                None => (),
+            };            
+            None
+        },
+        Err(err) => panic!("Failed to deserialize packet: {:?}", err)
+    }
 }

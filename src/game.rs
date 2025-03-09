@@ -41,6 +41,9 @@ impl Game{
     fn handle_receive<'a>(&self, player : &mut Player, other_players : &mut HashMap<u64,Player>, texture_creator : &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>, texture_map : &mut HashMap<String,Texture<'a>>) -> Result<(),&'static str>{
         match self.packet_receiver.try_recv(){
             Ok(msg) => {
+               // println!("Received a packet : {:?}",msg);
+
+
                 match msg.try_deserialize::<ClientID>(){
                     Some(id) => {
                         println!("Got an id :{}",id.id);
