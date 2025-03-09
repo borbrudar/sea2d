@@ -3,13 +3,13 @@ use serde::{Serialize,Deserialize};
 use crate::texture_data::TextureData;
 
 
-#[derive(Clone,Debug,Serialize,Deserialize)]
+#[derive(Clone,Debug,Serialize,Deserialize,PartialEq)]
 pub enum AnimationType{
     Loop,
     PingPong,
 }
 
-#[derive(Clone,Debug,Serialize,Deserialize)]
+#[derive(Clone,Debug,Serialize,Deserialize,PartialEq)]
 pub struct AnimatedTexture{
     pub frames : Vec<TextureData>,
     pub current_frame : i32,

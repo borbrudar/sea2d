@@ -2,7 +2,7 @@ use serde::{Deserialize,Serialize};
 
 use crate::{animated_texture::AnimatedTexture, texture_data::TextureData};
 
-#[derive(Serialize,Deserialize,Debug,Clone)]
+#[derive(Serialize,Deserialize,Debug,Clone,PartialEq)]
 pub enum PlayerPacket{
     PlayerWelcomePacket(PlayerWelcome),
     PlayerPositionPacket(PlayerPosition),
@@ -20,14 +20,14 @@ pub enum Movement{
     Down
 }
 
-#[derive(Serialize,Deserialize,Debug,Clone)]
+#[derive(Serialize,Deserialize,Debug,Clone,PartialEq)]
 pub struct PlayerPosition{
     pub player_id : u64,
     pub x : i32,
     pub y : i32,
 }
 
-#[derive(Serialize,Deserialize,Debug,Clone)]
+#[derive(Serialize,Deserialize,Debug,Clone,PartialEq)]
 pub struct PlayerWelcome {
     pub player_id : u64,
     pub x : i32,
@@ -36,18 +36,18 @@ pub struct PlayerWelcome {
 }
 
 
-#[derive(Serialize,Deserialize,Debug,Clone)]
+#[derive(Serialize,Deserialize,Debug,Clone,PartialEq)]
 pub struct PlayerTextureData{
     pub texture_data : TextureData,
     pub id : u64,
 }
 
-#[derive(Serialize,Deserialize,Debug,Clone)]
+#[derive(Serialize,Deserialize,Debug,Clone,PartialEq)]
 pub struct PlayerDisconnect{
     pub id : u64
 }
 
-#[derive(Serialize,Deserialize,Debug,Clone)]
+#[derive(Serialize,Deserialize,Debug,Clone,PartialEq)]
 pub struct PlayerAnimation{
     pub id : u64,
     pub animation_data : AnimatedTexture

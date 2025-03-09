@@ -7,14 +7,14 @@ use crate::player_packets::PlayerPacket;
 use std::hash::{Hash,Hasher};
 
 
-#[derive(Serialize,Deserialize,Debug,Clone)]
+#[derive(Serialize,Deserialize,Debug,Clone,PartialEq)]
 
 pub enum Packet{
     ClientIDPacket(ClientID),
     PlayerPacket(PlayerPacket),
 }
 
-#[derive(Serialize,Deserialize,Debug,Clone)]
+#[derive(Serialize,Deserialize,Debug,Clone,PartialEq)]
 pub struct ClientID{
     pub id : u64,
 }

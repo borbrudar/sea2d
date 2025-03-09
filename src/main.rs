@@ -19,7 +19,9 @@ use crate::server::server;
 use crate::client::client;
 use std::env;
 use std::thread;
-use crate::shared::{CLIENT_LOCAL};
+use crate::shared::CLIENT_LOCAL;
+#[cfg(test)]
+mod tests;
 
 
 fn main() {

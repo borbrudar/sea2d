@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use ::image::RgbaImage;
 use sdl2::render::{Texture, TextureCreator};
 
-use crate::{aabb::AABB, camera::Camera, texture_data::TextureData, tile::Tile, tile_type::{TileType}};
+use crate::{aabb::AABB, camera::Camera, texture_data::TextureData, tile::Tile, tile_type::TileType};
 
 pub struct Level{
     pub tiles : Vec<Vec<Tile>>,
