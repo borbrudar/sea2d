@@ -34,7 +34,7 @@ impl Player{
             size : 50,
             texture_data : None,
             animation_data : None,
-            hitbox : AABB::new((SCREEN_WIDTH as i32)/2 + 10,(SCREEN_HEIGHT as i32)/2+10,30,30),
+            hitbox : AABB::new((SCREEN_WIDTH as i32)/2 + 10,(SCREEN_HEIGHT as i32)/2+15,30,30),
             colliding : false,
             speed : 15,
         }

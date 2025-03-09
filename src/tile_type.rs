@@ -1,5 +1,3 @@
-use crate::aabb::AABB;
-
 pub struct TileTypeInfo {
     pub name: String,
     pub texture_name: String,
@@ -23,13 +21,7 @@ pub enum TileType {
     Rock,
     Tree,
     Wall,
-    Bush,
-    Flower,
-    Dirt,
     Stone,
-    Wood,
-    Leaves,
-    Empty,
 }
 
 impl TileType {
@@ -53,7 +45,7 @@ impl TileType {
             TileType::Stone => TileType::STONE_COLOR,
             TileType::Wall => TileType::WALL_COLOR,
             // Add other variants here...
-            _ => (0, 0, 0), // Default case for Empty or unhandled types
+            _ => (0, 0, 0), 
         }
     }
 }
