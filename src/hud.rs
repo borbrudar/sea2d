@@ -28,7 +28,7 @@ impl Hud{
         Hud{}
     }
 
-    pub fn draw(&self, canvas : &mut sdl2::render::Canvas<sdl2::video::Window>){
+    pub fn draw(&self, _canvas : &mut sdl2::render::Canvas<sdl2::video::Window>){
         // izrisi zadeve na ekranu, npr. health bar, score, etc.
         // spodnja koda ce odkomentiras izrise roza kvadrat na zacetku ekrana
         //canvas.set_draw_color(sdl2::pixels::Color::RGB(255,0,255));

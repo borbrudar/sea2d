@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use ::image::RgbaImage;
 use sdl2::render::{Texture, TextureCreator};
 
-use crate::{aabb::AABB, camera::Camera, texture_data::TextureData, tile::Tile, tile_type::{TileType, TileTypeInfo}};
+use crate::{aabb::AABB, camera::Camera, texture_data::TextureData, tile::Tile, tile_type::{TileType}};
 
 pub struct Level{
     pub tiles : Vec<Vec<Tile>>,
@@ -51,7 +51,7 @@ impl<'a> Level{
                 //println!("Pixel: {:?}",pixel);
                 match pixel{
                     TileType::STONE_COLOR => {
-                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Grass, None));
+                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Stone, None));
                         layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/tile.png".to_string()));
                         layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map, );
                     },

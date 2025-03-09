@@ -1,19 +1,3 @@
-pub struct TileTypeInfo {
-    pub name: String,
-    pub texture_name: String,
-    pub editor_color: (u8, u8, u8),
-}
-
-impl TileTypeInfo {
-    pub fn new(name: &str, texture_name: &str, editor_color: (u8, u8, u8)) -> TileTypeInfo {
-        TileTypeInfo {
-            name: name.to_string(),
-            texture_name: texture_name.to_string(),
-            editor_color,
-        }
-    }
-}
-
 pub enum TileType {
     Grass,
     Water,
@@ -35,7 +19,7 @@ impl TileType {
     pub const WALL_COLOR : (u8,u8,u8) = (50,47,77);
     // Other colors for each type can be defined here...
 
-    pub fn get_color(&self) -> (u8, u8, u8) {
+    pub fn _get_color(&self) -> (u8, u8, u8) {
         match *self {
             TileType::Grass => TileType::GRASS_COLOR,
             TileType::Water => TileType::WATER_COLOR,
@@ -45,7 +29,6 @@ impl TileType {
             TileType::Stone => TileType::STONE_COLOR,
             TileType::Wall => TileType::WALL_COLOR,
             // Add other variants here...
-            _ => (0, 0, 0), 
         }
     }
 }

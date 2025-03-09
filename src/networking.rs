@@ -49,7 +49,6 @@ pub fn serialize_and_send(stream : &mut TcpStream, packet : Packet) -> Option<()
         Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(inner)) => PacketInternal::new(inner).unwrap(),
         Packet::PlayerPacket(PlayerPacket::PlayerTextureDataPacket(inner)) => PacketInternal::new(inner).unwrap(),
         Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(inner)) => PacketInternal::new(inner).unwrap(),
-        _ => panic!("Unexpected packet type"),
     };
     //println!("internal packet {:?}", packet_int);
     let mut send = bincode::serialize(&packet_int).unwrap();

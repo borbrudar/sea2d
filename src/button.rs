@@ -9,12 +9,12 @@
 // za uporabo drugih modulov v projektu uporabi use crate::modul::modul
 // amapk mora bit dodan v main.rs kot `mod modul;` lhk pogledas
 
-pub struct Button{
+pub struct _Button{
 
 }
 
 
-impl Button{
+impl _Button{
 
 
 }
