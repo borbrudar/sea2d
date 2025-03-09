@@ -1,5 +1,5 @@
 use crate::animated_texture::AnimatedTexture;
-use crate::packet::{ClientID, Packet, PacketInternal};
+use crate::packet::Packet;
 use crate::player::Player;
 use crate::shared::*;
 use crate::player_packets::*;
@@ -7,6 +7,7 @@ use crate::player_packets::*;
 use std::sync::mpsc as mspc;
 use sdl2::image::{self};
 use sdl2::pixels::Color;
+use sdl2::rect;
 use std::collections::HashMap;
 use crate::texture_data::TextureData;
 use sdl2::render::Texture;
@@ -167,7 +168,8 @@ impl Game{
         'running: loop {
             // event polling
             for event in event_pump.poll_iter() {
-                player.on_event(event.clone(), &self.packet_sender, &level, &mut camera);
+                player.on_event(&event, &self.packet_sender, &level, &mut camera);
+                //camera.handle_zoom(&event);
                 match event {
                     sdl2::event::Event::Quit {..} | 
                     sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::ESCAPE),..} => {
@@ -210,6 +212,11 @@ impl Game{
     
             // drawing
             canvas.clear();
+
+            //let viewport = rect::Rect::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
+            let viewport = rect::Rect::new(0,0, camera.width, camera.height);
+            canvas.set_viewport(viewport);
+
             // draw level
             level.draw(&mut canvas,&texture_map,&camera);
             if draw_hitboxes {

@@ -1,16 +1,13 @@
-use crate::networking::{deserialize_to_packet, prepend_size, serialize_and_send, try_read_tcp, NetworkResult};
+use crate::networking::{deserialize_to_packet, serialize_and_send, try_read_tcp, NetworkResult};
 use crate::shared::LOCAL;
-use std::io::Write;
 use std::net::{TcpListener, TcpStream};
 use std::sync::{mpsc as mspc, MutexGuard};
 use std::thread;
 use std::collections::{HashMap,HashSet};
-use crate::packet::{ClientID, Packet, PacketInternal};
+use crate::packet::{ClientID, Packet};
 use crate::player::Player;
 use crate::player_packets::*;
 use rand::Rng;
-use std::any::TypeId;
-
 
 use std::sync::{Arc,Mutex};
 

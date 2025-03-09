@@ -1,7 +1,5 @@
 use crate::networking::{deserialize_to_packet, serialize_and_send, try_read_tcp, NetworkResult};
-use crate::packet::{Packet, PacketInternal};
-use crate::shared::*;
-use std::io::{ErrorKind,Read,Write};
+use crate::packet::Packet;
 use std::net::TcpStream;
 use std::sync::mpsc as mspc;
 use std::thread;
@@ -16,7 +14,7 @@ pub fn client(address : &str ) {
     let (tx2 , rx2) = mspc::channel::<Packet>(); // send to game thread from connection thread
 
     thread::spawn(move || loop{
-        // read from server
+        // read from server and send to game thread
         match try_read_tcp(&mut client){
             NetworkResult::Ok(buf) => {
                 match deserialize_to_packet(buf){
@@ -33,7 +31,6 @@ pub fn client(address : &str ) {
         
         // send to server
         match rx.try_recv(){
-            // not ok, types not preserved
             Ok(packet) => serialize_and_send(&mut client, packet).unwrap(),
             Err(mspc::TryRecvError::Empty) => (),
             Err(mspc::TryRecvError::Disconnected) => {

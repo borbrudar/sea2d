@@ -2,7 +2,6 @@ use fnv::FnvHasher;
 use serde_derive::{Deserialize, Serialize};
 use std::error::Error;
 
-use std::any::TypeId;
 use crate::player_packets::PlayerPacket;
 
 use std::hash::{Hash,Hasher};

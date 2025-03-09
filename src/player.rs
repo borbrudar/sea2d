@@ -65,11 +65,11 @@ impl Player{
         }
     }
 
-    pub fn on_event(&mut self, event : sdl2::event::Event, tx : &std::sync::mpsc::Sender<Packet>, level : &Level, camera : &mut Camera){
+    pub fn on_event(&mut self, event : &sdl2::event::Event, tx : &std::sync::mpsc::Sender<Packet>, level : &Level, camera : &mut Camera){
         let mut updated = false;
         match event {
             sdl2::event::Event::KeyDown { keycode: Some(keycode), .. } => {
-                match keycode {
+                match *keycode {
                     sdl2::keyboard::Keycode::Up => {
                         self.y -= self.speed;
                         self.hitbox.y -= self.speed;
