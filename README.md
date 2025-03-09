@@ -7,7 +7,11 @@ The program can be run as either the server, the client, or both at the same tim
 `cargo r` respectively. The client command takes an optional argument, namely the IP address and the port it should try to connect to, 
 separated by a colon, e.g. `cargo r client 127.0.0.1:6000`. By running on localhost the default port is 6000. Remember to have devel versions
 of sdl2 and sdl2_image installed on your system or you won't be able to compile the program. Arch users: `sudo pacman -S sdl2-compat sdl2_image`,
-everyone else figure it out :P
+windows users unzip the files provided in `windows_dependencies` and copy
+sdl2 .lib/.dll as well as sdl2_image .lib/.dll to `Cargo.toml` directory, as well as `target/` directory.
+Mac users figure it out :p
+
+
 
 ## General description:
 
