@@ -17,7 +17,7 @@ use crate::animated_texture::AnimationType;
 
 
 pub struct Game{
-    packet_receiver : mspc::Receiver<PacketInternal>,
+    packet_receiver : mspc::Receiver<Packet>,
     packet_sender : mspc::Sender<Packet>,
 }
 
@@ -31,21 +31,73 @@ fn find_sdl_gl_driver() -> Option<u32> {
 }
 
 impl Game{
-    pub fn new(packet_sender : mspc::Sender<Packet>, packet_receiver : mspc::Receiver<PacketInternal>) -> Game{
+    pub fn new(packet_sender : mspc::Sender<Packet>, packet_receiver : mspc::Receiver<Packet>) -> Game{
         Game{
             packet_receiver,
             packet_sender,
         }
     }
 
-    fn handle_receive<'a>(&self, player : &mut Player, other_players : &mut HashMap<u64,Player>, texture_creator : &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>, texture_map : &mut HashMap<String,Texture<'a>>) -> Result<(),&'static str>{
+    fn handle_receive<'a>(&self, player : &mut Player, other_players : &mut HashMap<u64,Player>, texture_creator : &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>, texture_map : &mut HashMap<String,Texture<'a>>){
         match self.packet_receiver.try_recv(){
-            Ok(msg) => {
-               // println!("Received a packet : {:?}",msg);
-
-
-                match msg.try_deserialize::<ClientID>(){
-                    Some(id) => {
+            Ok(packet) => {
+                match packet {
+                    Packet::PlayerPacket(player_packet) => {
+                        match player_packet {
+                            PlayerPacket::PlayerPositionPacket(pos) => {
+                                println!("Got a position :{:?}", pos);
+                                if let Some(other_player) = other_players.get_mut(&pos.player_id) {
+                                    other_player.x = pos.x;
+                                    other_player.y = pos.y;
+                                }
+                            },
+                            PlayerPacket::PlayerWelcomePacket(welc) => {
+                                println!("Got a welcome packet");
+                                // if self or already received return
+                                let found = other_players.contains_key(&welc.player_id) || welc.player_id == player.id;
+                                if !found {
+                                    let mut temp = Player::new(welc.player_id);
+                                    temp.x = welc.x;
+                                    temp.y = welc.y;
+                                    temp.texture_data = welc.texture_data;
+                            
+                                    if let Some(mut texture_data) = temp.texture_data.clone() {
+                                        texture_data.load_texture(&texture_creator, texture_map);
+                                    } else {
+                                        println!("No texture data");
+                                    }
+                                    other_players.insert(temp.id, temp);
+                                }
+                            },
+                            PlayerPacket::PlayerTextureDataPacket(texture_data) => {
+                                println!("Got a texture data packet");
+                                if let Some(other_player) = other_players.get_mut(&texture_data.id) {
+                                    other_player.texture_data = Some(texture_data.texture_data.clone());
+                                    match other_player.texture_data.clone() {
+                                        Some(mut texture_data) => {
+                                            texture_data.load_texture(&texture_creator, texture_map);
+                                        },
+                                        None => println!("No texture data")
+                                    }
+                                }
+                            },
+                            PlayerPacket::PlayerDisconnectPacket(disconnected) => {
+                                println!("Got a disconnect packet");
+                                other_players.remove(&disconnected.id);
+                            },
+                            PlayerPacket::PlayerAnimationPacket(animation) => {
+                                println!("Got an animation packet");
+                                if let Some(other_player) = other_players.get_mut(&animation.id) {
+                                    println!("Processed animation packet");
+                                    other_player.animation_data = Some(animation.animation_data.clone());
+                                    println!("Received animation data {:?}", &other_player.animation_data);
+                                    other_player.animation_data.as_mut().unwrap().load_animation(animation.animation_data.frames[0].path.clone(), 0, 0, 16, 16, 3, &texture_creator, texture_map);
+                                    println!("Received animation data2 {:?}", &other_player.animation_data);
+                                }
+                            },
+                        }
+                    },
+                    Packet::ClientIDPacket(id) =>{
                         println!("Got an id :{}",id.id);
                         if player.id == 1_000_000{
                             player.id = id.id;
@@ -56,89 +108,13 @@ impl Game{
                         let data = PlayerAnimation{id : player.id, animation_data : player.animation_data.clone().unwrap()};
                         println!("Sending animation packet");
                         self.packet_sender.send(Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(data))).unwrap();
-                        
-                    },
-                    None => ()
-                }
-    
-                match msg.try_deserialize::<PlayerPosition>(){
-                    Some(pos) => {
-                        println!("Got a position :{:?}", pos);
-                        if let Some(other_player) = other_players.get_mut(&pos.player_id) {
-                            other_player.x = pos.x;
-                            other_player.y = pos.y;
-                        }
-                    },
-                    None => ()  
-                }
-    
-                match msg.try_deserialize::<PlayerWelcome>(){
-                    Some( welc) =>{
-                        println!("Got a welcome packet");
-                        // if self or already received return
-                        let found = other_players.contains_key(&welc.player_id) || welc.player_id == player.id;
-                        if !found {
-                            let mut temp = Player::new(welc.player_id);
-                            temp.x = welc.x;
-                            temp.y = welc.y;
-                            temp.texture_data = welc.texture_data;
-                
-                            if let Some(mut texture_data) = temp.texture_data.clone() {
-                                texture_data.load_texture(&texture_creator, texture_map);
-                            } else {
-                                println!("No texture data");
-                            }
-                            other_players.insert(temp.id, temp);
-                        }
-                    },
-                    None => ()
-                }
-    
-                match msg.try_deserialize::<PlayerTextureData>(){
-                    Some(texture_data) => {
-                        println!("Got a texture data packet");
-                        if let Some(other_player) = other_players.get_mut(&texture_data.id) {
-                            other_player.texture_data = Some(texture_data.texture_data.clone());
-                            match other_player.texture_data.clone() {
-                                Some(mut texture_data) => {
-                                    texture_data.load_texture(&texture_creator, texture_map);
-                                },
-                                None => println!("No texture data")
-                            }
-                        }
-                    },
-                    None => ()
-                }
-    
-                match msg.try_deserialize::<PlayerDisconnect>(){
-                    Some(disconnected) => {
-                        println!("Got a disconnect packet");
-                        other_players.remove(&disconnected.id);
-                    },
-                    None => ()
-                }
-    
-                match msg.try_deserialize::<PlayerAnimation>(){
-                    Some(animation) => {
-                        println!("Got an animation packet");
-                        if let Some(other_player) = other_players.get_mut(&animation.id) {
-                            println!("Processed animation packet");
-                            other_player.animation_data = Some(animation.animation_data.clone());
-                            println!("Received animation data {:?}", &other_player.animation_data);
-                            other_player.animation_data.as_mut().unwrap().load_animation(animation.animation_data.frames[0].path.clone(), 0, 0, 16, 16, 3, &texture_creator, texture_map);
-                            println!("Received animation data2 {:?}", &other_player.animation_data);
-                        }
-                    },
-                    None => ()
+                    }
                 }
             },
-            Err(mspc::TryRecvError::Empty) => (),
-            Err(mspc::TryRecvError::Disconnected) => Err("Disconnected").unwrap(),
-        }
-        Ok(())
+            Err(mspc::TryRecvError::Empty) =>(),
+            Err(mspc::TryRecvError::Disconnected) => panic!("Disconnected"),
+        }     
     }
-    
-
 
     // main game loop
     pub fn run(&mut self){
@@ -260,7 +236,7 @@ impl Game{
     
     
             // receive
-            self.handle_receive(&mut player, &mut other_players, &texture_creator, &mut texture_map).unwrap();   
+            self.handle_receive(&mut player, &mut other_players, &texture_creator, &mut texture_map);   
 
         }
     }

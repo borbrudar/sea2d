@@ -1,4 +1,4 @@
-use crate::networking::{serialize_and_send, try_read_tcp, NetworkResult};
+use crate::networking::{deserialize_to_packet, serialize_and_send, try_read_tcp, NetworkResult};
 use crate::packet::{Packet, PacketInternal};
 use crate::shared::*;
 use std::io::{ErrorKind,Read,Write};
@@ -13,18 +13,16 @@ pub fn client(address : &str ) {
     println!("Running client on address {}",address);
     
     let (tx,rx) = mspc::channel::<Packet>(); // send from game thread to connection thread
-    let (tx2 , rx2) = mspc::channel::<PacketInternal>(); // send to game thread from connection thread
+    let (tx2 , rx2) = mspc::channel::<Packet>(); // send to game thread from connection thread
 
     thread::spawn(move || loop{
         // read from server
         match try_read_tcp(&mut client){
             NetworkResult::Ok(buf) => {
-                let packet_int  = bincode::deserialize(&buf);
-                match packet_int{
-                    Ok(packet_int) =>
-                     tx2.send(packet_int).expect("Failed to send packet to game thread"),
-                    Err(err) => println!("Failed to deserialize packet {:?}",err)
-                }
+                match deserialize_to_packet(buf){
+                    Some(packet) => tx2.send(packet).expect("Failed to send packet to game thread"),
+                    None => ()
+                };
             },
             NetworkResult::WouldBlock => (),
             NetworkResult::ConnectionLost => {
