@@ -182,6 +182,18 @@ impl Game{
                     _ => {}
                 }
             }
+
+            // check if we need to load a new level
+            if let Some(exit) = player.reached_end.clone(){
+                level.load_from_file(exit.next_level.clone(),&texture_creator,&mut texture_map);
+                player.x = level.player_spawn.0;
+                player.y = level.player_spawn.1;
+                player.hitbox.x = player.x + 10;
+                player.hitbox.y = player.y + 15;
+                camera.x = player.x + player.size as i32/2 - SCREEN_WIDTH as i32/2;
+                camera.y = player.y + player.size as i32/2 - SCREEN_HEIGHT as i32/2;
+                player.reached_end = None;
+            }
     
     
             // time handling

@@ -7,7 +7,14 @@ pub enum TileType {
     Wall,
     Stone,
     PlayerSpawn,
+    Exit(ExitTile)
 }
+
+#[derive(Clone)]
+pub struct ExitTile{
+    pub next_level : String,
+}
+
 
 impl TileType {
     // Associated constants for each tile type's color
@@ -19,6 +26,7 @@ impl TileType {
     pub const STONE_COLOR : (u8,u8,u8) = (192,192,192);
     pub const WALL_COLOR : (u8,u8,u8) = (50,47,77);
     pub const PLAYER_SPAWN_COLOR : (u8,u8,u8) = (255,0,0);
+    pub const EXIT_COLOR : (u8,u8,u8) = (64,58,171);
     // Other colors for each type can be defined here...
 
     pub fn _get_color(&self) -> (u8, u8, u8) {
@@ -31,6 +39,7 @@ impl TileType {
             TileType::Stone => TileType::STONE_COLOR,
             TileType::Wall => TileType::WALL_COLOR,
             TileType::PlayerSpawn => TileType::PLAYER_SPAWN_COLOR,
+            TileType::Exit(..) => TileType::EXIT_COLOR,
             // Add other variants here...
         }
     }

@@ -3,6 +3,8 @@ use crate::animated_texture::AnimatedTexture;
 use crate::level::Level;
 use crate::packet::Packet;
 use crate::shared::{SCREEN_HEIGHT,SCREEN_WIDTH};
+use crate::tile::Tile;
+use crate::tile_type::ExitTile;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
 use crate::texture_data::TextureData;
@@ -22,6 +24,7 @@ pub struct Player{
     pub hitbox : AABB,
     pub colliding : bool,
     speed : i32,
+    pub reached_end : Option<ExitTile>,
 }
 
 impl Player{
@@ -37,6 +40,7 @@ impl Player{
             hitbox : AABB::new((SCREEN_WIDTH as i32)/2 + 10,(SCREEN_HEIGHT as i32)/2+15,30,30),
             colliding : false,
             speed : 15,
+            reached_end : None,
         }
     }
 
@@ -150,6 +154,12 @@ impl Player{
                             }else if min == y2 {
                                 self.y += y2;
                                 self.hitbox.y += y2;
+                            }
+                            match &tile._tile_type {
+                                crate::tile_type::TileType::Exit(inner) => {
+                                    self.reached_end = Some((*inner).clone());
+                                }
+                                _ => ()
                             }
                         }
                     },

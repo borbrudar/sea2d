@@ -1,9 +1,9 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fs::exists, io::BufRead};
 
 use ::image::RgbaImage;
 use sdl2::render::{Texture, TextureCreator};
 
-use crate::{aabb::AABB, camera::Camera, texture_data::TextureData, tile::Tile, tile_type::TileType};
+use crate::{aabb::AABB, camera::Camera, texture_data::TextureData, tile::Tile, tile_type::{ExitTile, TileType}};
 
 pub struct Level{
     pub tiles : Vec<Vec<Tile>>,
@@ -19,9 +19,23 @@ impl<'a> Level{
     }
 
     pub fn load_from_file(&mut self, path : String, texture_creator : & 'a TextureCreator<sdl2::video::WindowContext>, texture_map : &mut HashMap<String,Texture<'a>>){
-        // load layer by layer from file, change path for each layer from "layer1_1.png" to "layer_2.png" while you can
+        // delete previous level (if any)
+        self.tiles.clear();
         
-        self.load_layer(path.clone(),texture_creator,texture_map);
+        // load exits file 
+        let mut exits = path.clone();
+        exits = exits.chars().take(exits.chars().count()-5).collect();
+        exits.push_str(String::from("exits.txt").as_str());
+        if !::std::path::Path::new(&exits).exists(){
+            panic!("Exits file not found");
+        }
+        let exits = ::std::fs::File::open(exits).expect("Failed to read exits file");
+        let exits = ::std::io::BufReader::new(exits);
+        let mut exits : Vec<String> = ::std::io::BufReader::new(exits).lines().filter_map(Result::ok).collect();
+        exits.reverse();
+
+        // load layer by layer from file, change path for each layer from "layer1_1.png" to "layer_2.png" while you can
+        self.load_layer(path.clone(),texture_creator,texture_map,&mut exits);
 
         let mut i = 2;
         loop{
@@ -31,12 +45,12 @@ impl<'a> Level{
             if !::std::path::Path::new(&new_path).exists(){
                 break;
             }
-            self.load_layer(new_path,texture_creator,texture_map);
+            self.load_layer(new_path,texture_creator,texture_map,&mut exits);
             i += 1;
         }
     }
 
-    fn load_layer(&mut self, path : String, texture_creator : & 'a TextureCreator<sdl2::video::WindowContext>, texture_map : &mut HashMap<String,Texture<'a>>){
+    fn load_layer(&mut self, path : String, texture_creator : & 'a TextureCreator<sdl2::video::WindowContext>, texture_map : &mut HashMap<String,Texture<'a>>, exits : &mut Vec<String>){
         let img = ::image::ImageReader::open(path).expect("Failed to load image").decode().expect("Failed to decode image");
         let img: RgbaImage = img.to_rgba8();
         let (width, height) = img.dimensions();
@@ -90,6 +104,12 @@ impl<'a> Level{
                     TileType::PLAYER_SPAWN_COLOR => {
                         self.player_spawn = (x as i32 * tile_size, y as i32 * tile_size);
                     }
+                    TileType::EXIT_COLOR => {
+                        let last = exits.pop().unwrap();
+                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Exit(ExitTile{next_level : last}), Some(AABB::new(x as i32 * tile_size + tile_size/4, y as i32 * tile_size+tile_size/4, tile_size as u32/2, tile_size as u32/2))));
+                        //layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/empty.png".to_string()));
+                        //layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map);
+                    },
                     _ => ()
                 }
             }
