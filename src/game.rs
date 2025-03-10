@@ -103,9 +103,6 @@ impl Game{
                         if player.id == 1_000_000{
                             player.id = id.id;
                         }
-                        self.packet_sender.send(Packet::PlayerPacket(PlayerPacket::PlayerTextureDataPacket(
-                            PlayerTextureData{texture_data : player.texture_data.clone().unwrap(),id : player.id}))).unwrap();
-    
                         let data = PlayerAnimation{id : player.id, animation_data : player.animation_data.clone().unwrap()};
                         println!("Sending animation packet");
                         self.packet_sender.send(Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(data))).unwrap();
@@ -134,28 +131,33 @@ impl Game{
 
         
         let mut event_pump = sdl_context.event_pump().unwrap();
-
-
+        
+        
         let mut other_players : HashMap<u64,Player> = HashMap::new();
-
-
+        
+        // texture setup
         image::init(image::InitFlag::PNG | image::InitFlag::JPG).unwrap();
         let texture_creator = canvas.texture_creator();
         let mut texture_map: HashMap<String, Texture> = HashMap::new();
+        
+        // level loading
+        let mut level = Level::new();
+        level.load_from_file("resources/levels/level1_1.png".to_string(),&texture_creator,&mut texture_map);
+        
+        // player setup
         let mut player = Player::new(1_000_000);
-        player.texture_data = Some(TextureData::new("resources/textures/test.png".to_string()));
-        player.texture_data.as_mut().unwrap().load_texture(&texture_creator, &mut texture_map);
-
         player.animation_data = Some(AnimatedTexture::new(1.0/6.));
         player.animation_data.as_mut().unwrap().load_animation("resources/player_animation/player.png".to_string(),0,0,16,16,3, 
         &texture_creator,&mut texture_map);
         player.animation_data.as_mut().unwrap().animation_type = AnimationType::PingPong;                    
+        player.x = level.player_spawn.0;
+        player.y = level.player_spawn.1;
+        player.hitbox.x = player.x + 10;
+        player.hitbox.y = player.y + 15;
 
-
-        let mut level = Level::new();
-        level.load_from_file("resources/levels/level1_1.png".to_string(),&texture_creator,&mut texture_map);
+        // camera init
         let mut camera = Camera::new(player.x + player.size as i32/2 - SCREEN_WIDTH as i32/2,
-            player.y + player.size as i32/2 - SCREEN_HEIGHT as i32/2, SCREEN_WIDTH,SCREEN_HEIGHT);
+        player.y + player.size as i32/2 - SCREEN_HEIGHT as i32/2, SCREEN_WIDTH,SCREEN_HEIGHT);
 
         // hud
         let hud = Hud::new();

@@ -7,12 +7,14 @@ use crate::{aabb::AABB, camera::Camera, texture_data::TextureData, tile::Tile, t
 
 pub struct Level{
     pub tiles : Vec<Vec<Tile>>,
+    pub player_spawn : (i32,i32),
 }
 
 impl<'a> Level{
     pub fn new() -> Level{
         Level{
-            tiles : Vec::new()
+            tiles : Vec::new(),
+            player_spawn : (0,0)
         }
     }
 
@@ -85,6 +87,9 @@ impl<'a> Level{
                         layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/wall.png".to_string()));
                         layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map);
                     },
+                    TileType::PLAYER_SPAWN_COLOR => {
+                        self.player_spawn = (x as i32 * tile_size, y as i32 * tile_size);
+                    }
                     _ => ()
                 }
             }

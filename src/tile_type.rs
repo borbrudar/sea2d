@@ -6,6 +6,7 @@ pub enum TileType {
     Tree,
     Wall,
     Stone,
+    PlayerSpawn,
 }
 
 impl TileType {
@@ -17,6 +18,7 @@ impl TileType {
     pub const TREE_COLOR: (u8, u8, u8) = (34, 139, 34);
     pub const STONE_COLOR : (u8,u8,u8) = (192,192,192);
     pub const WALL_COLOR : (u8,u8,u8) = (50,47,77);
+    pub const PLAYER_SPAWN_COLOR : (u8,u8,u8) = (255,0,0);
     // Other colors for each type can be defined here...
 
     pub fn _get_color(&self) -> (u8, u8, u8) {
@@ -28,6 +30,7 @@ impl TileType {
             TileType::Tree => TileType::TREE_COLOR,
             TileType::Stone => TileType::STONE_COLOR,
             TileType::Wall => TileType::WALL_COLOR,
+            TileType::PlayerSpawn => TileType::PLAYER_SPAWN_COLOR,
             // Add other variants here...
         }
     }
