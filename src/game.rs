@@ -9,7 +9,6 @@ use sdl2::image::{self};
 use sdl2::pixels::Color;
 use sdl2::rect;
 use std::collections::HashMap;
-use crate::texture_data::TextureData;
 use sdl2::render::Texture;
 use crate::level::Level;
 use crate::camera::Camera;
@@ -60,26 +59,8 @@ impl Game{
                                     let mut temp = Player::new(welc.player_id);
                                     temp.x = welc.x;
                                     temp.y = welc.y;
-                                    temp.texture_data = welc.texture_data;
-                            
-                                    if let Some(mut texture_data) = temp.texture_data.clone() {
-                                        texture_data.load_texture(&texture_creator, texture_map);
-                                    } else {
-                                        println!("No texture data");
-                                    }
+                
                                     other_players.insert(temp.id, temp);
-                                }
-                            },
-                            PlayerPacket::PlayerTextureDataPacket(texture_data) => {
-                                println!("Got a texture data packet");
-                                if let Some(other_player) = other_players.get_mut(&texture_data.id) {
-                                    other_player.texture_data = Some(texture_data.texture_data.clone());
-                                    match other_player.texture_data.clone() {
-                                        Some(mut texture_data) => {
-                                            texture_data.load_texture(&texture_creator, texture_map);
-                                        },
-                                        None => println!("No texture data")
-                                    }
                                 }
                             },
                             PlayerPacket::PlayerDisconnectPacket(disconnected) => {

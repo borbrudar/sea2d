@@ -1,12 +1,11 @@
 use serde::{Deserialize,Serialize};
 
-use crate::{animated_texture::AnimatedTexture, texture_data::TextureData};
+use crate::{animated_texture::AnimatedTexture};
 
 #[derive(Serialize,Deserialize,Debug,Clone,PartialEq)]
 pub enum PlayerPacket{
     PlayerWelcomePacket(PlayerWelcome),
     PlayerPositionPacket(PlayerPosition),
-    PlayerTextureDataPacket(PlayerTextureData),
     PlayerDisconnectPacket(PlayerDisconnect),
     PlayerAnimationPacket(PlayerAnimation),
 }
@@ -32,14 +31,6 @@ pub struct PlayerWelcome {
     pub player_id : u64,
     pub x : i32,
     pub y : i32,
-    pub texture_data : Option<TextureData>,
-}
-
-
-#[derive(Serialize,Deserialize,Debug,Clone,PartialEq)]
-pub struct PlayerTextureData{
-    pub texture_data : TextureData,
-    pub id : u64,
 }
 
 #[derive(Serialize,Deserialize,Debug,Clone,PartialEq)]

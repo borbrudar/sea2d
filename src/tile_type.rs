@@ -6,7 +6,7 @@ pub enum TileType {
     Tree,
     Wall,
     Stone,
-    PlayerSpawn,
+    //PlayerSpawn,
     Exit(ExitTile)
 }
 
@@ -38,7 +38,7 @@ impl TileType {
             TileType::Tree => TileType::TREE_COLOR,
             TileType::Stone => TileType::STONE_COLOR,
             TileType::Wall => TileType::WALL_COLOR,
-            TileType::PlayerSpawn => TileType::PLAYER_SPAWN_COLOR,
+            //TileType::PlayerSpawn => TileType::PLAYER_SPAWN_COLOR,
             TileType::Exit(..) => TileType::EXIT_COLOR,
             // Add other variants here...
         }

@@ -30,10 +30,6 @@ fn handle_player_send(packet : PlayerPacket, player_id : u64, players : &mut Mut
             players.get_mut(&player_id).unwrap().y = y as i32;
             return Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{player_id : player_id as u64, x, y}));
         },
-        PlayerPacket::PlayerTextureDataPacket(PlayerTextureData{texture_data,id}) => {
-            players.get_mut(&player_id).unwrap().texture_data = Some(texture_data);
-            return Packet::PlayerPacket(PlayerPacket::PlayerTextureDataPacket(PlayerTextureData{texture_data : players[&player_id].texture_data.clone().unwrap(), id}));
-        },
         PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect{id}) => {
             return Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect{id}));
         },
@@ -84,8 +80,7 @@ pub fn server(){
 
             // packet that tells everyone each other's initial position
             for u in players_lock.values(){
-                tx.send(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id : u.id as u64, x : u.x, y : u.y, 
-                    texture_data : u.texture_data.clone()}))).unwrap();
+                tx.send(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id : u.id as u64, x : u.x, y : u.y}))).unwrap();
             }
             
             clients.insert(uuid, socket.try_clone().expect("Failed to clone client"));

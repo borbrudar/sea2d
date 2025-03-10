@@ -1,8 +1,6 @@
 use std::net::{TcpListener, TcpStream};
 
-use sdl2::libc::NF_INET_FORWARD;
-
-use crate::{animated_texture::AnimatedTexture, networking::{self, prepend_size, try_read_tcp}, packet::{ClientID, Packet}, player_packets::{PlayerAnimation, PlayerDisconnect, PlayerPacket, PlayerPosition, PlayerTextureData, PlayerWelcome}, texture_data::TextureData};
+use crate::{animated_texture::AnimatedTexture, networking::{self, prepend_size, try_read_tcp}, packet::{ClientID, Packet}, player_packets::{PlayerAnimation, PlayerDisconnect, PlayerPacket, PlayerPosition, PlayerWelcome}};
 
 #[test]
 fn prepend_size_test() {
@@ -46,7 +44,6 @@ fn serialize_deserialize_test() {
         test_packet(Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(PlayerAnimation{id: 0, animation_data: AnimatedTexture::new(0.0)})));
         test_packet(Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect{id: 0})));
         test_packet(Packet::ClientIDPacket(ClientID{id: 0}));
-        test_packet(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id: 0, x : 12321, y : 102, texture_data : None})));
-        test_packet(Packet::PlayerPacket(PlayerPacket::PlayerTextureDataPacket(PlayerTextureData{id : 123,texture_data : TextureData::new("resources/textures/water.png".to_string())})));
+        test_packet(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id: 0, x : 12321, y : 102})));
     }
 }

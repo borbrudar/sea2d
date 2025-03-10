@@ -2,7 +2,7 @@ use std::net::TcpStream;
 use std::io::{ErrorKind,Read,Write};
 
 use crate::packet::{ClientID, Packet, PacketInternal};
-use crate::player_packets::{PlayerAnimation, PlayerDisconnect, PlayerPacket, PlayerPosition, PlayerTextureData, PlayerWelcome};
+use crate::player_packets::{PlayerAnimation, PlayerDisconnect, PlayerPacket, PlayerPosition, PlayerWelcome};
 use crate::shared::MAX_PACKET_SIZE;
 
 
@@ -47,7 +47,6 @@ pub fn serialize_and_send(stream : &mut TcpStream, packet : Packet) -> Option<()
         Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(inner)) => PacketInternal::new(inner).unwrap(),
         Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(inner)) => PacketInternal::new(inner).unwrap(),
         Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(inner)) => PacketInternal::new(inner).unwrap(),
-        Packet::PlayerPacket(PlayerPacket::PlayerTextureDataPacket(inner)) => PacketInternal::new(inner).unwrap(),
         Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(inner)) => PacketInternal::new(inner).unwrap(),
     };
     //println!("internal packet {:?}", packet_int);
@@ -81,11 +80,6 @@ pub fn deserialize_to_packet(buf : Vec<u8>) -> Option<Packet> {
 
             match packet_int.try_deserialize::<PlayerWelcome>(){
                 Some(packet) => return Some(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(packet))),
-                None => (),
-            };
-
-            match packet_int.try_deserialize::<PlayerTextureData>(){
-                Some(packet) => return Some(Packet::PlayerPacket(PlayerPacket::PlayerTextureDataPacket(packet))),
                 None => (),
             };
 

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs::exists, io::BufRead};
+use std::{collections::HashMap, io::BufRead};
 
 use ::image::RgbaImage;
 use sdl2::render::{Texture, TextureCreator};
