@@ -45,14 +45,14 @@ impl Game{
                     Packet::PlayerPacket(player_packet) => {
                         match player_packet {
                             PlayerPacket::PlayerPositionPacket(pos) => {
-                                println!("Got a position :{:?}", pos);
+                                //println!("Got a position :{:?}", pos);
                                 if let Some(other_player) = other_players.get_mut(&pos.player_id) {
                                     other_player.x = pos.x;
                                     other_player.y = pos.y;
                                 }
                             },
                             PlayerPacket::PlayerWelcomePacket(welc) => {
-                                println!("Got a welcome packet");
+                                //println!("Got a welcome packet");
                                 // if self or already received return
                                 let found = other_players.contains_key(&welc.player_id) || welc.player_id == player.id;
                                 if !found {
@@ -64,11 +64,11 @@ impl Game{
                                 }
                             },
                             PlayerPacket::PlayerDisconnectPacket(disconnected) => {
-                                println!("Got a disconnect packet");
+                                //println!("Got a disconnect packet");
                                 other_players.remove(&disconnected.id);
                             },
                             PlayerPacket::PlayerAnimationPacket(animation) => {
-                                println!("Got an animation packet");
+                                //println!("Got an animation packet");
                                 if let Some(other_player) = other_players.get_mut(&animation.id) {
                                     println!("Processed animation packet");
                                     other_player.animation_data = Some(animation.animation_data.clone());
@@ -80,7 +80,7 @@ impl Game{
                         }
                     },
                     Packet::ClientIDPacket(id) =>{
-                        println!("Got an id :{}",id.id);
+                       // println!("Got an id :{}",id.id);
                         if player.id == 1_000_000{
                             player.id = id.id;
                         }
