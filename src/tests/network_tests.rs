@@ -38,12 +38,12 @@ fn serialize_deserialize_test() {
             }
         };
         
-        test_packet(Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{x: 1, y: 2, player_id: 0})));
-        test_packet(Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{x: 3, y: 4, player_id: 1})));
-        test_packet(Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{x: 5, y: 6, player_id: 2})));
+        test_packet(Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{x: 1.0, y: 2., player_id: 0})));
+        test_packet(Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{x: 3., y: 4., player_id: 1})));
+        test_packet(Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{x: 5., y: 6., player_id: 2})));
         test_packet(Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(PlayerAnimation{id: 0, animation_data: AnimatedTexture::new(0.0)})));
         test_packet(Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect{id: 0})));
         test_packet(Packet::ClientIDPacket(ClientID{id: 0}));
-        test_packet(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id: 0, x : 12321, y : 102})));
+        test_packet(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id: 0, x : 12321., y : 102.})));
     }
 }

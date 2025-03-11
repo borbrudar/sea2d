@@ -26,8 +26,8 @@ fn new_client_id(set : &HashSet<u64> ) -> u64 {
 fn handle_player_send(packet : PlayerPacket, player_id : u64, players : &mut MutexGuard<'_,HashMap<u64,Player>>) -> Packet {
     match packet {
         PlayerPacket::PlayerPositionPacket(PlayerPosition{x,y, player_id}) => {
-            players.get_mut(&player_id).unwrap().x = x as i32;
-            players.get_mut(&player_id).unwrap().y = y as i32;
+            players.get_mut(&player_id).unwrap().x = x;
+            players.get_mut(&player_id).unwrap().y = y;
             return Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{player_id : player_id as u64, x, y}));
         },
         PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect{id}) => {

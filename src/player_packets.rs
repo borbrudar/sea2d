@@ -22,15 +22,15 @@ pub enum Movement{
 #[derive(Serialize,Deserialize,Debug,Clone,PartialEq)]
 pub struct PlayerPosition{
     pub player_id : u64,
-    pub x : i32,
-    pub y : i32,
+    pub x : f64,
+    pub y : f64,
 }
 
 #[derive(Serialize,Deserialize,Debug,Clone,PartialEq)]
 pub struct PlayerWelcome {
     pub player_id : u64,
-    pub x : i32,
-    pub y : i32,
+    pub x : f64,
+    pub y : f64,
 }
 
 #[derive(Serialize,Deserialize,Debug,Clone,PartialEq)]

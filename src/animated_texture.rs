@@ -56,7 +56,7 @@ impl<'a> AnimatedTexture{
         }
     }
 
-    pub fn draw(&self, canvas : &mut sdl2::render::Canvas<sdl2::video::Window>, texture_map : &std::collections::HashMap<String,sdl2::render::Texture>, x : i32, y : i32, w : u32, h : u32){
+    pub fn draw(&self, canvas : &mut sdl2::render::Canvas<sdl2::video::Window>, texture_map : &std::collections::HashMap<String,sdl2::render::Texture>, x : f64, y : f64, w : u32, h : u32){
         self.frames[self.current_frame as usize].draw(canvas,texture_map,x,y,w,h).unwrap();
     }
 

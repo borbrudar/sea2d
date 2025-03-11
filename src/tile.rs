@@ -3,8 +3,8 @@ use crate::{camera::Camera, texture_data::TextureData};
 use crate::tile_type::TileType;
 
 pub struct Tile{
-    pub x : i32,
-    pub y : i32,
+    pub x : f64,
+    pub y : f64,
     pub size : u32,
     pub texture_data : Option<TextureData>,
     pub _tile_type : TileType,
@@ -12,7 +12,7 @@ pub struct Tile{
 }
 
 impl Tile{
-    pub fn new(x : i32, y : i32, size : u32, _tile_type : TileType, bounding_box : Option<AABB>) -> Tile{
+    pub fn new(x : f64, y : f64, size : u32, _tile_type : TileType, bounding_box : Option<AABB>) -> Tile{
         Tile{
             x,
             y,
@@ -34,14 +34,14 @@ impl Tile{
                 match res {
                     Err(..) => {
                         canvas.set_draw_color(sdl2::pixels::Color::RGB(0,0,0));                        
-                        canvas.fill_rect(sdl2::rect::Rect::new(self.x-camera.x,self.y-camera.y, scaled_w,scaled_h)).unwrap();
+                        canvas.fill_rect(sdl2::rect::Rect::new((self.x-camera.x)as i32,(self.y-camera.y) as i32, scaled_w,scaled_h)).unwrap();
                     },
                     Ok(..) => ()
                 }
             },
             None => {
                 canvas.set_draw_color(sdl2::pixels::Color::RGB(0,0,0));
-                canvas.fill_rect(sdl2::rect::Rect::new(self.x-camera.x,self.y-camera.y,scaled_w,scaled_h)).unwrap();
+                canvas.fill_rect(sdl2::rect::Rect::new((self.x-camera.x) as i32,(self.y-camera.y) as i32,scaled_w,scaled_h)).unwrap();
             }
         }
     }

@@ -13,13 +13,15 @@ use crate::player_packets::{PlayerPacket, PlayerPosition};
 
 pub struct Player{
     pub id : u64,
-    pub x : i32,
-    pub y : i32,
+    pub x : f64,
+    pub y : f64,
+    velocity_x : f64,
+    velocity_y : f64,
     pub size : u32,
     pub animation_data : Option<AnimatedTexture>,
     pub hitbox : AABB,
     pub colliding : bool,
-    speed : i32,
+    speed : f64,
     pub reached_end : Option<ExitTile>,
 }
 
@@ -27,13 +29,15 @@ impl Player{
     pub fn new(id : u64) -> Player{
         Player{
             id : id,
-            x : (SCREEN_WIDTH as i32)/2,
-            y : (SCREEN_HEIGHT as i32)/2,
+            x : ((SCREEN_WIDTH as i32)/2) as f64,
+            y : ((SCREEN_HEIGHT as i32)/2) as f64,
+            velocity_x : 0.0,
+            velocity_y : 0.0,
             size : 50,
             animation_data : None,
-            hitbox : AABB::new((SCREEN_WIDTH as i32)/2 + 10,(SCREEN_HEIGHT as i32)/2+15,30,30),
+            hitbox : AABB::new(((SCREEN_WIDTH as i32)/2) as f64 + 10.0,((SCREEN_HEIGHT as i32)/2)as f64+15.0,30,30),
             colliding : false,
-            speed : 15,
+            speed : 250.0,
             reached_end : None,
         }
     }
@@ -46,54 +50,62 @@ impl Player{
             },
             None => {
                 canvas.set_draw_color(sdl2::pixels::Color::RGB(255,192,203));
-                canvas.fill_rect(sdl2::rect::Rect::new(self.x -camera.x,self.y-camera.y,self.size,self.size)).unwrap();
+                canvas.fill_rect(sdl2::rect::Rect::new((self.x -camera.x) as i32,(self.y-camera.y)as i32,self.size,self.size)).unwrap();
             }
         }
     }
 
-    pub fn on_event(&mut self, event : &sdl2::event::Event, tx : &std::sync::mpsc::Sender<Packet>, level : &Level, camera : &mut Camera){
-        let mut updated = false;
-        match event {
-            sdl2::event::Event::KeyDown { keycode: Some(keycode), .. } => {
-                match *keycode {
-                    sdl2::keyboard::Keycode::Up => {
-                        self.y -= self.speed;
-                        self.hitbox.y -= self.speed;
-                        updated = true;
-                    },
-                    sdl2::keyboard::Keycode::Down => {
-                        self.y += self.speed;
-                        self.hitbox.y += self.speed;
-                        updated = true;
-                    },
-                    sdl2::keyboard::Keycode::Left => {
-                        self.x -= self.speed;
-                        self.hitbox.x -= self.speed;
-                        updated = true;
-                    },
-                    sdl2::keyboard::Keycode::Right => {
-                        self.x += self.speed;
-                        self.hitbox.x += self.speed;
-                        updated = true;
-                    },
-                    _ => ()
-                }
+    pub fn update(&mut self, dt : f64,tx : &std::sync::mpsc::Sender<Packet>, level : &Level, camera : &mut Camera){
+        match self.animation_data {
+            Some(ref mut animation_data) => {
+                animation_data.update(dt);
             },
-            _ => ()
+            None => ()
         }
-        if !updated {
+
+        self.x += self.velocity_x * dt;
+        self.y += self.velocity_y * dt;
+        self.hitbox.x += self.velocity_x * dt;
+        self.hitbox.y += self.velocity_y * dt;
+
+        if self.velocity_x == 0.0 && self.velocity_y == 0.0 {
             return;
         }
+
         self.resolve_collision(level);
         let send = Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{x : self.x, y : self.y, player_id: self.id}));
         tx.send(send).unwrap();
 
-        camera.x = self.x + self.size as i32/2 - SCREEN_WIDTH as i32/2;
-        camera.y = self.y + self.size as i32/2 - SCREEN_HEIGHT as i32/2;
+        camera.x = self.x + (self.size as i32/2 - SCREEN_WIDTH as i32/2) as f64;
+        camera.y = self.y + (self.size as i32/2 - SCREEN_HEIGHT as i32/2) as f64;
         if self.check_collision(level) {
             self.colliding = true;
         }else {
             self.colliding = false;
+        }
+    }
+
+    pub fn on_event(&mut self, event : &sdl2::event::Event){
+        match event {
+            sdl2::event::Event::KeyDown { keycode: Some(keycode), .. } => {
+                match *keycode {
+                    sdl2::keyboard::Keycode::Up =>    self.velocity_y = -self.speed,
+                    sdl2::keyboard::Keycode::Down =>  self.velocity_y = self.speed,
+                    sdl2::keyboard::Keycode::Left =>  self.velocity_x = -self.speed,
+                    sdl2::keyboard::Keycode::Right => self.velocity_x = self.speed,
+                    _ => ()
+                }
+            },
+            sdl2::event::Event::KeyUp { keycode : Some(keycode), .. } => {
+                match *keycode {
+                    sdl2::keyboard::Keycode::Up =>    self.velocity_y = 0.0,
+                    sdl2::keyboard::Keycode::Down =>  self.velocity_y = 0.0,
+                    sdl2::keyboard::Keycode::Left =>  self.velocity_x = 0.0,
+                    sdl2::keyboard::Keycode::Right => self.velocity_x = 0.0,
+                    _ => ()
+                }
+            }
+            _ => ()
         }
     }
 
@@ -119,10 +131,10 @@ impl Player{
                 match tile.bounding_box{
                     Some(ref bounding_box) => {
                         if self.hitbox.intersects(bounding_box){
-                            let x1 = self.hitbox.x + self.hitbox.w as i32 - bounding_box.x; // right side of player - left side of tile
-                            let x2 = bounding_box.x + bounding_box.w as i32 - self.hitbox.x; // right side of tile - left side of player
-                            let y1 = self.hitbox.y + self.hitbox.h as i32 - bounding_box.y; // bottom side of player - top side of tile
-                            let y2 = bounding_box.y + bounding_box.h as i32 - self.hitbox.y; // bottom side of tile - top side of player
+                            let x1 = self.hitbox.x + self.hitbox.w as f64 - bounding_box.x; // right side of player - left side of tile
+                            let x2 = bounding_box.x + bounding_box.w as f64 - self.hitbox.x; // right side of tile - left side of player
+                            let y1 = self.hitbox.y + self.hitbox.h as f64 - bounding_box.y; // bottom side of player - top side of tile
+                            let y2 = bounding_box.y + bounding_box.h as f64 - self.hitbox.y; // bottom side of tile - top side of player
                             let min = x1.min(x2).min(y1).min(y2);
                             if min == x1 {
                                 self.x -= x1;

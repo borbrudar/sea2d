@@ -131,14 +131,14 @@ impl Game{
         player.animation_data.as_mut().unwrap().load_animation("resources/player_animation/player.png".to_string(),0,0,16,16,3, 
         &texture_creator,&mut texture_map);
         player.animation_data.as_mut().unwrap().animation_type = AnimationType::PingPong;                    
-        player.x = level.player_spawn.0;
-        player.y = level.player_spawn.1;
-        player.hitbox.x = player.x + 10;
-        player.hitbox.y = player.y + 15;
+        player.x = level.player_spawn.0 as f64;
+        player.y = level.player_spawn.1 as f64;
+        player.hitbox.x = player.x + 10.;
+        player.hitbox.y = player.y + 15.;
 
         // camera init
-        let mut camera = Camera::new(player.x + player.size as i32/2 - SCREEN_WIDTH as i32/2,
-        player.y + player.size as i32/2 - SCREEN_HEIGHT as i32/2, SCREEN_WIDTH,SCREEN_HEIGHT);
+        let mut camera = Camera::new(player.x + (player.size as i32/2 - SCREEN_WIDTH as i32/2) as f64,
+        player.y + (player.size as i32/2 - SCREEN_HEIGHT as i32/2) as f64, SCREEN_WIDTH,SCREEN_HEIGHT);
 
         // hud
         let hud = Hud::new();
@@ -150,7 +150,7 @@ impl Game{
         'running: loop {
             // event polling
             for event in event_pump.poll_iter() {
-                player.on_event(&event, &self.packet_sender, &level, &mut camera);
+                player.on_event(&event);
                 //camera.handle_zoom(&event);
                 match event {
                     sdl2::event::Event::Quit {..} | 
@@ -167,12 +167,12 @@ impl Game{
             // check if we need to load a new level
             if let Some(exit) = player.reached_end.clone(){
                 level.load_from_file(exit.next_level.clone(),&texture_creator,&mut texture_map);
-                player.x = level.player_spawn.0;
-                player.y = level.player_spawn.1;
-                player.hitbox.x = player.x + 10;
-                player.hitbox.y = player.y + 15;
-                camera.x = player.x + player.size as i32/2 - SCREEN_WIDTH as i32/2;
-                camera.y = player.y + player.size as i32/2 - SCREEN_HEIGHT as i32/2;
+                player.x = level.player_spawn.0 as f64;
+                player.y = level.player_spawn.1 as f64;
+                player.hitbox.x = player.x + 10.0;
+                player.hitbox.y = player.y + 15.0;
+                camera.x = player.x + (player.size as i32/2 - SCREEN_WIDTH as i32/2) as f64;
+                camera.y = player.y + (player.size as i32/2 - SCREEN_HEIGHT as i32/2) as f64;
                 player.reached_end = None;
             }
     
@@ -186,9 +186,7 @@ impl Game{
             while frame_time > std::time::Duration::from_secs_f64(0.0){
                 let delta_time = f64::min(frame_time.as_secs_f64(), time_step);
                 
-                if !player.animation_data.is_none(){
-                    player.animation_data.as_mut().unwrap().update(delta_time);
-                }
+                player.update(delta_time, &self.packet_sender, &level, &mut camera);
                 for (_,other_player) in &mut other_players{
                     if !other_player.animation_data.is_none(){
                         other_player.animation_data.as_mut().unwrap().update(delta_time);

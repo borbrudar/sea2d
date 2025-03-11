@@ -2,15 +2,15 @@
 
 
 pub struct Camera{
-    pub x : i32,
-    pub y : i32,
+    pub x : f64,
+    pub y : f64,
     pub width : u32,
     pub height : u32,
     //zoom : f32,
 }
 
 impl Camera{
-    pub fn new(x : i32, y : i32, width : u32, height : u32) -> Camera{
+    pub fn new(x : f64, y : f64, width : u32, height : u32) -> Camera{
         Camera{
             x,
             y,

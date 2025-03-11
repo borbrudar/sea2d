@@ -57,7 +57,7 @@ impl<'a> Level{
         
         let mut layer = Vec::new();
 
-        let tile_size  = 50;
+        let tile_size  = 50.;
         for y in 0..height{
             for x in 0..width{
                 let pixel = img.get_pixel(x, y);
@@ -67,46 +67,46 @@ impl<'a> Level{
                 //println!("Pixel: {:?}",pixel);
                 match pixel{
                     TileType::STONE_COLOR => {
-                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Stone, None));
+                        layer.push(Tile::new(x as f64 * tile_size, y as f64 * tile_size, tile_size as u32, TileType::Stone, None));
                         layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/tile.png".to_string()));
                         layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map, );
                     },
                     TileType::WATER_COLOR => {
-                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Water, Some(AABB::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, tile_size as u32))));
+                        layer.push(Tile::new(x as f64 * tile_size, y as f64 * tile_size, tile_size as u32, TileType::Water, Some(AABB::new(x as f64 * tile_size, y as f64 * tile_size, tile_size as u32, tile_size as u32))));
                         layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/water.png".to_string()));
                         layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map);
                     },
                     TileType::GRASS_COLOR => {
-                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Grass, None));
+                        layer.push(Tile::new(x as f64 * tile_size, y as f64 * tile_size, tile_size as u32, TileType::Grass, None));
                         layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/grass.png".to_string()));
                         layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map);
                     },
                     TileType::SAND_COLOR => {
-                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Sand, None));
+                        layer.push(Tile::new(x as f64 * tile_size, y as f64 * tile_size, tile_size as u32, TileType::Sand, None));
                         layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/sand.png".to_string()));
                         layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map);
                     },
                     TileType::ROCK_COLOR => {
-                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Rock, Some(AABB::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, tile_size as u32))));
+                        layer.push(Tile::new(x as f64 * tile_size, y as f64 * tile_size, tile_size as u32, TileType::Rock, Some(AABB::new(x as f64 * tile_size, y as f64 * tile_size, tile_size as u32, tile_size as u32))));
                         layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/rock.png".to_string()));
                         layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map);
                     },
                     TileType::TREE_COLOR => {
-                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Tree, Some(AABB::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, tile_size as u32))));
+                        layer.push(Tile::new(x as f64 * tile_size, y as f64 * tile_size, tile_size as u32, TileType::Tree, Some(AABB::new(x as f64 * tile_size, y as f64 * tile_size, tile_size as u32, tile_size as u32))));
                         layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/tree.png".to_string()));
                         layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map);
                     },
                     TileType::WALL_COLOR => {
-                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Wall, Some(AABB::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, tile_size as u32))));
+                        layer.push(Tile::new(x as f64 * tile_size, y as f64 * tile_size, tile_size as u32, TileType::Wall, Some(AABB::new(x as f64 * tile_size, y as f64 * tile_size, tile_size as u32, tile_size as u32))));
                         layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/wall.png".to_string()));
                         layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map);
                     },
                     TileType::PLAYER_SPAWN_COLOR => {
-                        self.player_spawn = (x as i32 * tile_size, y as i32 * tile_size);
+                        self.player_spawn = ((x  as f64 * tile_size) as i32, (y as f64 * tile_size) as i32);
                     }
                     TileType::EXIT_COLOR => {
                         let last = exits.pop().unwrap();
-                        layer.push(Tile::new(x as i32 * tile_size, y as i32 * tile_size, tile_size as u32, TileType::Exit(ExitTile{next_level : last}), Some(AABB::new(x as i32 * tile_size + tile_size/4, y as i32 * tile_size+tile_size/4, tile_size as u32/2, tile_size as u32/2))));
+                        layer.push(Tile::new(x as f64 * tile_size, y as f64 * tile_size, tile_size as u32, TileType::Exit(ExitTile{next_level : last}), Some(AABB::new(x as f64 * tile_size + tile_size/4., y as f64 * tile_size+tile_size/4., tile_size as u32/2, tile_size as u32/2))));
                         //layer.last_mut().unwrap().texture_data = Some(TextureData::new("resources/textures/empty.png".to_string()));
                         //layer.last_mut().unwrap().texture_data.as_mut().unwrap().load_texture(&texture_creator, texture_map);
                     },
