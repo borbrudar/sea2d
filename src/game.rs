@@ -110,7 +110,8 @@ impl Game{
             .build()
             .unwrap();
 
-        
+        let viewport = rect::Rect::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
+        canvas.set_viewport(viewport);
         let mut event_pump = sdl_context.event_pump().unwrap();
         
         

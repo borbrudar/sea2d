@@ -72,14 +72,24 @@ impl Player{
             None => ()
         }
 
-        self.x += self.velocity_x * dt;
-        self.y += self.velocity_y * dt;
-        self.hitbox.x += self.velocity_x * dt;
-        self.hitbox.y += self.velocity_y * dt;
-
         if self.velocity_x == 0.0 && self.velocity_y == 0.0 {
             return;
         }
+        
+
+        if self.velocity_x != 0.0 && self.velocity_y != 0.0 {
+            self.x += self.velocity_x * dt * 0.7071; // sqrt(2)/2
+            self.y += self.velocity_y * dt * 0.7071;
+            self.hitbox.x += self.velocity_x * dt * 0.7071;
+            self.hitbox.y += self.velocity_y * dt * 0.7071; 
+        }
+        else{   
+            self.x += self.velocity_x * dt;
+            self.y += self.velocity_y * dt;
+            self.hitbox.x += self.velocity_x * dt;
+            self.hitbox.y += self.velocity_y * dt;
+        }
+            
 
         self.resolve_collision(level);
         let send = Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{x : self.x, y : self.y, player_id: self.id}));
