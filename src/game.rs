@@ -70,11 +70,8 @@ impl Game{
                             PlayerPacket::PlayerAnimationPacket(animation) => {
                                 //println!("Got an animation packet");
                                 if let Some(other_player) = other_players.get_mut(&animation.id) {
-                                    println!("Processed animation packet");
                                     other_player.animation_data = Some(animation.animation_data.clone());
-                                    println!("Received animation data {:?}", &other_player.animation_data);
                                     other_player.animation_data.as_mut().unwrap().load_animation(animation.animation_data.frames[0].path.clone(), 0, 0, 16, 16, 3, &texture_creator, texture_map);
-                                    println!("Received animation data2 {:?}", &other_player.animation_data);
                                 }
                             },
                         }
@@ -84,8 +81,9 @@ impl Game{
                         if player.id == 1_000_000{
                             player.id = id.id;
                         }
+                        let data = PlayerWelcome{player_id : player.id, x : player.x, y : player.y};
+                        self.packet_sender.send(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(data))).unwrap();
                         let data = PlayerAnimation{id : player.id, animation_data : player.animation_data.clone().unwrap()};
-                        println!("Sending animation packet");
                         self.packet_sender.send(Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(data))).unwrap();
                     }
                 }

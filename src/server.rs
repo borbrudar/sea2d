@@ -37,6 +37,9 @@ fn handle_player_send(packet : PlayerPacket, player_id : u64, players : &mut Mut
             players.get_mut(&player_id).unwrap().animation_data = Some(animation_data.clone());
             return Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(PlayerAnimation{id,animation_data}));
         },
+        PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id,x,y}) => {
+            return Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id,x,y}));
+        },
         _ => panic!("Wtf you doing bro")
     }
 }
@@ -78,10 +81,6 @@ pub fn server(){
             let uuid = *ip_to_uuid.lock().unwrap().get(&addr).unwrap();
             players_lock.insert(new_id, Player::new(uuid));
 
-            // packet that tells everyone each other's initial position
-            for u in players_lock.values(){
-                tx.send(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id : u.id as u64, x : u.x, y : u.y}))).unwrap();
-            }
             
             clients.insert(uuid, socket.try_clone().expect("Failed to clone client"));
             let players_thr = Arc::clone(&players);
