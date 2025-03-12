@@ -44,6 +44,18 @@ fn handle_player_send(packet : PlayerPacket, player_id : u64, players : &mut Has
     }
 }
 
+fn send_to_clients(packet : Packet, clients : &mut HashMap<u64,TcpStream>){
+    match packet {
+        Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect{id})) => {
+            clients.remove(&id);
+        },
+        _ => ()
+    }
+    
+    for (_,mut client) in clients.iter_mut(){
+        serialize_and_send(&mut client, packet.clone());
+    }  
+}
 
 pub fn server(){
     // create a listener
@@ -51,8 +63,8 @@ pub fn server(){
     listener.set_nonblocking(true).expect("Failed to initialize non-blocking");
 
     let mut clients : HashMap<u64,TcpStream> = HashMap::new(); // uuid to tcp stream
-    let (client_sender,client_receiver) = mspc::channel::<Packet>();   // receives/send from/to clients directly
-    let (server_sender,server_receiver) = mspc::channel::<ServerPacket>();   // intermediate step to handle input (internally so we dont need arc(mutex) on everything to pass between threads)
+    // intermediate step to handle client messages (so we dont need arc(mutex) on everything to pass between threads)
+    let (server_sender,server_receiver) = mspc::channel::<ServerPacket>();  
 
     let mut ip_to_uuid : HashMap<std::net::SocketAddr, u64> = HashMap::new();
     let mut uuid_to_ip : HashMap<u64,std::net::SocketAddr> = HashMap::new();
@@ -65,7 +77,6 @@ pub fn server(){
         // socket reading
         if let Ok((mut socket, addr)) = listener.accept() {
             println!("Client {} connected", addr);
-            let client_sender = client_sender.clone();
             let server_sender = server_sender.clone();
 
             // add a new uuid for the client 
@@ -74,13 +85,12 @@ pub fn server(){
             ip_to_uuid.insert(addr,uuid);
             uuid_to_ip.insert(uuid,addr);
             
-            // send the client id to the client
-            client_sender.send(Packet::ClientIDPacket(ClientID{id : uuid})).expect("Failed to send client id packet");
-            
             // add player to the player list
-            server_sender.send(ServerPacket::AddPlayer(addr));            
+            server_sender.send(ServerPacket::AddPlayer(addr)).expect("Failed adding client to player list");            
             clients.insert(uuid, socket.try_clone().expect("Failed to clone client"));
-
+            
+            // send the client id to the client
+            send_to_clients(Packet::ClientIDPacket(ClientID{id : uuid}), &mut clients);
             
             // read from the socket, new thread for each client
             thread::spawn(move || loop {
@@ -88,7 +98,7 @@ pub fn server(){
                     NetworkResult::Ok(buf) => {
                         match deserialize_to_packet(buf){
                             // handling in the main thread
-                            Some(packet) => server_sender.send(ServerPacket::ServerInternalPacket(ServerInternal{address:addr,packet})).expect("Failed to send player packet"),
+                            Some(packet) => server_sender.send(ServerPacket::ServerInternalPacket(ServerInternal{address:addr,packet})).expect("Failed to send internal server packet"),
                             _ => println!("Unknown packet"),
                         }
                     },
@@ -101,21 +111,7 @@ pub fn server(){
                     }
                 }
             });
-        }
-        // socket writing
-        if let Ok(msg) = client_receiver.try_recv(){
-            match msg {
-                Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect{id})) => {
-                    clients.remove(&id);
-                },
-                _ => ()
-            }
-            
-            for (_,mut client) in clients.iter_mut(){
-                serialize_and_send(&mut client, msg.clone());
-            }        
-        }
-        
+        }        
         
         // handle incoming packets
         if let Ok(packet) = server_receiver.try_recv(){
@@ -126,7 +122,7 @@ pub fn server(){
                         Packet::PlayerPacket(packet) => {
                             let sender_uuid = ip_to_uuid.get(&addr).unwrap().clone();
                             let packet = handle_player_send(packet, sender_uuid, &mut players); 
-                            client_sender.send(packet).expect("Failed to send player packet");
+                            send_to_clients(packet, &mut clients);
                         }
                         _ => ()
                     }
@@ -138,7 +134,8 @@ pub fn server(){
                 ServerPacket::RemovePlayer(addr) => {
                     let uuid = *ip_to_uuid.get(&addr).unwrap();
                     //players.remove(&uuid);
-                    client_sender.send(Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect{id : uuid as u64}))).expect("Failed to send disconnect packet");
+                    let disconnect_packet = Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect{id : uuid as u64}));
+                    send_to_clients(disconnect_packet, &mut clients);
                 }
             }
         }

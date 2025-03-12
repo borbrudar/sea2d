@@ -77,7 +77,7 @@ impl Game{
                         }
                     },
                     Packet::ClientIDPacket(id) =>{
-                       // println!("Got an id :{}",id.id);
+                        println!("Got an id :{}",id.id);
                         if player.id == 1_000_000{
                             player.id = id.id;
                         }
