@@ -14,6 +14,17 @@ pub enum Packet{
     PlayerPacket(PlayerPacket),
 }
 
+pub enum ServerPacket{
+    AddPlayer(std::net::SocketAddr),
+    ServerInternalPacket(ServerInternal),
+    RemovePlayer(std::net::SocketAddr),
+}
+
+pub struct ServerInternal{
+    pub address : std::net::SocketAddr,
+    pub packet : Packet,
+}
+
 #[derive(Serialize,Deserialize,Debug,Clone,PartialEq)]
 pub struct ClientID{
     pub id : u64,
