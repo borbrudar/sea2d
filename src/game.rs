@@ -1,4 +1,5 @@
 use crate::animated_texture::AnimatedTexture;
+use crate::enemy::Enemy;
 use crate::packet::Packet;
 use crate::player::Player;
 use crate::shared::*;
@@ -146,6 +147,14 @@ impl Game{
         let mut camera = Camera::new(player.x + (player.size as i32/2 - SCREEN_WIDTH as i32/2) as f64,
         player.y + (player.size as i32/2 - SCREEN_HEIGHT as i32/2) as f64, SCREEN_WIDTH,SCREEN_HEIGHT);
 
+        // enemy
+        let mut enemy = Enemy::new();
+        enemy.animation_data = Some(AnimatedTexture::new(1.0/6.));
+        enemy.animation_data.as_mut().unwrap().load_animation("resources/textures/enemy.png".to_string(),0,0,16,16,3, 
+        &texture_creator,&mut texture_map);
+        enemy.animation_data.as_mut().unwrap().animation_type = AnimationType::PingPong;             
+
+
         // hud
         let hud = Hud::new();
         let mut draw_hitboxes = false;
@@ -203,6 +212,7 @@ impl Game{
                 
                 match self.game_state {
                     GameState::Running => {
+                        enemy.update(delta_time);
                         player.update(delta_time, &self.packet_sender, &level, &mut camera);
                         for (_,other_player) in &mut other_players{
                             if !other_player.animation_data.is_none(){
@@ -228,6 +238,8 @@ impl Game{
             if draw_hitboxes {
                 level.draw_hitboxes(&mut canvas,&camera);
             }
+            // draw enemy
+            enemy.draw(&mut canvas,&texture_map,&camera);
             //draw other player
             for (_,other_player) in &mut other_players{
                 other_player.draw(&mut canvas,&texture_map,&camera);
