@@ -1,4 +1,5 @@
 use crate::aabb::AABB;
+use crate::shared::{SCREEN_HEIGHT,SCREEN_WIDTH};
 use crate::{camera::Camera, texture_data::TextureData};
 use crate::tile_type::TileType;
 
@@ -28,6 +29,9 @@ impl Tile{
         //let scaled_h = camera.apply_zoom(self.size as f32) as u32;
         let scaled_w = self.size;
         let scaled_h = self.size;
+        if self.x-camera.x+(scaled_w as f64)< 0.0 || self.y-camera.y+(scaled_h as f64) < 0.0 || self.x-camera.x > SCREEN_WIDTH as f64 || self.y-camera.y > SCREEN_HEIGHT as f64{
+            return;
+        }
         match self.texture_data {
             Some(ref texture_data) => {
                 let res = texture_data.draw(canvas,texture_map,self.x-camera.x,self.y-camera.y,scaled_w ,scaled_h);

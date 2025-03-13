@@ -1,7 +1,7 @@
 use crate::networking::{deserialize_to_packet, serialize_and_send, try_read_tcp, NetworkResult};
 use crate::shared::LOCAL;
 use std::net::{TcpListener, TcpStream};
-use std::sync::{mpsc as mspc, MutexGuard};
+use std::sync::mpsc as mspc;
 use std::thread;
 use std::collections::{HashMap,HashSet};
 use crate::packet::{ClientID, Packet, ServerInternal, ServerPacket};
@@ -9,7 +9,6 @@ use crate::player::Player;
 use crate::player_packets::*;
 use rand::Rng;
 
-use std::sync::{Arc,Mutex};
 
 
 fn new_client_id(set : &HashSet<u64> ) -> u64 {
@@ -39,8 +38,7 @@ fn handle_player_send(packet : PlayerPacket, player_id : u64, players : &mut Has
         },
         PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id,x,y}) => {
             return Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id,x,y}));
-        },
-        _ => panic!("Wtf you doing bro")
+        }
     }
 }
 

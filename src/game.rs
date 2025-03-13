@@ -122,7 +122,7 @@ impl Game{
         
         // level loading
         let mut level = Level::new();
-        level.load_from_file("resources/levels/level1_1.png".to_string(),&texture_creator,&mut texture_map);
+        level.load_from_file("resources/levels/stress_test1_1.png".to_string(),&texture_creator,&mut texture_map);
         
         // player setup
         let mut player = Player::new(1_000_000);

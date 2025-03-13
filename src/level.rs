@@ -1,6 +1,5 @@
 use std::{collections::HashMap, io::BufRead};
 
-use bincode::de;
 use ::image::RgbaImage;
 use sdl2::render::{Texture, TextureCreator};
 
