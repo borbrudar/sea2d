@@ -51,6 +51,15 @@ impl Player{
         }
     }
 
+    pub fn reset_velocity(&mut self) {
+        self.velocity_x = 0.0;
+        self.velocity_y = 0.0;
+        self.pressed_down = false;
+        self.pressed_left = false;
+        self.pressed_right = false;
+        self.pressed_up = false;
+    }
+
     pub fn draw(&self,canvas : &mut Canvas<Window>, texture_map : &std::collections::HashMap<String,Texture>, camera : &Camera){ 
         match self.animation_data {
             Some(ref animation_data) => {

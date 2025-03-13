@@ -16,9 +16,15 @@ use crate::hud::Hud;
 use crate::animated_texture::AnimationType;
 
 
+pub enum GameState{
+    Running,
+    Paused
+}
+
 pub struct Game{
     packet_receiver : mspc::Receiver<Packet>,
     packet_sender : mspc::Sender<Packet>,
+    game_state : GameState
 }
 
 fn find_sdl_gl_driver() -> Option<u32> {
@@ -35,6 +41,7 @@ impl Game{
         Game{
             packet_receiver,
             packet_sender,
+            game_state : GameState::Running
         }
     }
 
@@ -122,7 +129,7 @@ impl Game{
         
         // level loading
         let mut level = Level::new();
-        level.load_from_file("resources/levels/stress_test1_1.png".to_string(),&texture_creator,&mut texture_map);
+        level.load_from_file("resources/levels/level1_1.png".to_string(),&texture_creator,&mut texture_map);
         
         // player setup
         let mut player = Player::new(1_000_000);
@@ -149,7 +156,10 @@ impl Game{
         'running: loop {
             // event polling
             for event in event_pump.poll_iter() {
-                player.on_event(&event);
+                match self.game_state {
+                    GameState::Running => player.on_event(&event),
+                    GameState::Paused => player.reset_velocity(),
+                }
                 //camera.handle_zoom(&event);
                 match event {
                     sdl2::event::Event::Quit {..} | 
@@ -158,6 +168,12 @@ impl Game{
                     },
                     sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::H), .. } => {
                         draw_hitboxes = !draw_hitboxes;
+                    }
+                    sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::P), ..} =>{
+                        match self.game_state {
+                            GameState::Paused => self.game_state = GameState::Running,
+                            GameState::Running => self.game_state = GameState::Paused,
+                        }
                     }
                     _ => {}
                 }
@@ -185,11 +201,16 @@ impl Game{
             while frame_time > std::time::Duration::from_secs_f64(0.0){
                 let delta_time = f64::min(frame_time.as_secs_f64(), time_step);
                 
-                player.update(delta_time, &self.packet_sender, &level, &mut camera);
-                for (_,other_player) in &mut other_players{
-                    if !other_player.animation_data.is_none(){
-                        other_player.animation_data.as_mut().unwrap().update(delta_time);
+                match self.game_state {
+                    GameState::Running => {
+                        player.update(delta_time, &self.packet_sender, &level, &mut camera);
+                        for (_,other_player) in &mut other_players{
+                            if !other_player.animation_data.is_none(){
+                                other_player.animation_data.as_mut().unwrap().update(delta_time);
+                            }
+                        }
                     }
+                    _ => ()
                 }
     
                 frame_time -= std::time::Duration::from_secs_f64(delta_time);
@@ -222,7 +243,15 @@ impl Game{
             hud.draw(&mut canvas);
 
             // clear screen
-            canvas.set_draw_color(sdl2::pixels::Color::RGB(0,0,0));
+            match self.game_state{
+                GameState::Paused => {
+                    canvas.set_draw_color(sdl2::pixels::Color::RGBA(00,00,255,150));
+                    canvas.set_blend_mode(sdl2::render::BlendMode::Blend);
+                    canvas.fill_rect(rect::Rect::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT)).unwrap();
+                },
+                _ => ()
+            }
+
             canvas.present();
     
     
