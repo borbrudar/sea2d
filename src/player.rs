@@ -117,19 +117,19 @@ impl Player{
         match event {
             sdl2::event::Event::KeyDown { keycode: Some(keycode), .. } => {
                 match *keycode {
-                    sdl2::keyboard::Keycode::Up =>    {
+                    sdl2::keyboard::Keycode::Up | sdl2::keyboard::Keycode::W =>    {
                         self.velocity_y = -self.speed;
                         self.pressed_up = true;
                     },
-                    sdl2::keyboard::Keycode::Down =>  {
+                    sdl2::keyboard::Keycode::Down | sdl2::keyboard::Keycode::S =>  {
                         self.velocity_y = self.speed;
                         self.pressed_down = true;
                     },
-                    sdl2::keyboard::Keycode::Left =>  {
+                    sdl2::keyboard::Keycode::Left | sdl2::keyboard::Keycode::A =>  {
                         self.velocity_x = -self.speed;
                         self.pressed_left = true;
                     },
-                    sdl2::keyboard::Keycode::Right => {
+                    sdl2::keyboard::Keycode::Right | sdl2::keyboard::Keycode::D => {
                         self.velocity_x = self.speed;
                         self.pressed_right = true;
                     }
@@ -138,7 +138,7 @@ impl Player{
             },
             sdl2::event::Event::KeyUp { keycode : Some(keycode), .. } => {
                 match *keycode {
-                    sdl2::keyboard::Keycode::Up =>    {
+                    sdl2::keyboard::Keycode::Up | sdl2::keyboard::Keycode::W =>    {
                         self.pressed_up = false;
                         if self.pressed_down {
                             self.velocity_y = self.speed;
@@ -146,7 +146,7 @@ impl Player{
                             self.velocity_y = 0.0;
                         }
                     },
-                    sdl2::keyboard::Keycode::Down =>  {
+                    sdl2::keyboard::Keycode::Down | sdl2::keyboard::Keycode::S =>  {
                         self.pressed_down = false;
                         if self.pressed_up {
                             self.velocity_y = -self.speed;
@@ -154,7 +154,7 @@ impl Player{
                             self.velocity_y = 0.0;
                         }
                     },
-                    sdl2::keyboard::Keycode::Left =>  {
+                    sdl2::keyboard::Keycode::Left | sdl2::keyboard::Keycode::A =>  {
                         self.pressed_left = false;
                         if self.pressed_right {
                             self.velocity_x = self.speed;
@@ -162,7 +162,7 @@ impl Player{
                             self.velocity_x = 0.0;
                         }
                     },
-                    sdl2::keyboard::Keycode::Right => {
+                    sdl2::keyboard::Keycode::Right | sdl2::keyboard::Keycode::D => {
                         self.pressed_right = false;
                         if self.pressed_left {
                             self.velocity_x = -self.speed;

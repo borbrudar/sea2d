@@ -19,7 +19,7 @@ impl Enemy{
             y : 50., 
             animation_data : None,
             size : 50,
-            hitbox : AABB::new(50.,50.,50,50)
+            hitbox : AABB::new(55.,55.,40,40)
         }
     }
 

@@ -227,6 +227,8 @@ impl Game{
             }
     
             // drawing
+            canvas.set_blend_mode(sdl2::render::BlendMode::None);
+            canvas.set_draw_color(Color::BLACK);
             canvas.clear();
 
             //let viewport = rect::Rect::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
@@ -250,6 +252,7 @@ impl Game{
             
             if draw_hitboxes{
                 player.hitbox.draw(&mut canvas,player_hitbox_color,&camera);
+                enemy.hitbox.draw(&mut canvas,Color::RED,&camera);
             }
             
             hud.draw(&mut canvas);
