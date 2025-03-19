@@ -28,6 +28,8 @@ pub struct Player{
     pressed_down : bool,
     pressed_left : bool,
     pressed_right : bool,
+
+    pub current_level : String,
 }
 
 impl Player{
@@ -48,6 +50,7 @@ impl Player{
             pressed_down : false,
             pressed_left : false,
             pressed_right : false,
+            current_level : String::new()
         }
     }
 

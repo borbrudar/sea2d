@@ -6,6 +6,7 @@ use crate::shared::*;
 use crate::player_packets::*;
 
 use std::sync::mpsc as mspc;
+use sdl2::image::init;
 use sdl2::image::{self};
 use sdl2::pixels::Color;
 use sdl2::rect;
@@ -82,6 +83,12 @@ impl Game{
                                     other_player.animation_data.as_mut().unwrap().load_animation(animation.animation_data.frames[0].path.clone(), 0, 0, 16, 16, 3, &texture_creator, texture_map);
                                 }
                             },
+                            PlayerPacket::PlayerLevelPacket(level) => {
+                                //println!("Got a level packet");
+                                if let Some(other_player) = other_players.get_mut(&level.player_id) {
+                                    other_player.current_level = level.level.clone();
+                                }
+                            }
                         }
                     },
                     Packet::ClientIDPacket(id) =>{
@@ -93,6 +100,7 @@ impl Game{
                         self.packet_sender.send(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(data))).unwrap();
                         let data = PlayerAnimation{id : player.id, animation_data : player.animation_data.clone().unwrap()};
                         self.packet_sender.send(Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(data))).unwrap();
+                        self.packet_sender.send(Packet::PlayerPacket(PlayerPacket::PlayerLevelPacket(PlayerLevel{player_id : player.id, level : player.current_level.clone()}))).unwrap();
                     }
                 }
             },
@@ -103,6 +111,8 @@ impl Game{
 
     // main game loop
     pub fn run(&mut self){
+        let initial_level = "resources/levels/level1_1.png".to_string();
+
         // initalize sdl2 stuff
         let sdl_context = sdl2::init().unwrap();
         let video_subsystem = sdl_context.video().unwrap();
@@ -130,7 +140,7 @@ impl Game{
         
         // level loading
         let mut level = Level::new();
-        level.load_from_file("resources/levels/level1_1.png".to_string(),&texture_creator,&mut texture_map);
+        level.load_from_file(initial_level.clone(),&texture_creator,&mut texture_map);
         
         // player setup
         let mut player = Player::new(1_000_000);
@@ -142,7 +152,8 @@ impl Game{
         player.y = level.player_spawn.1 as f64;
         player.hitbox.x = player.x + 10.;
         player.hitbox.y = player.y + 15.;
-
+        player.current_level = initial_level.clone();
+        
         // camera init
         let mut camera = Camera::new(player.x + (player.size as i32/2 - SCREEN_WIDTH as i32/2) as f64,
         player.y + (player.size as i32/2 - SCREEN_HEIGHT as i32/2) as f64, SCREEN_WIDTH,SCREEN_HEIGHT);
@@ -198,6 +209,8 @@ impl Game{
                 camera.x = player.x + (player.size as i32/2 - SCREEN_WIDTH as i32/2) as f64;
                 camera.y = player.y + (player.size as i32/2 - SCREEN_HEIGHT as i32/2) as f64;
                 player.reached_end = None;
+                player.current_level = exit.next_level.clone();
+                self.packet_sender.send(Packet::PlayerPacket(PlayerPacket::PlayerLevelPacket(PlayerLevel{player_id : player.id, level : player.current_level.clone()}))).unwrap();
             }
     
     
@@ -242,9 +255,11 @@ impl Game{
             }
             // draw enemy
             enemy.draw(&mut canvas,&texture_map,&camera);
-            //draw other player
+            //draw other player if on the same level
             for (_,other_player) in &mut other_players{
-                other_player.draw(&mut canvas,&texture_map,&camera);
+                if other_player.current_level == player.current_level {
+                    other_player.draw(&mut canvas,&texture_map,&camera);
+                }
             }
             // draw self
             player.draw(&mut canvas,&texture_map,&camera);

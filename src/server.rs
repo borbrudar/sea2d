@@ -38,6 +38,10 @@ fn handle_player_send(packet : PlayerPacket, player_id : u64, players : &mut Has
         },
         PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id,x,y}) => {
             return Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id,x,y}));
+        },
+        PlayerPacket::PlayerLevelPacket(PlayerLevel{player_id,level}) => {
+            players.get_mut(&player_id).unwrap().current_level = level.clone();
+            return Packet::PlayerPacket(PlayerPacket::PlayerLevelPacket(PlayerLevel{player_id,level}));
         }
     }
 }
