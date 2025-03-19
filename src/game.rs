@@ -6,7 +6,6 @@ use crate::shared::*;
 use crate::player_packets::*;
 
 use std::sync::mpsc as mspc;
-use sdl2::image::init;
 use sdl2::image::{self};
 use sdl2::pixels::Color;
 use sdl2::rect;
