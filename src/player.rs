@@ -2,6 +2,7 @@ use crate::aabb::AABB;
 use crate::animated_texture::AnimatedTexture;
 use crate::level::Level;
 use crate::packet::Packet;
+use crate::point::Point;
 use crate::shared::{SCREEN_HEIGHT,SCREEN_WIDTH};
 use crate::tile_type::ExitTile;
 use sdl2::render::Canvas;
@@ -180,16 +181,35 @@ impl Player{
         }
     }
 
+    // snap to nearest tile
+    fn get_snapped_position(&self, level : &Level) -> (i32,i32){
+        let x = (self.x + self.size as f64/2.0) as i32;
+        let y = (self.y + self.size as f64/2.0) as i32;
+        (x/ level.tile_size, y / level.tile_size)
+    }
+
     fn check_collision(&self, level : &Level) -> bool {
-        for layer in &level.tiles{
-            for tile in layer{
-                match tile.bounding_box{
-                    Some(ref bounding_box) => {
-                        if self.hitbox.intersects(bounding_box){
-                            return true;
-                        }
-                    },
-                    None => ()
+        let player_tile = (self.get_snapped_position(level).0 * level.tile_size, self.get_snapped_position(level).1 * level.tile_size);
+        //println!("Player tile: {:?}",player_tile);
+        // check 9 neighbouring tiles
+        for offx in -1..2{
+            for offy in -1..2{
+                let offset_pos = Point::new(player_tile.0.wrapping_add(offx*level.tile_size),player_tile.1.wrapping_add(offy*level.tile_size));
+
+                for layer in &level.tiles{
+                    match layer.get(&offset_pos){
+                        Some(tile) => {
+                            match tile.bounding_box{
+                                Some(ref bounding_box) => {
+                                    if self.hitbox.intersects(bounding_box){
+                                        return true;
+                                    }
+                                },
+                                None => ()
+                            }
+                        },
+                        None => ()
+                    }
                 }
             }
         }
@@ -197,40 +217,50 @@ impl Player{
     }
 
     fn resolve_collision(&mut self, level : &Level) {
-        for layer in &level.tiles{
-            for tile in layer{
-                match tile.bounding_box{
-                    Some(ref bounding_box) => {
-                        if self.hitbox.intersects(bounding_box){
-                            let x1 = self.hitbox.x + self.hitbox.w as f64 - bounding_box.x; // right side of player - left side of tile
-                            let x2 = bounding_box.x + bounding_box.w as f64 - self.hitbox.x; // right side of tile - left side of player
-                            let y1 = self.hitbox.y + self.hitbox.h as f64 - bounding_box.y; // bottom side of player - top side of tile
-                            let y2 = bounding_box.y + bounding_box.h as f64 - self.hitbox.y; // bottom side of tile - top side of player
-                            let min = x1.min(x2).min(y1).min(y2);
-                            if min == x1 {
-                                self.x -= x1;
-                                self.hitbox.x -= x1;
-                            }else if min == x2 {
-                                self.x += x2;
-                                self.hitbox.x += x2;
-                            }else if min == y1 {
-                                self.y -= y1;
-                                self.hitbox.y -= y1;
-                            }else if min == y2 {
-                                self.y += y2;
-                                self.hitbox.y += y2;
-                            }
-                            match &tile._tile_type {
-                                crate::tile_type::TileType::Exit(inner) => {
-                                    self.reached_end = Some((*inner).clone());
+        let player_tile = (self.get_snapped_position(level).0 * level.tile_size, self.get_snapped_position(level).1 * level.tile_size);
+            for offx in -1..2{
+                for offy in -1..2{
+                    let offset_pos = Point::new(player_tile.0.wrapping_add(offx*level.tile_size),player_tile.1.wrapping_add(offy*level.tile_size));
+                    
+                    for layer in &level.tiles{
+                        match layer.get(&offset_pos){
+                            Some(tile) => {
+                                match tile.bounding_box{
+                                    Some(ref bounding_box) => {
+                                        if self.hitbox.intersects(bounding_box){
+                                            let x1 = self.hitbox.x + self.hitbox.w as f64 - bounding_box.x; // right side of player - left side of tile
+                                            let x2 = bounding_box.x + bounding_box.w as f64 - self.hitbox.x; // right side of tile - left side of player
+                                            let y1 = self.hitbox.y + self.hitbox.h as f64 - bounding_box.y; // bottom side of player - top side of tile
+                                            let y2 = bounding_box.y + bounding_box.h as f64 - self.hitbox.y; // bottom side of tile - top side of player
+                                            let min = x1.min(x2).min(y1).min(y2);
+                                            if min == x1 {
+                                                self.x -= x1;
+                                                self.hitbox.x -= x1;
+                                            }else if min == x2 {
+                                                self.x += x2;
+                                                self.hitbox.x += x2;
+                                            }else if min == y1 {
+                                                self.y -= y1;
+                                                self.hitbox.y -= y1;
+                                            }else if min == y2 {
+                                                self.y += y2;
+                                                self.hitbox.y += y2;
+                                            }
+                                            match &tile._tile_type {
+                                                crate::tile_type::TileType::Exit(inner) => {
+                                                    self.reached_end = Some((*inner).clone());
+                                                }
+                                                _ => ()
+                                            }
+                                        }
+                                    },
+                                    None => ()
                                 }
-                                _ => ()
-                            }
+                            },
+                            None => ()
                         }
-                    },
-                    None => ()
+                    }
                 }
             }
-        }
     }
 }
