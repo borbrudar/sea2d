@@ -46,9 +46,9 @@ impl Enemy{
             None => ()
         };
 
-        println!("TIme: {}",instant.elapsed().as_secs_f64());
+        //println!("TIme: {}",instant.elapsed().as_secs_f64());
         if instant.elapsed().as_secs_f64() - self.last_time > 0.5{
-            println!("Enemy moving");
+            //println!("Enemy moving");
             let dir = self.calculate_player_direction(level,player);
             match dir {
                 0 => self.y -= 50.,
@@ -91,19 +91,37 @@ impl Enemy{
 
             let (x,y) = (current.x,current.y);
             let mut next = Point::new(x+level.tile_size,y);
-            if level.tiles[0].contains_key(&next) && !distance.contains_key(&next){
+
+            
+            
+            let check = |next| -> bool {
+                let mut exists = false;
+                let mut obstacle = false;
+                
+                for i in 0..level.tiles.len(){
+                    if level.tiles[i].contains_key(&next){
+                        exists = true;
+                        if level.tiles[i][&next].bounding_box.is_some(){
+                            obstacle = true;
+                        }
+                    }
+                }
+                exists && !obstacle
+            };
+
+            if check(next) {
                 queue.push_back((next, current, 1));
-            }
+            }            
             next = Point::new(x-level.tile_size,y);
-            if level.tiles[0].contains_key(&next) && !distance.contains_key(&next){
+            if check(next) {
                 queue.push_back((next, current, 3));
             }
             next = Point::new(x,y+level.tile_size);
-            if level.tiles[0].contains_key(&next) && !distance.contains_key(&next){
+            if check(next) {
                 queue.push_back((next, current, 2));
             }
             next = Point::new(x,y-level.tile_size);
-            if level.tiles[0].contains_key(&next) && !distance.contains_key(&next){
+            if check(next) {
                 queue.push_back((next, current, 0));
             }
         }
