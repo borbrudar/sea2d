@@ -169,6 +169,7 @@ impl Game{
         let hud = Hud::new();
         let mut draw_hitboxes = false;
 
+        let global_clock = std::time::Instant::now();
         let mut current_time = std::time::Instant::now();
         let time_step = 1.0/60.0;
         
@@ -224,7 +225,7 @@ impl Game{
                 
                 match self.game_state {
                     GameState::Running => {
-                        enemy.update(delta_time);
+                        enemy.update(delta_time, &level, &player, &global_clock);
                         player.update(delta_time, &self.packet_sender, &level, &mut camera);
                         for (_,other_player) in &mut other_players{
                             if !other_player.animation_data.is_none(){

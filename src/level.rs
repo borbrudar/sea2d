@@ -1,9 +1,9 @@
-use std::{collections::HashMap, hash::Hash, io::BufRead};
+use std::{collections::HashMap, io::BufRead};
 
 use ::image::RgbaImage;
-use sdl2::{libc::exit, render::{Texture, TextureCreator}};
+use sdl2::render::{Texture, TextureCreator};
 
-use crate::{aabb::AABB, camera::Camera, texture_data::TextureData, tile::{self, Tile}, tile_type::{ExitTile, TileType}};
+use crate::{aabb::AABB, camera::Camera, texture_data::TextureData, tile::Tile, tile_type::{ExitTile, TileType}};
 use crate::point::Point;
 
 pub struct Level{
