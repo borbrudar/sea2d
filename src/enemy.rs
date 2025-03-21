@@ -1,6 +1,6 @@
 use sdl2::{render::{Canvas, Texture}, video::Window};
 
-use crate::{aabb::AABB, animated_texture::AnimatedTexture, camera::Camera, level::Level, player::Player, point::Point};
+use crate::{aabb::AABB, animated_texture::AnimatedTexture, camera::Camera, enemy, level::Level, player::Player, point::Point};
 use std::{collections::{HashMap, VecDeque}, time::Instant};
 
 
@@ -12,6 +12,7 @@ pub struct Enemy{
     pub hitbox : AABB,
 
     pub last_time : f64,
+    pub dir : i32,
 }
 
 impl Enemy{
@@ -23,6 +24,7 @@ impl Enemy{
             size : 50,
             hitbox : AABB::new(55.,55.,40,40),
             last_time : 0.,
+            dir : -1,
         }
     }
 
@@ -49,33 +51,29 @@ impl Enemy{
         //println!("TIme: {}",instant.elapsed().as_secs_f64());
         if instant.elapsed().as_secs_f64() - self.last_time > 0.5{
             //println!("Enemy moving");
-            let dir = self.calculate_player_direction(level,player);
-            match dir {
-                0 => self.y -= 50.,
-                1 => self.x += 50.,
-                2 => self.y += 50.,
-                3 => self.x -= 50.,
-                _ => ()
-            }
+            self.dir = self.calculate_player_direction(level,player);
             self.last_time = instant.elapsed().as_secs_f64();
         }
+        match self.dir {
+            0 => self.y -= 2.*level.tile_size as f64 * dt,
+            1 => self.x += 2.*level.tile_size as f64 * dt,
+            2 => self.y += 2.*level.tile_size as f64 * dt,
+            3 => self.x -= 2.*level.tile_size as f64 * dt,
+            _ => ()
+        }
+        self.hitbox.x = self.x + 5.;
+        self.hitbox.y = self.y + 5.;
     }
-
-    fn get_snapped_position(&self, level : &Level) -> (i32,i32){
-        let x = (self.x/level.tile_size as f64).floor() as i32 * level.tile_size;
-        let y = (self.y/level.tile_size as f64).floor() as i32 * level.tile_size;
-        (x,y)
-    }
-
+    
     pub fn calculate_player_direction(&self, level : &Level, player : &Player) -> i32 {
-        let player_tile = Point::new(player.get_snapped_position(level).0 * level.tile_size,player.get_snapped_position(level).1 * level.tile_size);
-        let enemy_tile = Point::new(self.get_snapped_position(level).0,self.get_snapped_position(level).1);
+        let player_tile = Point::new(level.get_snapped_position(&player.hitbox).0,level.get_snapped_position(&player.hitbox).1);
+        let enemy_tile = Point::new(level.get_snapped_position(&self.hitbox).0 , level.get_snapped_position(&self.hitbox).1);
 
         // run a bfs to find the shortest path to the player and return the direction
         let mut queue = VecDeque::new();
         let mut distance = HashMap::new();
         queue.push_back((enemy_tile, Point::new(-1,-1), -1));
-        //distance.insert(enemy_tile,(0,-1)); // tile, (distance, direction) - 0 up, 1 right, 2 down, 3 left
+        // tile, (distance, direction) - 0 up, 1 right, 2 down, 3 left
         distance.insert(Point::new(-1,-1), (-1,-1));
 
         while let Some(current) = queue.pop_front() {

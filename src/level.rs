@@ -145,4 +145,78 @@ impl<'a> Level{
             }
         }
     }
+
+     // snap to nearest tile
+     pub fn get_snapped_position(&self, hitbox : &AABB) -> (i32,i32){
+        let x = (hitbox.x + hitbox.w as f64/2.0) as i32;
+        let y = (hitbox.y + hitbox.h as f64/2.0) as i32;
+        (x/ self.tile_size * self.tile_size, y / self.tile_size * self.tile_size)
+    }
+
+    pub fn check_collision(&self, hitbox : &AABB) -> Vec<Tile> {
+        let mut ret = Vec::new();
+        let player_tile = (self.get_snapped_position(hitbox).0 * self.tile_size, self.get_snapped_position(hitbox).1 * self.tile_size);
+        //println!("Player tile: {:?}",player_tile);
+        // check 9 neighbouring tiles
+        for offx in -1..2{
+            for offy in -1..2{
+                let offset_pos = Point::new(player_tile.0.wrapping_add(offx*self.tile_size),player_tile.1.wrapping_add(offy*self.tile_size));
+
+                for layer in &self.tiles{
+                    match layer.get(&offset_pos){
+                        Some(tile) => {
+                            match tile.bounding_box{
+                                Some(ref bounding_box) => {
+                                    if hitbox.intersects(bounding_box){
+                                        ret.push(tile.clone());
+                                    }
+                                },
+                                None => ()
+                            }
+                        },
+                        None => ()
+                    }
+                }
+            }
+        }
+        ret
+    }
+    pub fn resolve_collision(&self, hitbox : &mut AABB) {
+        let player_tile = (self.get_snapped_position(hitbox).0, self.get_snapped_position(hitbox).1);
+        for offx in -1..2{
+            for offy in -1..2{
+                let offset_pos = Point::new(player_tile.0.wrapping_add(offx*self.tile_size),player_tile.1.wrapping_add(offy*self.tile_size));
+                
+                for layer in &self.tiles{
+                    match layer.get(&offset_pos){
+                        Some(tile) => {
+                            match tile.bounding_box{
+                                Some(ref bounding_box) => {
+                                    if hitbox.intersects(bounding_box){
+                                        let x1 = hitbox.x + hitbox.w as f64 - bounding_box.x; // right side of player - left side of tile
+                                        let x2 = bounding_box.x + bounding_box.w as f64 - hitbox.x; // right side of tile - left side of player
+                                        let y1 = hitbox.y + hitbox.h as f64 - bounding_box.y; // bottom side of player - top side of tile
+                                        let y2 = bounding_box.y + bounding_box.h as f64 - hitbox.y; // bottom side of tile - top side of player
+                                        let min = x1.min(x2).min(y1).min(y2);
+                                        if min == x1 {
+                                            hitbox.x -= x1;
+                                        }else if min == x2 {
+                                            hitbox.x += x2;
+                                        }else if min == y1 {
+                                            hitbox.y -= y1;
+                                        }else if min == y2 {
+                                            hitbox.y += y2;
+                                        }
+                                    }
+                                },
+                                None => ()
+                            }
+                        },
+                        None => ()
+                    }
+                }
+            }
+        }
+    }
+
 }

@@ -3,6 +3,7 @@ use crate::shared::{SCREEN_HEIGHT,SCREEN_WIDTH};
 use crate::{camera::Camera, texture_data::TextureData};
 use crate::tile_type::TileType;
 
+#[derive(Debug,Clone)]
 pub struct Tile{
     pub x : i32,
     pub y : i32,

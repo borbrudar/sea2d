@@ -1,3 +1,4 @@
+#[derive(Debug,Clone)]
 pub enum TileType {
     Grass,
     Water,
@@ -10,7 +11,7 @@ pub enum TileType {
     Exit(ExitTile)
 }
 
-#[derive(Clone)]
+#[derive(Debug,Clone)]
 pub struct ExitTile{
     pub next_level : String,
 }

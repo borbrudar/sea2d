@@ -3,7 +3,7 @@ use sdl2::pixels::Color;
 use crate::camera::Camera;
 
 
-
+#[derive(Clone,Debug)]
 pub struct AABB{
     pub x : f64,
     pub y : f64,
