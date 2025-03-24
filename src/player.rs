@@ -11,6 +11,10 @@ use sdl2::render::Texture;
 use crate::camera::Camera;
 use crate::player_packets::{PlayerPacket, PlayerPosition};
 
+pub enum PlayerHitState{
+    Invincible,
+    Vulnerable
+}
 
 pub struct Player{
     pub id : u64,
@@ -31,6 +35,8 @@ pub struct Player{
     pressed_right : bool,
 
     pub current_level : String,
+    pub hit_state : PlayerHitState,
+    pub health : i32,
 }
 
 impl Player{
@@ -51,7 +57,9 @@ impl Player{
             pressed_down : false,
             pressed_left : false,
             pressed_right : false,
-            current_level : String::new()
+            current_level : String::new(),
+            hit_state : PlayerHitState::Vulnerable,
+            health : 100,
         }
     }
 

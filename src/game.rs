@@ -9,6 +9,9 @@ use std::sync::mpsc as mspc;
 use sdl2::image::{self};
 use sdl2::pixels::Color;
 use sdl2::rect;
+use sdl2::rect::Rect;
+use sdl2::render::TextureQuery;
+use sdl2::ttf;
 use std::collections::HashMap;
 use sdl2::render::Texture;
 use crate::level::Level;
@@ -19,7 +22,8 @@ use crate::animated_texture::AnimationType;
 
 pub enum GameState{
     Running,
-    Paused
+    Paused,
+    GameOver
 }
 
 pub struct Game{
@@ -125,6 +129,12 @@ impl Game{
             .build()
             .unwrap();
 
+        // font rendering setup
+        let ttf_context = ttf::init().unwrap(); 
+          // Load a font
+        let font_path = "resources/fonts/Battle-Race.ttf"; 
+        let font = ttf_context.load_font(font_path, 56).unwrap();
+
         let viewport = rect::Rect::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
         canvas.set_viewport(viewport);
         let mut event_pump = sdl_context.event_pump().unwrap();
@@ -173,12 +183,14 @@ impl Game{
         let mut current_time = std::time::Instant::now();
         let time_step = 1.0/60.0;
         
+        self.game_state = GameState::GameOver;
         'running: loop {
             // event polling
             for event in event_pump.poll_iter() {
                 match self.game_state {
                     GameState::Running => player.on_event(&event),
                     GameState::Paused => player.reset_velocity(),
+                    GameState::GameOver => (),
                 }
                 //camera.handle_zoom(&event);
                 match event {
@@ -193,6 +205,7 @@ impl Game{
                         match self.game_state {
                             GameState::Paused => self.game_state = GameState::Running,
                             GameState::Running => self.game_state = GameState::Paused,
+                            GameState::GameOver => ()
                         }
                     }
                     _ => {}
@@ -274,11 +287,32 @@ impl Game{
 
             // clear screen
             match self.game_state{
-                GameState::Paused => {
+                GameState::Paused | GameState::GameOver => {
                     canvas.set_draw_color(sdl2::pixels::Color::RGBA(00,00,255,150));
                     canvas.set_blend_mode(sdl2::render::BlendMode::Blend);
                     canvas.fill_rect(rect::Rect::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT)).unwrap();
                 },
+                _ => ()
+            }
+            match self.game_state{
+                GameState::GameOver => {
+                    let color = Color::RGB(255, 255, 255); 
+                    let surface = font.render("Game Joever")
+                        .blended(color).unwrap(); // Create a blended surface (anti-aliased)
+    
+                    let texture = texture_creator.create_texture_from_surface(&surface).unwrap();
+                
+                    // Get the size of the texture
+                    let TextureQuery { width, height, .. } = texture.query();
+                
+                    // Set up the destination rectangle (where the text will appear)
+                    let dest_rect = Rect::new((SCREEN_WIDTH/2) as i32 - 200, (SCREEN_HEIGHT/2) as i32-30, width, height); // Position at (100, 100)
+                
+                    // Clear the screen and draw the texture
+                    canvas.copy(&texture, None, Some(dest_rect)).unwrap();
+                    canvas.present();
+                
+                }
                 _ => ()
             }
 
