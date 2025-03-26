@@ -215,6 +215,10 @@ impl Game{
                             GameState::GameOver => {
                                 self.game_state = GameState::Running;
                                 player.health = 100;
+                                player.pressed_down=false;
+                                player.pressed_left=false;
+                                player.pressed_right=false;
+                                player.pressed_up=false; 
                             }
                             _ => ()
                         }
@@ -266,9 +270,12 @@ impl Game{
             }
 
             if player.health <= 0{
-                self.game_state = GameState::GameOver;
+                match self.game_state{
+                    GameState::GameOver => (),
+                    _ => self.game_state = GameState::GameOver
+                }
             }
-            println!("health :{}",player.health);
+            
             // drawing
             canvas.set_blend_mode(sdl2::render::BlendMode::None);
             canvas.set_draw_color(Color::BLACK);
@@ -290,11 +297,11 @@ impl Game{
             //draw other player if on the same level
             for (_,other_player) in &mut other_players{
                 if other_player.current_level == player.current_level {
-                    other_player.draw(&mut canvas,&texture_map,&camera);
+                    other_player.draw(&mut canvas,&texture_map,&camera,&global_clock);
                 }
             }
             // draw self
-            player.draw(&mut canvas,&texture_map,&camera);
+            player.draw(&mut canvas,&texture_map,&camera, &global_clock);
             let player_hitbox_color = if player.colliding {Color::RED} else {Color::GREEN};
             
             if draw_hitboxes{

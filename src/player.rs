@@ -32,15 +32,17 @@ pub struct Player{
     speed : f64,
     pub reached_end : Option<ExitTile>,
 
-    pressed_up : bool,
-    pressed_down : bool,
-    pressed_left : bool,
-    pressed_right : bool,
+    pub pressed_up : bool,
+    pub pressed_down : bool,
+    pub pressed_left : bool,
+    pub pressed_right : bool,
 
     pub current_level : String,
     pub hit_state : PlayerHitState,
     pub health : i32,
     last_hit_time : f64,
+    invicibility_blinks : i32,
+    last_blink_time : f64,
 }
 
 impl Player{
@@ -65,6 +67,8 @@ impl Player{
             hit_state : PlayerHitState::Vulnerable,
             health : 100,
             last_hit_time : 0.0,
+            invicibility_blinks : 0,
+            last_blink_time : 0.0,
         }
     }
 
@@ -77,11 +81,35 @@ impl Player{
         self.pressed_up = false;
     }
 
-    pub fn draw(&self,canvas : &mut Canvas<Window>, texture_map : &std::collections::HashMap<String,Texture>, camera : &Camera){ 
+    pub fn draw(&mut self,canvas : &mut Canvas<Window>, texture_map : &std::collections::HashMap<String,Texture>, camera : &Camera, global_clock : &Instant){ 
         match self.animation_data {
             Some(ref animation_data) => {
                 //println!("Drawing animation");
-                animation_data.draw(canvas,texture_map,self.x-camera.x,self.y-camera.y,self.size,self.size);
+                match self.hit_state {
+                    PlayerHitState::Invincible => {
+                        let time_since_last_blink = global_clock.elapsed().as_secs_f64() - self.last_blink_time;
+                        if time_since_last_blink < 0.1 {
+                            //canvas.set_draw_color(sdl2::pixels::Color::RGB(255,192,203));
+                            //canvas.fill_rect(sdl2::rect::Rect::new((self.x -camera.x) as i32,(self.y-camera.y)as i32,self.size,self.size)).unwrap();
+                            return ();
+                        }
+                        let mut lol = false;
+                        let time_since_hit = global_clock.elapsed().as_secs_f64() - self.last_hit_time;  
+                        for i in 0..4{
+                            if self.invicibility_blinks <= i && time_since_hit > (i as f64)/4. {
+                                self.invicibility_blinks += 1;
+                                self.last_blink_time = global_clock.elapsed().as_secs_f64();
+                                lol = true;
+                            }
+                        }
+                        if !lol{
+                            animation_data.draw(canvas,texture_map,self.x-camera.x,self.y-camera.y,self.size,self.size);
+                        }
+                    },
+                    PlayerHitState::Vulnerable => {
+                        animation_data.draw(canvas,texture_map,self.x-camera.x,self.y-camera.y,self.size,self.size);
+                    }
+                }
             },
             None => {
                 canvas.set_draw_color(sdl2::pixels::Color::RGB(255,192,203));
@@ -137,6 +165,7 @@ impl Player{
                     PlayerHitState::Vulnerable =>{
                         self.hit_state = PlayerHitState::Invincible;
                         self.health -= 15;
+                        println!("Health : {}",self.health);
                         self.last_hit_time = global_clock.elapsed().as_secs_f64();
                     }
                     _ => ()
@@ -146,6 +175,7 @@ impl Player{
 
         if global_clock.elapsed().as_secs_f64() - self.last_hit_time > 1.0{
             self.hit_state = PlayerHitState::Vulnerable;
+            self.invicibility_blinks = 0;
         }
 
         level.resolve_collision(&mut self.hitbox);
