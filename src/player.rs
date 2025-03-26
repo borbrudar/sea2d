@@ -89,20 +89,18 @@ impl Player{
                     PlayerHitState::Invincible => {
                         let time_since_last_blink = global_clock.elapsed().as_secs_f64() - self.last_blink_time;
                         if time_since_last_blink < 0.1 {
-                            //canvas.set_draw_color(sdl2::pixels::Color::RGB(255,192,203));
-                            //canvas.fill_rect(sdl2::rect::Rect::new((self.x -camera.x) as i32,(self.y-camera.y)as i32,self.size,self.size)).unwrap();
                             return ();
                         }
-                        let mut lol = false;
+                        let mut draw = false;
                         let time_since_hit = global_clock.elapsed().as_secs_f64() - self.last_hit_time;  
                         for i in 0..4{
                             if self.invicibility_blinks <= i && time_since_hit > (i as f64)/4. {
                                 self.invicibility_blinks += 1;
                                 self.last_blink_time = global_clock.elapsed().as_secs_f64();
-                                lol = true;
+                                draw = true;
                             }
                         }
-                        if !lol{
+                        if !draw{
                             animation_data.draw(canvas,texture_map,self.x-camera.x,self.y-camera.y,self.size,self.size);
                         }
                     },
@@ -119,17 +117,16 @@ impl Player{
     }
 
     pub fn update(&mut self, dt : f64,tx : &std::sync::mpsc::Sender<Packet>, level : &Level, camera : &mut Camera, enemies : &Vec<Enemy>, global_clock : &Instant){
+        if self.id == 1_000_000 {
+            return ();    
+        }
         match self.animation_data {
             Some(ref mut animation_data) => {
                 animation_data.update(dt);
             },
             None => ()
         }
-
-        if self.velocity_x == 0.0 && self.velocity_y == 0.0 {
-            return;
-        }
-        
+     
 
         if self.velocity_x != 0.0 && self.velocity_y != 0.0 {
             self.x += self.velocity_x * dt * 0.7071; // sqrt(2)/2
@@ -137,7 +134,7 @@ impl Player{
             self.hitbox.x += self.velocity_x * dt * 0.7071;
             self.hitbox.y += self.velocity_y * dt * 0.7071; 
         }
-        else{   
+        else {   
             self.x += self.velocity_x * dt;
             self.y += self.velocity_y * dt;
             self.hitbox.x += self.velocity_x * dt;
@@ -157,7 +154,7 @@ impl Player{
                 }
                 _ => ()
             }
-        }
+        };
 
         for enemy in enemies{
             if self.hitbox.intersects(&enemy.hitbox){
