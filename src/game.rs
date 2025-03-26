@@ -167,12 +167,14 @@ impl Game{
         let mut camera = Camera::new(player.x + (player.size as i32/2 - SCREEN_WIDTH as i32/2) as f64,
         player.y + (player.size as i32/2 - SCREEN_HEIGHT as i32/2) as f64, SCREEN_WIDTH,SCREEN_HEIGHT);
 
-        // enemy
-        let mut enemy = Enemy::new();
-        enemy.animation_data = Some(AnimatedTexture::new(1.0/6.));
-        enemy.animation_data.as_mut().unwrap().load_animation("resources/textures/enemy.png".to_string(),0,0,16,16,3, 
+        // enemies
+
+        let mut enemies : Vec<Enemy> = Vec::new();
+        enemies.push(Enemy::new());
+        enemies.last_mut().unwrap().animation_data = Some(AnimatedTexture::new(1.0/6.));
+        enemies.last_mut().unwrap().animation_data.as_mut().unwrap().load_animation("resources/textures/enemy.png".to_string(),0,0,16,16,3, 
         &texture_creator,&mut texture_map);
-        enemy.animation_data.as_mut().unwrap().animation_type = AnimationType::PingPong;             
+        enemies.last_mut().unwrap().animation_data.as_mut().unwrap().animation_type = AnimationType::PingPong;             
 
 
         // hud
@@ -183,7 +185,7 @@ impl Game{
         let mut current_time = std::time::Instant::now();
         let time_step = 1.0/60.0;
         
-        self.game_state = GameState::GameOver;
+        self.game_state = GameState::Running;
         'running: loop {
             // event polling
             for event in event_pump.poll_iter() {
@@ -206,6 +208,15 @@ impl Game{
                             GameState::Paused => self.game_state = GameState::Running,
                             GameState::Running => self.game_state = GameState::Paused,
                             GameState::GameOver => ()
+                        }
+                    }
+                    sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::R), ..} => {
+                        match self.game_state{
+                            GameState::GameOver => {
+                                self.game_state = GameState::Running;
+                                player.health = 100;
+                            }
+                            _ => ()
                         }
                     }
                     _ => {}
@@ -238,8 +249,10 @@ impl Game{
                 
                 match self.game_state {
                     GameState::Running => {
-                        enemy.update(delta_time, &level, &player, &global_clock);
-                        player.update(delta_time, &self.packet_sender, &level, &mut camera);
+                        for enemy in &mut enemies{
+                            enemy.update(delta_time, &level, &player, &global_clock);
+                        }
+                        player.update(delta_time, &self.packet_sender, &level, &mut camera,&enemies, &global_clock);
                         for (_,other_player) in &mut other_players{
                             if !other_player.animation_data.is_none(){
                                 other_player.animation_data.as_mut().unwrap().update(delta_time);
@@ -251,7 +264,11 @@ impl Game{
     
                 frame_time -= std::time::Duration::from_secs_f64(delta_time);
             }
-    
+
+            if player.health <= 0{
+                self.game_state = GameState::GameOver;
+            }
+            println!("health :{}",player.health);
             // drawing
             canvas.set_blend_mode(sdl2::render::BlendMode::None);
             canvas.set_draw_color(Color::BLACK);
@@ -266,8 +283,10 @@ impl Game{
             if draw_hitboxes {
                 level.draw_hitboxes(&mut canvas,&camera);
             }
-            // draw enemy
-            enemy.draw(&mut canvas,&texture_map,&camera);
+            // draw enemies
+            for enemy in &enemies{
+                enemy.draw(&mut canvas,&texture_map,&camera);
+            }
             //draw other player if on the same level
             for (_,other_player) in &mut other_players{
                 if other_player.current_level == player.current_level {
@@ -280,7 +299,9 @@ impl Game{
             
             if draw_hitboxes{
                 player.hitbox.draw(&mut canvas,player_hitbox_color,&camera);
-                enemy.hitbox.draw(&mut canvas,Color::RED,&camera);
+                for enemy in &enemies{
+                    enemy.hitbox.draw(&mut canvas,Color::RED,&camera);
+                }
             }
             
             hud.draw(&mut canvas);

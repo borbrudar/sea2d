@@ -1,5 +1,8 @@
+use std::time::Instant;
+
 use crate::aabb::AABB;
 use crate::animated_texture::AnimatedTexture;
+use crate::enemy::Enemy;
 use crate::level::Level;
 use crate::packet::Packet;
 use crate::point::Point;
@@ -37,6 +40,7 @@ pub struct Player{
     pub current_level : String,
     pub hit_state : PlayerHitState,
     pub health : i32,
+    last_hit_time : f64,
 }
 
 impl Player{
@@ -60,6 +64,7 @@ impl Player{
             current_level : String::new(),
             hit_state : PlayerHitState::Vulnerable,
             health : 100,
+            last_hit_time : 0.0,
         }
     }
 
@@ -85,7 +90,7 @@ impl Player{
         }
     }
 
-    pub fn update(&mut self, dt : f64,tx : &std::sync::mpsc::Sender<Packet>, level : &Level, camera : &mut Camera){
+    pub fn update(&mut self, dt : f64,tx : &std::sync::mpsc::Sender<Packet>, level : &Level, camera : &mut Camera, enemies : &Vec<Enemy>, global_clock : &Instant){
         match self.animation_data {
             Some(ref mut animation_data) => {
                 animation_data.update(dt);
@@ -124,6 +129,23 @@ impl Player{
                 }
                 _ => ()
             }
+        }
+
+        for enemy in enemies{
+            if self.hitbox.intersects(&enemy.hitbox){
+                match self.hit_state{
+                    PlayerHitState::Vulnerable =>{
+                        self.hit_state = PlayerHitState::Invincible;
+                        self.health -= 15;
+                        self.last_hit_time = global_clock.elapsed().as_secs_f64();
+                    }
+                    _ => ()
+                }                
+            }
+        }
+
+        if global_clock.elapsed().as_secs_f64() - self.last_hit_time > 1.0{
+            self.hit_state = PlayerHitState::Vulnerable;
         }
 
         level.resolve_collision(&mut self.hitbox);

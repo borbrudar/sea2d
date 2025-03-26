@@ -155,7 +155,7 @@ impl<'a> Level{
 
     pub fn check_collision(&self, hitbox : &AABB) -> Vec<Tile> {
         let mut ret = Vec::new();
-        let player_tile = (self.get_snapped_position(hitbox).0 * self.tile_size, self.get_snapped_position(hitbox).1 * self.tile_size);
+        let player_tile = (self.get_snapped_position(hitbox).0 , self.get_snapped_position(hitbox).1 );
         //println!("Player tile: {:?}",player_tile);
         // check 9 neighbouring tiles
         for offx in -1..2{
