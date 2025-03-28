@@ -6,7 +6,11 @@ use crate::shared::*;
 use crate::player_packets::*;
 
 use std::sync::mpsc as mspc;
+use sdl2::audio::AudioDevice;
 use sdl2::image::{self};
+use sdl2::mixer;
+use sdl2::mixer::Chunk;
+use sdl2::mixer::Music;
 use sdl2::pixels::Color;
 use sdl2::rect;
 use sdl2::rect::Rect;
@@ -135,6 +139,16 @@ impl Game{
         let font_path = "resources/fonts/Battle-Race.ttf"; 
         let font = ttf_context.load_font(font_path, 56).unwrap();
 
+        //sound
+        mixer::init(mixer::InitFlag::MP3 | mixer::InitFlag::OGG).unwrap();
+        mixer::open_audio(22050, mixer::DEFAULT_FORMAT, 2, 4096).unwrap();
+
+        let test_sound_effect = Chunk::from_file("resources/sound/effects/795424__koolkatbenziboii4__step-dirt-1.mp3").unwrap();
+        let test_music = Music::from_file("resources/sound/music/music.mp3").unwrap();
+
+        test_music.play(-1).unwrap();
+        
+        
         let viewport = rect::Rect::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
         canvas.set_viewport(viewport);
         let mut event_pump = sdl_context.event_pump().unwrap();
@@ -166,21 +180,21 @@ impl Game{
         // camera init
         let mut camera = Camera::new(player.x + (player.size as i32/2 - SCREEN_WIDTH as i32/2) as f64,
         player.y + (player.size as i32/2 - SCREEN_HEIGHT as i32/2) as f64, SCREEN_WIDTH,SCREEN_HEIGHT);
-
+        
         // enemies
-
+        
         let mut enemies : Vec<Enemy> = Vec::new();
         enemies.push(Enemy::new());
         enemies.last_mut().unwrap().animation_data = Some(AnimatedTexture::new(1.0/6.));
         enemies.last_mut().unwrap().animation_data.as_mut().unwrap().load_animation("resources/textures/enemy.png".to_string(),0,0,16,16,3, 
         &texture_creator,&mut texture_map);
         enemies.last_mut().unwrap().animation_data.as_mut().unwrap().animation_type = AnimationType::PingPong;             
-
-
+        
+        
         // hud
         let hud = Hud::new();
         let mut draw_hitboxes = false;
-
+        
         let global_clock = std::time::Instant::now();
         let mut current_time = std::time::Instant::now();
         let time_step = 1.0/60.0;
@@ -222,6 +236,9 @@ impl Game{
                             }
                             _ => ()
                         }
+                    }
+                    sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::L), ..} => {
+                        sdl2::mixer::Channel::all().play(&test_sound_effect, 1).unwrap();
                     }
                     _ => {}
                 }
