@@ -289,7 +289,10 @@ impl Game{
             if player.health <= 0{
                 match self.game_state{
                     GameState::GameOver => (),
-                    _ => self.game_state = GameState::GameOver
+                    _ => {
+                        self.game_state = GameState::GameOver;
+                        player.reset_velocity();
+                    }
                 }
             }
             
@@ -355,8 +358,6 @@ impl Game{
                 
                     // Clear the screen and draw the texture
                     canvas.copy(&texture, None, Some(dest_rect)).unwrap();
-                    canvas.present();
-                
                 }
                 _ => ()
             }
