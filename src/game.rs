@@ -57,18 +57,22 @@ impl Game{
     fn handle_receive<'a>(&self, player : &mut Player, other_players : &mut HashMap<u64,Player>, texture_creator : &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>, texture_map : &mut HashMap<String,Texture<'a>>){
         match self.packet_receiver.try_recv(){
             Ok(packet) => {
+                //println!("Lmao");
                 match packet {
                     Packet::PlayerPacket(player_packet) => {
                         match player_packet {
                             PlayerPacket::PlayerPositionPacket(pos) => {
-                                //println!("Got a position :{:?}", pos);
+                                //println!("Got fake positoin'");
                                 if let Some(other_player) = other_players.get_mut(&pos.player_id) {
+                                    if pos.x != other_player.x || pos.y != other_player.y {
+                                        //println!("Got a position :{:?}", pos);
+                                    } 
                                     other_player.x = pos.x;
                                     other_player.y = pos.y;
                                 }
                             },
                             PlayerPacket::PlayerWelcomePacket(welc) => {
-                                //println!("Got a welcome packet");
+                                println!("Got a welcome packet");
                                 // if self or already received return
                                 let found = other_players.contains_key(&welc.player_id) || welc.player_id == player.id;
                                 if !found {
@@ -80,18 +84,18 @@ impl Game{
                                 }
                             },
                             PlayerPacket::PlayerDisconnectPacket(disconnected) => {
-                                //println!("Got a disconnect packet");
+                                println!("Got a disconnect packet");
                                 other_players.remove(&disconnected.id);
                             },
                             PlayerPacket::PlayerAnimationPacket(animation) => {
-                                //println!("Got an animation packet");
+                                println!("Got an animation packet");
                                 if let Some(other_player) = other_players.get_mut(&animation.id) {
                                     other_player.animation_data = Some(animation.animation_data.clone());
                                     other_player.animation_data.as_mut().unwrap().load_animation(animation.animation_data.frames[0].path.clone(), 0, 0, 16, 16, 3, &texture_creator, texture_map);
                                 }
                             },
                             PlayerPacket::PlayerLevelPacket(level) => {
-                                //println!("Got a level packet");
+                                println!("Got a level packet");
                                 if let Some(other_player) = other_players.get_mut(&level.player_id) {
                                     other_player.current_level = level.level.clone();
                                 }
@@ -140,15 +144,15 @@ impl Game{
         let font = ttf_context.load_font(font_path, 56).unwrap();
 
         //sound
-        mixer::init(mixer::InitFlag::MP3 | mixer::InitFlag::OGG).unwrap();
-        mixer::open_audio(22050, mixer::DEFAULT_FORMAT, 2, 4096).unwrap();
+        //mixer::init(mixer::InitFlag::MP3 | mixer::InitFlag::OGG).unwrap();
+        //mixer::open_audio(22050, mixer::DEFAULT_FORMAT, 2, 4096).unwrap();
 
-        let test_sound_effect = Chunk::from_file("resources/sound/effects/795424__koolkatbenziboii4__step-dirt-1.mp3").unwrap();
-        let test_music = Music::from_file("resources/sound/music/music.mp3").unwrap();
+        //let test_sound_effect = Chunk::from_file("resources/sound/effects/795424__koolkatbenziboii4__step-dirt-1.mp3").unwrap();
+        //let test_music = Music::from_file("resources/sound/music/music.mp3").unwrap();
 
-        test_music.play(-1).unwrap();
+        //test_music.play(-1).unwrap();
         
-        
+        // --------------------------------------
         let viewport = rect::Rect::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
         canvas.set_viewport(viewport);
         let mut event_pump = sdl_context.event_pump().unwrap();
@@ -238,7 +242,7 @@ impl Game{
                         }
                     }
                     sdl2::event::Event::KeyDown { keycode : Some(sdl2::keyboard::Keycode::L), ..} => {
-                        sdl2::mixer::Channel::all().play(&test_sound_effect, 1).unwrap();
+                       // sdl2::mixer::Channel::all().play(&test_sound_effect, 1).unwrap();
                     }
                     _ => {}
                 }
@@ -263,29 +267,31 @@ impl Game{
             let new_time = std::time::Instant::now();
             let mut frame_time = new_time - current_time;
             current_time = new_time;
-    
+            
             // update
-            while frame_time > std::time::Duration::from_secs_f64(0.0){
-                let delta_time = f64::min(frame_time.as_secs_f64(), time_step);
-                
-                match self.game_state {
-                    GameState::Running => {
-                        for enemy in &mut enemies{
-                            enemy.update(delta_time, &level, &player, &global_clock);
-                        }
-                        player.update(delta_time, &self.packet_sender, &level, &mut camera,&enemies, &global_clock);
-                        for (_,other_player) in &mut other_players{
-                            if !other_player.animation_data.is_none(){
-                                other_player.animation_data.as_mut().unwrap().update(delta_time);
-                            }
+          //  while frame_time > std::time::Duration::from_secs_f64(0.0){
+            let delta_time = f64::min(frame_time.as_secs_f64(), time_step);
+            
+            match self.game_state {
+                GameState::Running => {
+                    for enemy in &mut enemies{
+                        enemy.update(delta_time, &level, &player, &global_clock);
+                    }
+                    player.update(delta_time, &self.packet_sender, &level, &mut camera,&enemies, &global_clock);
+                    for (_,other_player) in &mut other_players{
+                        if !other_player.animation_data.is_none(){
+                            other_player.animation_data.as_mut().unwrap().update(delta_time);
                         }
                     }
-                    _ => ()
                 }
-    
-                frame_time -= std::time::Duration::from_secs_f64(delta_time);
+                _ => ()
             }
-
+            
+            frame_time -= std::time::Duration::from_secs_f64(delta_time);
+            std::thread::sleep(frame_time);
+           // }
+            
+            
             if player.health <= 0{
                 match self.game_state{
                     GameState::GameOver => (),
@@ -300,11 +306,11 @@ impl Game{
             canvas.set_blend_mode(sdl2::render::BlendMode::None);
             canvas.set_draw_color(Color::BLACK);
             canvas.clear();
-
+            
             //let viewport = rect::Rect::new(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
             let viewport = rect::Rect::new(0,0, camera.width, camera.height);
             canvas.set_viewport(viewport);
-
+            
             // draw level
             level.draw(&mut canvas,&texture_map,&camera);
             if draw_hitboxes {
@@ -332,7 +338,7 @@ impl Game{
             }
             
             hud.draw(&mut canvas);
-
+            
             // clear screen
             match self.game_state{
                 GameState::Paused | GameState::GameOver => {
@@ -346,28 +352,32 @@ impl Game{
                 GameState::GameOver => {
                     let color = Color::RGB(255, 255, 255); 
                     let surface = font.render("Game Joever")
-                        .blended(color).unwrap(); // Create a blended surface (anti-aliased)
-    
-                    let texture = texture_creator.create_texture_from_surface(&surface).unwrap();
+                    .blended(color).unwrap(); // Create a blended surface (anti-aliased)
                 
-                    // Get the size of the texture
-                    let TextureQuery { width, height, .. } = texture.query();
+                let texture = texture_creator.create_texture_from_surface(&surface).unwrap();
                 
-                    // Set up the destination rectangle (where the text will appear)
-                    let dest_rect = Rect::new((SCREEN_WIDTH/2) as i32 - 200, (SCREEN_HEIGHT/2) as i32-30, width, height); // Position at (100, 100)
+                // Get the size of the texture
+                let TextureQuery { width, height, .. } = texture.query();
                 
-                    // Clear the screen and draw the texture
-                    canvas.copy(&texture, None, Some(dest_rect)).unwrap();
-                }
-                _ => ()
+                // Set up the destination rectangle (where the text will appear)
+                let dest_rect = Rect::new((SCREEN_WIDTH/2) as i32 - 200, (SCREEN_HEIGHT/2) as i32-30, width, height); // Position at (100, 100)
+                
+                // Clear the screen and draw the texture
+                canvas.copy(&texture, None, Some(dest_rect)).unwrap();
             }
-
-            canvas.present();
-    
-    
-            // receive
-            self.handle_receive(&mut player, &mut other_players, &texture_creator, &mut texture_map);   
-
+            _ => ()
         }
+        
+        canvas.present();
+        
+        // send updates
+        if player.id != 1_000_000 && player.moved{  
+            //println!("sendingk");
+            self.packet_sender.send(Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition { player_id:player.id, x: player.x, y: player.y }))).unwrap();
+        }
+        
+        // receive
+        self.handle_receive(&mut player, &mut other_players, &texture_creator, &mut texture_map);   
     }
+}
 }

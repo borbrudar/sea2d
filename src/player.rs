@@ -43,6 +43,7 @@ pub struct Player{
     last_hit_time : f64,
     invicibility_blinks : i32,
     last_blink_time : f64,
+    pub moved:bool,
 }
 
 impl Player{
@@ -69,6 +70,7 @@ impl Player{
             last_hit_time : 0.0,
             invicibility_blinks : 0,
             last_blink_time : 0.0,
+            moved:false,
         }
     }
 
@@ -127,20 +129,24 @@ impl Player{
             None => ()
         }
      
-
+        self.moved=false;
         if self.velocity_x != 0.0 && self.velocity_y != 0.0 {
             self.x += self.velocity_x * dt * 0.7071; // sqrt(2)/2
             self.y += self.velocity_y * dt * 0.7071;
             self.hitbox.x += self.velocity_x * dt * 0.7071;
             self.hitbox.y += self.velocity_y * dt * 0.7071; 
+            self.moved=true;
         }
         else {   
             self.x += self.velocity_x * dt;
             self.y += self.velocity_y * dt;
             self.hitbox.x += self.velocity_x * dt;
             self.hitbox.y += self.velocity_y * dt;
+            self.moved=true;
         }
-                 
+        if self.velocity_x == 0.0 && self.velocity_y == 0.0 {
+            self.moved=false;
+        }                 
         let collisions   = level.check_collision(&self.hitbox);
         if collisions.len() > 0 {
             self.colliding = true;
@@ -178,9 +184,8 @@ impl Player{
         level.resolve_collision(&mut self.hitbox);
         self.x = self.hitbox.x - 10.;
         self.y = self.hitbox.y - 15.;
-        let send = Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{x : self.x, y : self.y, player_id: self.id}));
-        tx.send(send).unwrap();
-
+        //let send = Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{x : self.x, y : self.y, player_id: self.id}));
+        //tx.send(send).unwrap();
 
         camera.x = self.x + (self.size as i32/2 - SCREEN_WIDTH as i32/2) as f64;
         camera.y = self.y + (self.size as i32/2 - SCREEN_HEIGHT as i32/2) as f64;
