@@ -16,6 +16,7 @@ mod button;
 mod game;
 mod networking;
 mod enemy;
+mod point;
 use crate::server::server;
 use crate::client::client;
 use std::env;

@@ -15,7 +15,7 @@ image = "0.25.5"
 [dependencies.sdl2]
 version = "0.37.0"
 default-features = false
-features = ["image"]
+features = ["image","ttf","mixer"]
 #features = ["ttf","image","gfx","mixer"]
 
 [dependencies.serde]

@@ -2,7 +2,7 @@ use std::net::TcpStream;
 use std::io::{ErrorKind,Read,Write};
 
 use crate::packet::{ClientID, Packet, PacketInternal};
-use crate::player_packets::{PlayerAnimation, PlayerDisconnect, PlayerPacket, PlayerPosition, PlayerWelcome};
+use crate::player_packets::{PlayerAnimation, PlayerDisconnect, PlayerLevel, PlayerPacket, PlayerPosition, PlayerWelcome};
 use crate::shared::MAX_PACKET_SIZE;
 
 
@@ -48,6 +48,7 @@ pub fn serialize_and_send(stream : &mut TcpStream, packet : Packet) -> Option<()
         Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(inner)) => PacketInternal::new(inner).unwrap(),
         Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(inner)) => PacketInternal::new(inner).unwrap(),
         Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(inner)) => PacketInternal::new(inner).unwrap(),
+        Packet::PlayerPacket(PlayerPacket::PlayerLevelPacket(inner)) => PacketInternal::new(inner).unwrap(),
     };
     //println!("internal packet {:?}", packet_int);
     let mut send = bincode::serialize(&packet_int).unwrap();
@@ -86,7 +87,11 @@ pub fn deserialize_to_packet(buf : Vec<u8>) -> Option<Packet> {
             match packet_int.try_deserialize::<PlayerDisconnect>(){
                 Some(packet) => return Some(Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(packet))),
                 None => (),
-            };            
+            };  
+            match packet_int.try_deserialize::<PlayerLevel>(){
+                Some(packet) => return Some(Packet::PlayerPacket(PlayerPacket::PlayerLevelPacket(packet))),
+                None => (),
+            }          
             None
         },
         Err(err) => panic!("Failed to deserialize packet: {:?}", err)

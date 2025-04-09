@@ -8,6 +8,7 @@ pub enum PlayerPacket{
     PlayerPositionPacket(PlayerPosition),
     PlayerDisconnectPacket(PlayerDisconnect),
     PlayerAnimationPacket(PlayerAnimation),
+    PlayerLevelPacket(PlayerLevel),
 }
 
 
@@ -42,4 +43,10 @@ pub struct PlayerDisconnect{
 pub struct PlayerAnimation{
     pub id : u64,
     pub animation_data : AnimatedTexture
+}
+
+#[derive(Serialize,Deserialize,Debug,Clone,PartialEq)]
+pub struct PlayerLevel{
+    pub player_id : u64,
+    pub level : String,
 }

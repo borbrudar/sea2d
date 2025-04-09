@@ -1,7 +1,11 @@
+use std::time::Instant;
+
 use crate::aabb::AABB;
 use crate::animated_texture::AnimatedTexture;
+use crate::enemy::Enemy;
 use crate::level::Level;
 use crate::packet::Packet;
+use crate::point::Point;
 use crate::shared::{SCREEN_HEIGHT,SCREEN_WIDTH};
 use crate::tile_type::ExitTile;
 use sdl2::render::Canvas;
@@ -10,6 +14,10 @@ use sdl2::render::Texture;
 use crate::camera::Camera;
 use crate::player_packets::{PlayerPacket, PlayerPosition};
 
+pub enum PlayerHitState{
+    Invincible,
+    Vulnerable
+}
 
 pub struct Player{
     pub id : u64,
@@ -24,10 +32,18 @@ pub struct Player{
     speed : f64,
     pub reached_end : Option<ExitTile>,
 
-    pressed_up : bool,
-    pressed_down : bool,
-    pressed_left : bool,
-    pressed_right : bool,
+    pub pressed_up : bool,
+    pub pressed_down : bool,
+    pub pressed_left : bool,
+    pub pressed_right : bool,
+
+    pub current_level : String,
+    pub hit_state : PlayerHitState,
+    pub health : i32,
+    last_hit_time : f64,
+    invicibility_blinks : i32,
+    last_blink_time : f64,
+    pub moved:bool,
 }
 
 impl Player{
@@ -48,6 +64,13 @@ impl Player{
             pressed_down : false,
             pressed_left : false,
             pressed_right : false,
+            current_level : String::new(),
+            hit_state : PlayerHitState::Vulnerable,
+            health : 100,
+            last_hit_time : 0.0,
+            invicibility_blinks : 0,
+            last_blink_time : 0.0,
+            moved:false,
         }
     }
 
@@ -60,11 +83,33 @@ impl Player{
         self.pressed_up = false;
     }
 
-    pub fn draw(&self,canvas : &mut Canvas<Window>, texture_map : &std::collections::HashMap<String,Texture>, camera : &Camera){ 
+    pub fn draw(&mut self,canvas : &mut Canvas<Window>, texture_map : &std::collections::HashMap<String,Texture>, camera : &Camera, global_clock : &Instant){ 
         match self.animation_data {
             Some(ref animation_data) => {
                 //println!("Drawing animation");
-                animation_data.draw(canvas,texture_map,self.x-camera.x,self.y-camera.y,self.size,self.size);
+                match self.hit_state {
+                    PlayerHitState::Invincible => {
+                        let time_since_last_blink = global_clock.elapsed().as_secs_f64() - self.last_blink_time;
+                        if time_since_last_blink < 0.1 {
+                            return ();
+                        }
+                        let mut draw = false;
+                        let time_since_hit = global_clock.elapsed().as_secs_f64() - self.last_hit_time;  
+                        for i in 0..4{
+                            if self.invicibility_blinks <= i && time_since_hit > (i as f64)/4. {
+                                self.invicibility_blinks += 1;
+                                self.last_blink_time = global_clock.elapsed().as_secs_f64();
+                                draw = true;
+                            }
+                        }
+                        if !draw{
+                            animation_data.draw(canvas,texture_map,self.x-camera.x,self.y-camera.y,self.size,self.size);
+                        }
+                    },
+                    PlayerHitState::Vulnerable => {
+                        animation_data.draw(canvas,texture_map,self.x-camera.x,self.y-camera.y,self.size,self.size);
+                    }
+                }
             },
             None => {
                 canvas.set_draw_color(sdl2::pixels::Color::RGB(255,192,203));
@@ -73,44 +118,77 @@ impl Player{
         }
     }
 
-    pub fn update(&mut self, dt : f64,tx : &std::sync::mpsc::Sender<Packet>, level : &Level, camera : &mut Camera){
+    pub fn update(&mut self, dt : f64,tx : &std::sync::mpsc::Sender<Packet>, level : &Level, camera : &mut Camera, enemies : &Vec<Enemy>, global_clock : &Instant){
+        if self.id == 1_000_000 {
+            return ();    
+        }
         match self.animation_data {
             Some(ref mut animation_data) => {
                 animation_data.update(dt);
             },
             None => ()
         }
-
-        if self.velocity_x == 0.0 && self.velocity_y == 0.0 {
-            return;
-        }
-        
-
+     
+        self.moved=false;
         if self.velocity_x != 0.0 && self.velocity_y != 0.0 {
             self.x += self.velocity_x * dt * 0.7071; // sqrt(2)/2
             self.y += self.velocity_y * dt * 0.7071;
             self.hitbox.x += self.velocity_x * dt * 0.7071;
             self.hitbox.y += self.velocity_y * dt * 0.7071; 
+            self.moved=true;
         }
-        else{   
+        else {   
             self.x += self.velocity_x * dt;
             self.y += self.velocity_y * dt;
             self.hitbox.x += self.velocity_x * dt;
             self.hitbox.y += self.velocity_y * dt;
+            self.moved=true;
         }
-            
-
-        self.resolve_collision(level);
-        let send = Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{x : self.x, y : self.y, player_id: self.id}));
-        tx.send(send).unwrap();
-
-        camera.x = self.x + (self.size as i32/2 - SCREEN_WIDTH as i32/2) as f64;
-        camera.y = self.y + (self.size as i32/2 - SCREEN_HEIGHT as i32/2) as f64;
-        if self.check_collision(level) {
+        if self.velocity_x == 0.0 && self.velocity_y == 0.0 {
+            self.moved=false;
+        }                 
+        let collisions   = level.check_collision(&self.hitbox);
+        if collisions.len() > 0 {
             self.colliding = true;
         }else {
             self.colliding = false;
         }
+        for tile in collisions {
+            match tile._tile_type {
+                crate::tile_type::TileType::Exit(inner) => {
+                    self.reached_end = Some(inner.clone());
+                }
+                _ => ()
+            }
+        };
+
+        for enemy in enemies{
+            if self.hitbox.intersects(&enemy.hitbox){
+                match self.hit_state{
+                    PlayerHitState::Vulnerable =>{
+                        self.hit_state = PlayerHitState::Invincible;
+                        self.health -= 15;
+                        println!("Health : {}",self.health);
+                        self.last_hit_time = global_clock.elapsed().as_secs_f64();
+                    }
+                    _ => ()
+                }                
+            }
+        }
+
+        if global_clock.elapsed().as_secs_f64() - self.last_hit_time > 1.0{
+            self.hit_state = PlayerHitState::Vulnerable;
+            self.invicibility_blinks = 0;
+        }
+
+        level.resolve_collision(&mut self.hitbox);
+        self.x = self.hitbox.x - 10.;
+        self.y = self.hitbox.y - 15.;
+        //let send = Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{x : self.x, y : self.y, player_id: self.id}));
+        //tx.send(send).unwrap();
+
+        camera.x = self.x + (self.size as i32/2 - SCREEN_WIDTH as i32/2) as f64;
+        camera.y = self.y + (self.size as i32/2 - SCREEN_HEIGHT as i32/2) as f64;
     }
 
     pub fn on_event(&mut self, event : &sdl2::event::Event){
@@ -174,60 +252,6 @@ impl Player{
                 }
             }
             _ => ()
-        }
-    }
-
-    fn check_collision(&self, level : &Level) -> bool {
-        for layer in &level.tiles{
-            for tile in layer{
-                match tile.bounding_box{
-                    Some(ref bounding_box) => {
-                        if self.hitbox.intersects(bounding_box){
-                            return true;
-                        }
-                    },
-                    None => ()
-                }
-            }
-        }
-        false
-    }
-
-    fn resolve_collision(&mut self, level : &Level) {
-        for layer in &level.tiles{
-            for tile in layer{
-                match tile.bounding_box{
-                    Some(ref bounding_box) => {
-                        if self.hitbox.intersects(bounding_box){
-                            let x1 = self.hitbox.x + self.hitbox.w as f64 - bounding_box.x; // right side of player - left side of tile
-                            let x2 = bounding_box.x + bounding_box.w as f64 - self.hitbox.x; // right side of tile - left side of player
-                            let y1 = self.hitbox.y + self.hitbox.h as f64 - bounding_box.y; // bottom side of player - top side of tile
-                            let y2 = bounding_box.y + bounding_box.h as f64 - self.hitbox.y; // bottom side of tile - top side of player
-                            let min = x1.min(x2).min(y1).min(y2);
-                            if min == x1 {
-                                self.x -= x1;
-                                self.hitbox.x -= x1;
-                            }else if min == x2 {
-                                self.x += x2;
-                                self.hitbox.x += x2;
-                            }else if min == y1 {
-                                self.y -= y1;
-                                self.hitbox.y -= y1;
-                            }else if min == y2 {
-                                self.y += y2;
-                                self.hitbox.y += y2;
-                            }
-                            match &tile._tile_type {
-                                crate::tile_type::TileType::Exit(inner) => {
-                                    self.reached_end = Some((*inner).clone());
-                                }
-                                _ => ()
-                            }
-                        }
-                    },
-                    None => ()
-                }
-            }
         }
     }
 }

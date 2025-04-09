@@ -24,7 +24,7 @@ fn new_client_id(set : &HashSet<u64> ) -> u64 {
 
 fn handle_player_send(packet : PlayerPacket, player_id : u64, players : &mut HashMap<u64,Player>) -> Packet {
     match packet {
-        PlayerPacket::PlayerPositionPacket(PlayerPosition{x,y, player_id}) => {
+        PlayerPacket::PlayerPositionPacket(PlayerPosition{x,y, player_id}) => { 
             players.get_mut(&player_id).unwrap().x = x;
             players.get_mut(&player_id).unwrap().y = y;
             return Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{player_id : player_id as u64, x, y}));
@@ -38,6 +38,10 @@ fn handle_player_send(packet : PlayerPacket, player_id : u64, players : &mut Has
         },
         PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id,x,y}) => {
             return Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome{player_id,x,y}));
+        },
+        PlayerPacket::PlayerLevelPacket(PlayerLevel{player_id,level}) => {
+            players.get_mut(&player_id).unwrap().current_level = level.clone();
+            return Packet::PlayerPacket(PlayerPacket::PlayerLevelPacket(PlayerLevel{player_id,level}));
         }
     }
 }
@@ -72,6 +76,7 @@ pub fn server(){
     let mut players : HashMap<u64,Player> = HashMap::new();
 
     loop {
+        //std::thread::sleep(std::time::Duration::from_secs_f64(1./5.));
         // socket reading
         if let Ok((mut socket, addr)) = listener.accept() {
             println!("Client {} connected", addr);
