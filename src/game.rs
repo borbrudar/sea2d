@@ -24,6 +24,10 @@ use sdl2::ttf;
 use std::collections::HashMap;
 use std::sync::mpsc as mspc;
 
+//lara
+use std::cell::RefCell;
+use std::rc::Rc;
+
 pub enum GameState {
     Running,
     Paused,
@@ -167,6 +171,15 @@ impl Game {
         }
     }
 
+    // pause function
+    pub fn pause(&mut self) {
+        match self.game_state {
+            GameState::Running => self.game_state = GameState::Paused,
+            GameState::Paused => self.game_state = GameState::Running,
+            GameState::GameOver => (),
+        }
+    }
+
     // main game loop
     pub fn run(&mut self) {
         let initial_level = "resources/levels/level1_1.png".to_string();
@@ -276,20 +289,22 @@ impl Game {
             .animation_type = AnimationType::PingPong;
 
         // hud
-        let hud = Hud::new();
+        let pause_button = Button::create_pause_button(self);
+        let mut hud = Hud::new(vec![pause_button]);
         let mut draw_hitboxes = false;
 
         //testni gumb
-        fn fun() {
-            println!("It's alive!")
-        }
-        let mut gumbek = Button::new(fun);
+        // fn fun() {
+        //     println!("It's alive!")
+        // }
+        // let mut gumbek = Button::new(fun);
 
         let global_clock = std::time::Instant::now();
         let mut current_time = std::time::Instant::now();
         let time_step = 1.0 / 60.0;
 
         self.game_state = GameState::Running;
+
         'running: loop {
             // event polling
             for event in event_pump.poll_iter() {
@@ -348,7 +363,11 @@ impl Game {
                         clicks,
                         x,
                         y,
-                    } => gumbek.handle_event(&event),
+                    } => {
+                        for but in &mut hud.buttons {
+                            but.handle_event(&event)
+                        }
+                    }
 
                     _ => {}
                 }
@@ -467,7 +486,6 @@ impl Game {
 
             //larine stvari
             hud.draw(&mut canvas);
-            gumbek.draw(&mut canvas);
 
             // clear screen
             match self.game_state {

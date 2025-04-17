@@ -16,20 +16,46 @@
 
 // sej bom naceloma probu kodo u kratkem mal bolj komentirat ampk kr upras ce ti ni jasn
 // pa uso sreco z implementacijo ;D
+use crate::{
+    button,
+    shared::{SCREEN_HEIGHT, SCREEN_WIDTH},
+};
 
-pub struct Hud {}
+pub struct Hud<'a> {
+    pub buttons: Vec<button::Button<'a>>,
+    pub badges: Vec<button::Badge>,
+    pub health_bar: button::HealthBar,
+    pub time_display: u32,
+}
 
-impl Hud {
-    pub fn new() -> Hud {
-        Hud {}
+impl<'a> Hud<'a> {
+    pub fn new<'b: 'a>(gumbi: Vec<button::Button<'b>>) -> Hud<'b> {
+        Hud {
+            buttons: gumbi, //pause button hočem, da je po defaultu na vsakem levelu plus others
+            badges: Vec::new(),
+            health_bar: button::HealthBar::new(100, 100, 200, 20),
+            time_display: 0,
+        }
     }
 
-    pub fn draw(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
+    pub fn draw(&mut self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
         // izrisi zadeve na ekranu, npr. health bar, score, etc.
-        // spodnja koda ce odkomentiras izrise roza kvadrat na zacetku ekrana
-        canvas.set_draw_color(sdl2::pixels::Color::RGB(255, 0, 255));
+        canvas.set_draw_color(sdl2::pixels::Color::RGB(128, 128, 128));
         canvas
-            .fill_rect(sdl2::rect::Rect::new(0, 0, 100, 100))
+            .fill_rect(sdl2::rect::Rect::new(0, 0, SCREEN_WIDTH, 50))
             .unwrap();
+        canvas
+            .fill_rect(sdl2::rect::Rect::new(
+                0,
+                (SCREEN_HEIGHT - 50) as i32,
+                SCREEN_WIDTH,
+                50,
+            ))
+            .unwrap();
+
+        // narise gumbke
+        for b in self.buttons.iter() {
+            b.draw(canvas);
+        }
     }
 }
