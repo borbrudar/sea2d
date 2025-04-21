@@ -24,16 +24,18 @@ use crate::{
 pub struct Hud<'a> {
     pub buttons: Vec<button::Button<'a>>,
     pub badges: Vec<button::Badge>,
+    pub dropdown: button::Dropdown<'a>,
     pub health_bar: button::HealthBar,
     pub time_display: u32,
 }
 
 impl<'a> Hud<'a> {
-    pub fn new<'b: 'a>(gumbi: Vec<button::Button<'b>>) -> Hud<'b> {
+    pub fn new<'b: 'a>(gumbi: Vec<button::Button<'b>>, meni: button::Dropdown<'b>) -> Hud<'b> {
         Hud {
             buttons: gumbi, //pause button hočem, da je po defaultu na vsakem levelu plus others
             badges: Vec::new(),
             health_bar: button::HealthBar::new(100, 100, 200, 20),
+            dropdown: meni,
             time_display: 0,
         }
     }
@@ -57,5 +59,8 @@ impl<'a> Hud<'a> {
         for b in self.buttons.iter() {
             b.draw(canvas);
         }
+
+        //narise ddm
+        self.dropdown.draw(canvas);
     }
 }

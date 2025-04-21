@@ -1,45 +1,43 @@
-mod server;
+mod aabb;
+mod animated_texture;
+mod button;
+mod camera;
 mod client;
-mod shared;
+mod enemy;
+mod game;
+mod hud;
+mod level;
+mod networking;
 mod packet;
 mod player;
-mod texture_data;
 mod player_packets;
-mod tile;
-mod level;
-mod camera;
-mod animated_texture;
-mod tile_type;
-mod aabb;
-mod hud;
-mod button;
-mod game;
-mod networking;
-mod enemy;
 mod point;
-use crate::server::server;
+mod server;
+mod shared;
+mod texture_data;
+mod tile;
+mod tile_type;
 use crate::client::client;
+use crate::server::server;
+use crate::shared::CLIENT_LOCAL;
 use std::env;
 use std::thread;
-use crate::shared::CLIENT_LOCAL;
 #[cfg(test)]
 mod tests;
 
-
 fn main() {
     let args = env::args().collect::<Vec<String>>();
-   
-    if args.len() >= 2 && args[1] == "client"{ 
-        if args.len() >= 3{
+
+    if args.len() >= 2 && args[1] == "client" {
+        if args.len() >= 3 {
             client(&args[2]);
         } else {
             client(CLIENT_LOCAL);
         }
-    }else if args.len() >= 2 && args[1] == "server"{
+    } else if args.len() >= 2 && args[1] == "server" {
         println!("Running server on localhost:6000");
         server();
-    }
-    else {
+    } else {
         println!("Running server-client on localhost:6000");
         let _server = thread::spawn(|| {
             server();
@@ -48,5 +46,5 @@ fn main() {
             client(CLIENT_LOCAL);
         });
         client.join().unwrap();
-    }   
+    }
 }

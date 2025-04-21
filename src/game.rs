@@ -6,7 +6,7 @@ use crate::player_packets::*;
 use crate::shared::*;
 
 use crate::animated_texture::AnimationType;
-use crate::button::Button;
+use crate::button::{Button, Dropdown};
 use crate::camera::Camera;
 use crate::hud::Hud;
 use crate::level::Level;
@@ -21,13 +21,11 @@ use sdl2::rect::Rect;
 use sdl2::render::Texture;
 use sdl2::render::TextureQuery;
 use sdl2::ttf;
+use std::clone;
 use std::collections::HashMap;
 use std::sync::mpsc as mspc;
 
-//lara
-use std::cell::RefCell;
-use std::rc::Rc;
-
+#[derive(Clone, Copy, Debug)]
 pub enum GameState {
     Running,
     Paused,
@@ -171,15 +169,6 @@ impl Game {
         }
     }
 
-    // pause function
-    pub fn pause(&mut self) {
-        match self.game_state {
-            GameState::Running => self.game_state = GameState::Paused,
-            GameState::Paused => self.game_state = GameState::Running,
-            GameState::GameOver => (),
-        }
-    }
-
     // main game loop
     pub fn run(&mut self) {
         let initial_level = "resources/levels/level1_1.png".to_string();
@@ -289,15 +278,62 @@ impl Game {
             .animation_type = AnimationType::PingPong;
 
         // hud
-        let pause_button = Button::create_pause_button(self);
-        let mut hud = Hud::new(vec![pause_button]);
-        let mut draw_hitboxes = false;
 
-        //testni gumb
-        // fn fun() {
-        //     println!("It's alive!")
-        // }
-        // let mut gumbek = Button::new(fun);
+        // non_functioning pause button
+        // let mut state = self.game_state.clone();
+        // let mut pause = || {
+        //     match state {
+        //         GameState::Running => state = GameState::Paused,
+        //         GameState::Paused => state = GameState::Running,
+        //         GameState::GameOver => (),
+        //     };
+        //     self.game_state = state
+        // };
+
+        // let pause_button = Button::new(
+        //     Box::new(|| pause()),
+        //     Some(String::from("Pause")),
+        //     None,
+        //     Color::RGB(255, 0, 0),
+        //     Rect::new(0, 0, 50, 50),
+        // );
+
+        //dropdown menu
+        let ddm = Dropdown::new(
+            Button::new(
+                Box::new(|| println!("Dropdown triggered")),
+                Some("...".to_string()),
+                None,
+                Color::RGB(255, 255, 255),
+                Rect::new(0, 0, 50, 50),
+            ),
+            vec![
+                Button::new(
+                    Box::new(|| println!("Item 1 clicked")),
+                    Some("Item 1".to_string()),
+                    None,
+                    Color::RGB(214, 2, 112),
+                    Rect::new(0, 50, 100, 50),
+                ),
+                Button::new(
+                    Box::new(|| println!("Item 2 clicked")),
+                    Some("Item 2".to_string()),
+                    None,
+                    Color::RGB(155, 79, 150),
+                    Rect::new(0, 100, 100, 50),
+                ),
+                Button::new(
+                    Box::new(|| println!("Item 3 clicked")),
+                    Some("Item 3".to_string()),
+                    None,
+                    Color::RGB(0, 56, 168),
+                    Rect::new(0, 150, 100, 50),
+                ),
+            ],
+        );
+
+        let mut hud = Hud::new(Vec::new(), ddm);
+        let mut draw_hitboxes = false;
 
         let global_clock = std::time::Instant::now();
         let mut current_time = std::time::Instant::now();
@@ -354,7 +390,7 @@ impl Game {
                     } => {
                         // sdl2::mixer::Channel::all().play(&test_sound_effect, 1).unwrap();
                     }
-                    //klik na gumb
+                    //klik z miško
                     sdl2::event::Event::MouseButtonDown {
                         timestamp,
                         window_id,
@@ -365,8 +401,14 @@ impl Game {
                         y,
                     } => {
                         for but in &mut hud.buttons {
-                            but.handle_event(&event)
+                            but.handle_event(&event);
                         }
+                        for item in &mut hud.dropdown.items {
+                            item.handle_event(&event);
+                        }
+                    }
+                    sdl2::event::Event::MouseMotion { x, y, .. } => {
+                        hud.dropdown.handle_event(&event);
                     }
 
                     _ => {}
