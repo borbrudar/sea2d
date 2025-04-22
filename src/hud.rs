@@ -17,12 +17,13 @@
 // sej bom naceloma probu kodo u kratkem mal bolj komentirat ampk kr upras ce ti ni jasn
 // pa uso sreco z implementacijo ;D
 use crate::{
-    button,
+    button, poskus,
     shared::{SCREEN_HEIGHT, SCREEN_WIDTH},
 };
 
 pub struct Hud<'a> {
     pub buttons: Vec<button::Button<'a>>,
+    pub novi_gumbi: Vec<poskus::Gumb>,
     pub badges: Vec<button::Badge>,
     pub dropdown: button::Dropdown<'a>,
     pub health_bar: button::HealthBar,
@@ -30,9 +31,14 @@ pub struct Hud<'a> {
 }
 
 impl<'a> Hud<'a> {
-    pub fn new<'b: 'a>(gumbi: Vec<button::Button<'b>>, meni: button::Dropdown<'b>) -> Hud<'b> {
+    pub fn new<'b: 'a>(
+        gumbi: Vec<button::Button<'b>>,
+        nov_g: Vec<poskus::Gumb>,
+        meni: button::Dropdown<'b>,
+    ) -> Hud<'b> {
         Hud {
-            buttons: gumbi, //pause button hočem, da je po defaultu na vsakem levelu plus others
+            buttons: gumbi,
+            novi_gumbi: nov_g, //pause button hočem, da je po defaultu na vsakem levelu plus others
             badges: Vec::new(),
             health_bar: button::HealthBar::new(100, 100, 200, 20),
             dropdown: meni,
@@ -58,6 +64,11 @@ impl<'a> Hud<'a> {
         // narise gumbke
         for b in self.buttons.iter() {
             b.draw(canvas);
+        }
+
+        //narise tudi tanove gumbe
+        for g in self.novi_gumbi.iter() {
+            g.draw(canvas);
         }
 
         //narise ddm

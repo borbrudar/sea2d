@@ -3,6 +3,7 @@ use crate::enemy::Enemy;
 use crate::packet::Packet;
 use crate::player::Player;
 use crate::player_packets::*;
+use crate::poskus::Gumb;
 use crate::shared::*;
 
 use crate::animated_texture::AnimationType;
@@ -298,6 +299,15 @@ impl Game {
         //     Rect::new(0, 0, 50, 50),
         // );
 
+        //NEW PAUSE BUTTON
+        let pavza = Gumb::new(
+            GameState::Paused,
+            Some("Pause".to_string()),
+            None,
+            Color::RGB(255, 0, 0),
+            Rect::new(50, 0, 50, 50),
+        );
+
         //dropdown menu
         let ddm = Dropdown::new(
             Button::new(
@@ -332,7 +342,7 @@ impl Game {
             ],
         );
 
-        let mut hud = Hud::new(Vec::new(), ddm);
+        let mut hud = Hud::new(Vec::new(), vec![pavza], ddm);
         let mut draw_hitboxes = false;
 
         let global_clock = std::time::Instant::now();
@@ -405,6 +415,15 @@ impl Game {
                         }
                         for item in &mut hud.dropdown.items {
                             item.handle_event(&event);
+                        }
+                        for g in &mut hud.novi_gumbi {
+                            let st = g.handle_event(&event);
+                            match st {
+                                Some(stanje) => {
+                                    self.game_state = stanje;
+                                }
+                                None => (),
+                            }
                         }
                     }
                     sdl2::event::Event::MouseMotion { x, y, .. } => {
