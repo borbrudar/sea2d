@@ -280,26 +280,31 @@ impl Game {
 
         // hud
 
-        // non_functioning pause button
-        // let mut state = self.game_state.clone();
-        // let mut pause = || {
-        //     match state {
-        //         GameState::Running => state = GameState::Paused,
-        //         GameState::Paused => state = GameState::Running,
-        //         GameState::GameOver => (),
-        //     };
-        //     self.game_state = state
-        // };
+        //non_functioning pause button
+        /*let mut pause = || {
+            match self.game_state {
+                GameState::Running => self.game_state = GameState::Paused,
+                GameState::Paused => self.game_state = GameState::Running,
+                GameState::GameOver => (),
+            };
+        };*/
 
         // let pause_button = Button::new(
-        //     Box::new(|| pause()),
+        //     Box::new(|| {
+        //         match self.game_state {
+        //             GameState::Running => self.game_state = GameState::Paused,
+        //             GameState::Paused => self.game_state = GameState::Running,
+        //             GameState::GameOver => (),
+        //         };
+        //     }),
         //     Some(String::from("Pause")),
         //     None,
         //     Color::RGB(255, 0, 0),
-        //     Rect::new(0, 0, 50, 50),
+        //     Rect::new(50, 0, 50, 50),
         // );
 
         //NEW PAUSE BUTTON
+
         let pavza = Gumb::new(
             GameState::Paused,
             Some("Pause".to_string()),
@@ -314,7 +319,7 @@ impl Game {
                 Box::new(|| println!("Dropdown triggered")),
                 Some("...".to_string()),
                 None,
-                Color::RGB(255, 255, 255),
+                Color::RGB(0, 0, 0),
                 Rect::new(0, 0, 50, 50),
             ),
             vec![
@@ -545,8 +550,8 @@ impl Game {
                 }
             }
 
-            //larine stvari
-            hud.draw(&mut canvas);
+            //hud
+            hud.draw(&mut canvas, &ttf_context);
 
             // clear screen
             match self.game_state {

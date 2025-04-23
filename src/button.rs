@@ -9,7 +9,8 @@
 
 use crate::texture_data::TextureData;
 use sdl2::pixels::Color as RGB;
-use sdl2::{event::Event, rect::Point, rect::Rect};
+use sdl2::ttf;
+use sdl2::{event::Event, rect::Point, rect::Rect, render, video::WindowContext};
 
 //basic button
 pub struct Button<'a> {
@@ -29,6 +30,7 @@ impl<'a> Button<'a> {
         fun: Box<dyn FnMut() + 'a>,
         line: Option<String>,
         tex: Option<TextureData>,
+        //texture_create: &'a render::TextureCreator<WindowContext>,
         col: RGB,
         pos: Rect,
     ) -> Button<'a> {
@@ -36,14 +38,54 @@ impl<'a> Button<'a> {
             function: fun,
             text: line,
             texture: tex,
+            //texture_creator: &texture_create,
             colour: col,
             position: pos,
         }
     }
 
-    pub fn draw(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
+    pub fn create_text_texture<'b>(
+        &'b self,
+        texture_creator: &'b render::TextureCreator<WindowContext>,
+        ttf_context: &'b ttf::Sdl2TtfContext,
+    ) -> (render::Texture<'b>, u32, u32) {
+        // Load a font
+        let font_path = "resources/fonts/Enwallowify-Regular.ttf";
+        //let font = ttf_context.load_font(font_path, 24).unwrap();
+
+        let font = ttf_context
+            .load_font(font_path, 20)
+            .expect("Failed to load font");
+
+        let surface = font
+            .render(self.text.as_ref().unwrap())
+            .blended(RGB::RGB(255, 255, 255))
+            .expect("Failed to create surface from font");
+
+        let texture = texture_creator
+            .create_texture_from_surface(&surface)
+            .expect("Failed to create texture from surface");
+        let render::TextureQuery { width, height, .. } = texture.query();
+
+        (texture, width, height)
+    }
+
+    pub fn draw(
+        &self,
+        canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
+        ttf_context: &ttf::Sdl2TtfContext,
+    ) {
         canvas.set_draw_color(self.colour);
         canvas.fill_rect(self.position).unwrap();
+
+        //text
+        let ttc = canvas.texture_creator();
+        let (texture, text_width, text_height) = self.create_text_texture(&ttc, ttf_context);
+        let text_x = self.position.x + ((self.position.width() - text_width) / 2) as i32;
+        let text_y = self.position.y + ((self.position.height() - text_height) / 2) as i32;
+
+        let target = Rect::new(text_x, text_y, text_width, text_height);
+        canvas.copy(&texture, None, Some(target)).unwrap();
     }
 
     pub fn handle_event(&mut self, event: &Event) {
@@ -108,11 +150,15 @@ impl<'a> Dropdown<'a> {
         }
     }
 
-    pub fn draw(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
-        self.trigger.draw(canvas);
+    pub fn draw(
+        &self,
+        canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
+        ttf_context: &ttf::Sdl2TtfContext,
+    ) {
+        self.trigger.draw(canvas, ttf_context);
         if self.visible {
             for item in &self.items {
-                item.draw(canvas);
+                item.draw(canvas, ttf_context);
             }
         }
     }
@@ -128,15 +174,6 @@ impl<'a> Dropdown<'a> {
                     .any(|item| item.position.contains_point(mouse_point));
                 self.visible = inside_trigger || inside_items;
             }
-
-            // Event::MouseButtonDown { x, y, .. } if self.visible => {
-            //     let mouse_point = Point::new(*x, *y);
-            //     for item in &mut self.items {
-            //         if item.position.contains_point(mouse_point) {
-            //             (item.function)();
-            //         }
-            //     }
-            // }
             _ => {}
         }
     }

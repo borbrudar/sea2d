@@ -46,7 +46,11 @@ impl<'a> Hud<'a> {
         }
     }
 
-    pub fn draw(&mut self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
+    pub fn draw(
+        &mut self,
+        canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
+        ttf_context: &sdl2::ttf::Sdl2TtfContext,
+    ) {
         // izrisi zadeve na ekranu, npr. health bar, score, etc.
         canvas.set_draw_color(sdl2::pixels::Color::RGB(128, 128, 128));
         canvas
@@ -63,7 +67,7 @@ impl<'a> Hud<'a> {
 
         // narise gumbke
         for b in self.buttons.iter() {
-            b.draw(canvas);
+            b.draw(canvas, ttf_context);
         }
 
         //narise tudi tanove gumbe
@@ -72,6 +76,6 @@ impl<'a> Hud<'a> {
         }
 
         //narise ddm
-        self.dropdown.draw(canvas);
+        self.dropdown.draw(canvas, ttf_context);
     }
 }
