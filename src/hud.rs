@@ -50,6 +50,7 @@ impl<'a> Hud<'a> {
 
     pub fn draw(
         &mut self,
+        player_health: i32,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
         ttf_context: &sdl2::ttf::Sdl2TtfContext,
     ) {
@@ -78,7 +79,7 @@ impl<'a> Hud<'a> {
         }
 
         // narise health bar
-        self.health_bar.draw(canvas);
+        self.health_bar.draw(player_health, canvas);
 
         //narise ddm
         self.dropdown.draw(canvas, ttf_context);

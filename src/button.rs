@@ -50,7 +50,7 @@ impl<'a> Button<'a> {
         ttf_context: &'b ttf::Sdl2TtfContext,
     ) -> (render::Texture<'b>, u32, u32) {
         // Load a font
-        let font_path = "resources/fonts/Enwallowify-Regular.ttf";
+        let font_path = "resources/fonts/manolomono.otf";
         //let font = ttf_context.load_font(font_path, 24).unwrap();
 
         let font = ttf_context
@@ -117,19 +117,19 @@ pub struct HealthBar {
 }
 
 impl HealthBar {
-    pub fn new(heal: i32) -> HealthBar {
+    pub fn new() -> HealthBar {
         HealthBar {
             offset: 20,
             width: 200,
             height: 30,
-            x: (SCREEN_WIDTH - 200) as i32,
-            y: (SCREEN_HEIGHT - 40) as i32,
-            health: heal,
+            x: (SCREEN_WIDTH - 205) as i32,
+            y: (SCREEN_HEIGHT - 45) as i32,
+            health: 100,
         }
     }
 
-    pub fn draw(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
-        let health_percent = self.health as f32 / 100.0;
+    pub fn draw(&self, health: i32, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
+        let health_percent = health as f32 / 100.0;
         let fill_width = (self.width as f32 * health_percent) as i32;
         let fill_height = self.height;
         canvas.set_draw_color(RGB::RGB(0, 0, 0));

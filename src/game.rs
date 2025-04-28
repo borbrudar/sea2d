@@ -322,7 +322,7 @@ impl Game {
         );
 
         //Health bar
-        let healbar = HealthBar::new(player.health);
+        let healbar = HealthBar::new();
 
         //dropdown menu
         let ddm = Dropdown::new(
@@ -562,7 +562,7 @@ impl Game {
             }
 
             //hud
-            hud.draw(&mut canvas, &ttf_context);
+            hud.draw(player.health, &mut canvas, &ttf_context);
 
             // clear screen
             match self.game_state {
