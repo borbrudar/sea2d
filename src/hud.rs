@@ -17,7 +17,8 @@
 // sej bom naceloma probu kodo u kratkem mal bolj komentirat ampk kr upras ce ti ni jasn
 // pa uso sreco z implementacijo ;D
 use crate::{
-    button, poskus,
+    button::{self, HealthBar},
+    poskus,
     shared::{SCREEN_HEIGHT, SCREEN_WIDTH},
 };
 
@@ -35,12 +36,13 @@ impl<'a> Hud<'a> {
         gumbi: Vec<button::Button<'b>>,
         nov_g: Vec<poskus::Gumb>,
         meni: button::Dropdown<'b>,
+        health: HealthBar,
     ) -> Hud<'b> {
         Hud {
             buttons: gumbi,
             novi_gumbi: nov_g, //pause button hočem, da je po defaultu na vsakem levelu plus others
             badges: Vec::new(),
-            health_bar: button::HealthBar::new(100, 100, 200, 20),
+            health_bar: health,
             dropdown: meni,
             time_display: 0,
         }
@@ -74,6 +76,9 @@ impl<'a> Hud<'a> {
         for g in self.novi_gumbi.iter() {
             g.draw(canvas);
         }
+
+        // narise health bar
+        self.health_bar.draw(canvas);
 
         //narise ddm
         self.dropdown.draw(canvas, ttf_context);

@@ -7,7 +7,7 @@ use crate::poskus::Gumb;
 use crate::shared::*;
 
 use crate::animated_texture::AnimationType;
-use crate::button::{Button, Dropdown};
+use crate::button::{Button, Dropdown, HealthBar};
 use crate::camera::Camera;
 use crate::hud::Hud;
 use crate::level::Level;
@@ -313,6 +313,17 @@ impl Game {
             Rect::new(50, 0, 50, 50),
         );
 
+        let resume = Gumb::new(
+            GameState::Running,
+            Some("Resume".to_string()),
+            None,
+            Color::RGB(0, 255, 0),
+            Rect::new(100, 0, 50, 50),
+        );
+
+        //Health bar
+        let healbar = HealthBar::new(player.health);
+
         //dropdown menu
         let ddm = Dropdown::new(
             Button::new(
@@ -347,7 +358,7 @@ impl Game {
             ],
         );
 
-        let mut hud = Hud::new(Vec::new(), vec![pavza], ddm);
+        let mut hud = Hud::new(Vec::new(), vec![pavza, resume], ddm, healbar);
         let mut draw_hitboxes = false;
 
         let global_clock = std::time::Instant::now();
