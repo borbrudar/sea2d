@@ -7,6 +7,7 @@
 // za uporabo drugih modulov v projektu uporabi use crate::modul::modul
 // amapk mora bit dodan v main.rs kot `mod modul;` lhk pogledas
 
+use crate::game::GameState;
 use crate::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use crate::texture_data::TextureData;
 //use sdl2::gfx::primitives::DrawRenderer;
@@ -14,10 +15,16 @@ use sdl2::pixels::Color as RGB;
 use sdl2::ttf;
 use sdl2::{event::Event, rect::Point, rect::Rect, render, video::WindowContext};
 
+pub enum ButtonAction<'a> {
+    ChangeGameState(GameState),
+    Callback(Box<dyn FnMut() + 'a>),
+}
+
 //basic button
 pub struct Button<'a> {
-    //funkcija
-    pub function: Box<dyn FnMut() + 'a>,
+    //ukaz
+    pub action: ButtonAction<'a>,
+    //pub function: Box<dyn FnMut() + 'a>,
     //text & texture
     pub text: Option<String>,
     pub texture: Option<TextureData>,
@@ -29,14 +36,14 @@ pub struct Button<'a> {
 
 impl<'a> Button<'a> {
     pub fn new(
-        fun: Box<dyn FnMut() + 'a>,
+        act: ButtonAction<'a>,
         line: Option<String>,
         tex: Option<TextureData>,
         col: RGB,
         pos: Rect,
     ) -> Button<'a> {
         Button {
-            function: fun,
+            action: act,
             text: line,
             texture: tex,
             colour: col,
@@ -88,7 +95,7 @@ impl<'a> Button<'a> {
         canvas.copy(&texture, None, Some(target)).unwrap();
     }
 
-    pub fn handle_event(&mut self, event: &Event) {
+    pub fn handle_event(&mut self, event: &Event) -> bool {
         if let Event::MouseButtonDown {
             timestamp,
             window_id,
@@ -100,8 +107,12 @@ impl<'a> Button<'a> {
         } = event
         {
             if self.position.contains_point((*x, *y)) {
-                (self.function)();
+                return true;
+            } else {
+                return false;
             }
+        } else {
+            return false;
         }
     }
 }

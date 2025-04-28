@@ -7,7 +7,7 @@ use crate::poskus::Gumb;
 use crate::shared::*;
 
 use crate::animated_texture::AnimationType;
-use crate::button::{Button, Dropdown, HealthBar};
+use crate::button::{Button, ButtonAction, Dropdown, HealthBar};
 use crate::camera::Camera;
 use crate::hud::Hud;
 use crate::level::Level;
@@ -305,20 +305,20 @@ impl Game {
 
         //NEW PAUSE BUTTON
 
-        let pavza = Gumb::new(
-            GameState::Paused,
+        let pavza = Button::new(
+            ButtonAction::ChangeGameState(GameState::Paused),
             Some("Pause".to_string()),
             None,
             Color::RGB(255, 0, 0),
-            Rect::new(50, 0, 50, 50),
+            Rect::new(50, 0, 100, 50),
         );
 
-        let resume = Gumb::new(
-            GameState::Running,
+        let resume = Button::new(
+            ButtonAction::ChangeGameState(GameState::Running),
             Some("Resume".to_string()),
             None,
             Color::RGB(0, 255, 0),
-            Rect::new(100, 0, 50, 50),
+            Rect::new(150, 0, 100, 50),
         );
 
         //Health bar
@@ -327,7 +327,7 @@ impl Game {
         //dropdown menu
         let ddm = Dropdown::new(
             Button::new(
-                Box::new(|| println!("Dropdown triggered")),
+                ButtonAction::Callback(Box::new(|| println!("Dropdown triggered"))),
                 Some("...".to_string()),
                 None,
                 Color::RGB(0, 0, 0),
@@ -335,21 +335,21 @@ impl Game {
             ),
             vec![
                 Button::new(
-                    Box::new(|| println!("Item 1 clicked")),
+                    ButtonAction::Callback(Box::new(|| println!("Item 1 clicked"))),
                     Some("Item 1".to_string()),
                     None,
                     Color::RGB(214, 2, 112),
                     Rect::new(0, 50, 100, 50),
                 ),
                 Button::new(
-                    Box::new(|| println!("Item 2 clicked")),
+                    ButtonAction::Callback(Box::new(|| println!("Item 2 clicked"))),
                     Some("Item 2".to_string()),
                     None,
                     Color::RGB(155, 79, 150),
                     Rect::new(0, 100, 100, 50),
                 ),
                 Button::new(
-                    Box::new(|| println!("Item 3 clicked")),
+                    ButtonAction::Callback(Box::new(|| println!("Item 3 clicked"))),
                     Some("Item 3".to_string()),
                     None,
                     Color::RGB(0, 56, 168),
@@ -358,7 +358,7 @@ impl Game {
             ],
         );
 
-        let mut hud = Hud::new(Vec::new(), vec![pavza, resume], ddm, healbar);
+        let mut hud = Hud::new(vec![pavza, resume], ddm, healbar);
         let mut draw_hitboxes = false;
 
         let global_clock = std::time::Instant::now();
@@ -427,18 +427,27 @@ impl Game {
                         y,
                     } => {
                         for but in &mut hud.buttons {
-                            but.handle_event(&event);
+                            match but.handle_event(&event) {
+                                true => match but.action {
+                                    ButtonAction::Callback(ref mut callback) => {
+                                        callback();
+                                    }
+                                    ButtonAction::ChangeGameState(state) => self.game_state = state,
+                                },
+                                false => (),
+                            }
                         }
                         for item in &mut hud.dropdown.items {
-                            item.handle_event(&event);
-                        }
-                        for g in &mut hud.novi_gumbi {
-                            let st = g.handle_event(&event);
-                            match st {
-                                Some(stanje) => {
-                                    self.game_state = stanje;
-                                }
-                                None => (),
+                            match item.handle_event(&event) {
+                                true => match item.action {
+                                    ButtonAction::Callback(ref mut callback) => {
+                                        callback();
+                                    }
+                                    ButtonAction::ChangeGameState(state) => {
+                                        self.game_state = state;
+                                    }
+                                },
+                                false => (),
                             }
                         }
                     }
