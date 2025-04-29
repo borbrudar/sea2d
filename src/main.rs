@@ -12,7 +12,6 @@ mod packet;
 mod player;
 mod player_packets;
 mod point;
-mod poskus;
 mod server;
 mod shared;
 mod texture_data;

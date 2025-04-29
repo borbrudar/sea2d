@@ -3,7 +3,6 @@ use crate::enemy::Enemy;
 use crate::packet::Packet;
 use crate::player::Player;
 use crate::player_packets::*;
-use crate::poskus::Gumb;
 use crate::shared::*;
 
 use crate::animated_texture::AnimationType;
