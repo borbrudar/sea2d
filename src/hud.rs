@@ -20,6 +20,7 @@ use crate::{
     button::{self, HealthBar},
     shared::{SCREEN_HEIGHT, SCREEN_WIDTH},
 };
+use sdl2::render::Texture;
 
 pub struct Hud<'a> {
     pub buttons: Vec<button::Button<'a>>,
@@ -32,12 +33,13 @@ pub struct Hud<'a> {
 impl<'a> Hud<'a> {
     pub fn new<'b: 'a>(
         gumbi: Vec<button::Button<'b>>,
+        ikone: Vec<button::Badge>,
         meni: button::Dropdown<'b>,
         health: HealthBar,
     ) -> Hud<'b> {
         Hud {
             buttons: gumbi,
-            badges: Vec::new(),
+            badges: ikone,
             health_bar: health,
             dropdown: meni,
             time_display: 0,
@@ -49,6 +51,8 @@ impl<'a> Hud<'a> {
         player_health: i32,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
         ttf_context: &sdl2::ttf::Sdl2TtfContext,
+        texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>,
+        texture_map: &mut std::collections::HashMap<String, Texture<'a>>,
     ) {
         // izrisi zadeve na ekranu, npr. health bar, score, etc.
         canvas.set_draw_color(sdl2::pixels::Color::RGB(128, 128, 128));
@@ -67,6 +71,11 @@ impl<'a> Hud<'a> {
         // narise gumbke
         for b in self.buttons.iter() {
             b.draw(canvas, ttf_context);
+        }
+
+        //narise badge
+        for b in self.badges.iter_mut() {
+            b.draw(canvas, texture_creator, texture_map);
         }
 
         // narise health bar

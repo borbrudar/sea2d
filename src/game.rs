@@ -1,4 +1,5 @@
 use crate::animated_texture::AnimatedTexture;
+use crate::button::Badge;
 use crate::enemy::Enemy;
 use crate::packet::Packet;
 use crate::player::Player;
@@ -10,6 +11,7 @@ use crate::button::{Button, ButtonAction, Dropdown, HealthBar};
 use crate::camera::Camera;
 use crate::hud::Hud;
 use crate::level::Level;
+use crate::texture_data::TextureData;
 use sdl2::audio::AudioDevice;
 use sdl2::image::{self};
 use sdl2::mixer;
@@ -323,6 +325,12 @@ impl Game {
         //Health bar
         let healbar = HealthBar::new();
 
+        //Badges
+        let first_badge = Badge::new(
+            Rect::new(300, 0, 50, 50),
+            TextureData::new("resources/textures/scuba_mask.png".to_string()),
+        );
+
         //dropdown menu
         let ddm = Dropdown::new(
             Button::new(
@@ -357,7 +365,7 @@ impl Game {
             ],
         );
 
-        let mut hud = Hud::new(vec![pavza, resume], ddm, healbar);
+        let mut hud = Hud::new(vec![pavza, resume], vec![first_badge], ddm, healbar);
         let mut draw_hitboxes = false;
 
         let global_clock = std::time::Instant::now();
@@ -570,7 +578,13 @@ impl Game {
             }
 
             //hud
-            hud.draw(player.health, &mut canvas, &ttf_context);
+            hud.draw(
+                player.health,
+                &mut canvas,
+                &ttf_context,
+                &texture_creator,
+                &mut texture_map,
+            );
 
             // clear screen
             match self.game_state {

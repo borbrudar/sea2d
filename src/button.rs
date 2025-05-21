@@ -12,6 +12,7 @@ use crate::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use crate::texture_data::TextureData;
 //use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::pixels::Color as RGB;
+use sdl2::render::Texture;
 use sdl2::ttf;
 use sdl2::{event::Event, rect::Point, rect::Rect, render, video::WindowContext};
 
@@ -225,6 +226,32 @@ pub struct Badge {
     pub texture: TextureData,
 }
 
+impl Badge {
+    pub fn new(pos: Rect, tex: TextureData) -> Badge {
+        Badge {
+            position: pos,
+            texture: tex,
+        }
+    }
+    pub fn draw<'a>(
+        &mut self,
+        canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
+        texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>,
+        texture_map: &mut std::collections::HashMap<String, Texture<'a>>,
+    ) {
+        self.texture.load_texture(texture_creator, texture_map);
+        self.texture
+            .draw(
+                canvas,
+                texture_map,
+                self.position.x as f64,
+                self.position.y as f64,
+                self.position.width(),
+                self.position.height(),
+            )
+            .unwrap();
+    }
+}
 //dropdown menu
 pub struct Dropdown<'a> {
     pub trigger: Button<'a>,
