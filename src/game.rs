@@ -365,12 +365,18 @@ impl Game {
             ],
         );
 
-        let mut hud = Hud::new(vec![pavza, resume], vec![first_badge], ddm, healbar);
-        let mut draw_hitboxes = false;
-
         let global_clock = std::time::Instant::now();
         let mut current_time = std::time::Instant::now();
         let time_step = 1.0 / 60.0;
+
+        let mut hud = Hud::new(
+            vec![pavza, resume],
+            vec![first_badge],
+            ddm,
+            healbar,
+            current_time,
+        );
+        let mut draw_hitboxes = false;
 
         self.game_state = GameState::Running;
 
