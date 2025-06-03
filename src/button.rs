@@ -79,21 +79,38 @@ impl<'a> Button<'a> {
     }
 
     pub fn draw(
-        &self,
+        &mut self,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
         ttf_context: &ttf::Sdl2TtfContext,
+        texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>,
+        texture_map: &mut std::collections::HashMap<String, Texture<'a>>,
     ) {
         canvas.set_draw_color(self.colour);
         canvas.fill_rect(self.position).unwrap();
 
-        //text
-        let ttc = canvas.texture_creator();
-        let (texture, text_width, text_height) = self.create_text_texture(&ttc, ttf_context);
-        let text_x = self.position.x + ((self.position.width() - text_width) / 2) as i32;
-        let text_y = self.position.y + ((self.position.height() - text_height) / 2) as i32;
+        //texture
+        if let Some(tex_data) = self.texture.as_mut() {
+            tex_data.load_texture(texture_creator, texture_map);
+            tex_data
+                .draw(
+                    canvas,
+                    texture_map,
+                    self.position.x as f64,
+                    self.position.y as f64,
+                    self.position.width(),
+                    self.position.height(),
+                )
+                .expect("Failed to draw texture");
 
-        let target = Rect::new(text_x, text_y, text_width, text_height);
-        canvas.copy(&texture, None, Some(target)).unwrap();
+            //text
+            let ttc = canvas.texture_creator();
+            let (texture, text_width, text_height) = self.create_text_texture(&ttc, ttf_context);
+            let text_x = self.position.x + ((self.position.width() - text_width) / 2) as i32;
+            let text_y = self.position.y + ((self.position.height() - text_height) / 2) as i32;
+
+            let target = Rect::new(text_x, text_y, text_width, text_height);
+            canvas.copy(&texture, None, Some(target)).unwrap();
+        }
     }
 
     pub fn handle_event(&mut self, event: &Event) -> bool {
@@ -269,14 +286,17 @@ impl<'a> Dropdown<'a> {
     }
 
     pub fn draw(
-        &self,
+        &mut self,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
         ttf_context: &ttf::Sdl2TtfContext,
+        texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>,
+        texture_map: &mut std::collections::HashMap<String, Texture<'a>>,
     ) {
-        self.trigger.draw(canvas, ttf_context);
+        self.trigger
+            .draw(canvas, ttf_context, texture_creator, texture_map);
         if self.visible {
-            for item in &self.items {
-                item.draw(canvas, ttf_context);
+            for item in self.items.iter_mut() {
+                item.draw(canvas, ttf_context, texture_creator, texture_map);
             }
         }
     }

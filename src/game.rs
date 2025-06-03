@@ -316,8 +316,10 @@ impl Game {
 
         let resume = Button::new(
             ButtonAction::ChangeGameState(GameState::Running),
-            Some("Resume".to_string()),
             None,
+            Some(TextureData::new(
+                "resources/textures/resume.png".to_string(),
+            )),
             Color::RGB(0, 255, 0),
             Rect::new(150, 0, 100, 50),
         );

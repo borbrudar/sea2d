@@ -112,8 +112,8 @@ impl<'a> Hud<'a> {
             .unwrap();
 
         // narise gumbke
-        for b in self.buttons.iter() {
-            b.draw(canvas, ttf_context);
+        for b in self.buttons.iter_mut() {
+            b.draw(canvas, ttf_context, texture_creator, texture_map);
         }
 
         //narise badge
@@ -128,6 +128,7 @@ impl<'a> Hud<'a> {
         self.health_bar.draw(player_health, canvas);
 
         //narise ddm
-        self.dropdown.draw(canvas, ttf_context);
+        self.dropdown
+            .draw(canvas, ttf_context, texture_creator, texture_map);
     }
 }
