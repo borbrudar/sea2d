@@ -2,34 +2,32 @@ use fnv::FnvHasher;
 use serde_derive::{Deserialize, Serialize};
 use std::error::Error;
 
-use crate::player_packets::PlayerPacket;
+use crate::networking::player_packets::PlayerPacket;
 
-use std::hash::{Hash,Hasher};
+use std::hash::{Hash, Hasher};
 
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 
-#[derive(Serialize,Deserialize,Debug,Clone,PartialEq)]
-
-pub enum Packet{
+pub enum Packet {
     ClientIDPacket(ClientID),
     PlayerPacket(PlayerPacket),
 }
 
-pub enum ServerPacket{
+pub enum ServerPacket {
     AddPlayer(std::net::SocketAddr),
     ServerInternalPacket(ServerInternal),
     RemovePlayer(std::net::SocketAddr),
 }
 
-pub struct ServerInternal{
-    pub address : std::net::SocketAddr,
-    pub packet : Packet,
+pub struct ServerInternal {
+    pub address: std::net::SocketAddr,
+    pub packet: Packet,
 }
 
-#[derive(Serialize,Deserialize,Debug,Clone,PartialEq)]
-pub struct ClientID{
-    pub id : u64,
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct ClientID {
+    pub id: u64,
 }
-
 
 fn get_type_id<Type: 'static>() -> u64 {
     let mut hasher = FnvHasher::default();
@@ -41,17 +39,16 @@ fn get_type_id<Type: 'static>() -> u64 {
     hasher.finish()
 }
 
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PacketInternal {
-    pub type_id : u64,
+    pub type_id: u64,
     pub data: Vec<u8>,
 }
-impl PacketInternal{
-    pub fn new<T: serde::Serialize + 'static>(data : T) -> Result<Self,Box<dyn Error>> {
-        let type_id  = get_type_id::<T>();
+impl PacketInternal {
+    pub fn new<T: serde::Serialize + 'static>(data: T) -> Result<Self, Box<dyn Error>> {
+        let type_id = get_type_id::<T>();
         let data = bincode::serialize(&data)?;
-        Ok(Self{type_id,data})
+        Ok(Self { type_id, data })
     }
     #[must_use]
     pub fn try_deserialize<T: serde::de::DeserializeOwned + 'static>(&self) -> Option<T> {

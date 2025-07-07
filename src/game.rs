@@ -1,17 +1,14 @@
-use crate::animated_texture::AnimatedTexture;
-use crate::button::Badge;
-use crate::enemy::Enemy;
-use crate::packet::Packet;
-use crate::player::Player;
-use crate::player_packets::*;
-use crate::shared::*;
+use crate::hud::button::{Badge, Button, ButtonAction, Dropdown, HealthBar};
+use crate::networking::{packet::Packet, player_packets::*, shared::*};
+use crate::player::{
+    Player,
+    animated_texture::{AnimatedTexture, AnimationType},
+    camera::Camera,
+    enemy::Enemy,
+};
 
-use crate::animated_texture::AnimationType;
-use crate::button::{Button, ButtonAction, Dropdown, HealthBar};
-use crate::camera::Camera;
 use crate::hud::Hud;
-use crate::level::Level;
-use crate::texture_data::TextureData;
+use crate::level::{Level, texture_data::TextureData};
 use sdl2::audio::AudioDevice;
 use sdl2::image::{self};
 use sdl2::mixer;
@@ -317,13 +314,13 @@ impl Game {
         let resume = Button::new(
             ButtonAction::ChangeGameState(GameState::Running),
             None,
-            Some(TextureData::new(
-                "resources/textures/resume.png".to_string(),
-            )),
+            None,
             Color::RGB(0, 255, 0),
             Rect::new(150, 0, 100, 50),
         );
-
+        /*Some(TextureData::new(
+            "resources/textures/resume.png".to_string(),
+        ))*/
         //Health bar
         let healbar = HealthBar::new();
 

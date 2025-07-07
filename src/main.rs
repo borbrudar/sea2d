@@ -1,25 +1,9 @@
-mod aabb;
-mod animated_texture;
-mod button;
-mod camera;
-mod client;
-mod enemy;
 mod game;
 mod hud;
 mod level;
 mod networking;
-mod packet;
 mod player;
-mod player_packets;
-mod point;
-mod server;
-mod shared;
-mod texture_data;
-mod tile;
-mod tile_type;
-use crate::client::client;
-use crate::server::server;
-use crate::shared::CLIENT_LOCAL;
+use crate::networking::{client::client, server::server, shared::CLIENT_LOCAL};
 use std::env;
 use std::thread;
 #[cfg(test)]

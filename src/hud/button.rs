@@ -8,8 +8,8 @@
 // amapk mora bit dodan v main.rs kot `mod modul;` lhk pogledas
 
 use crate::game::GameState;
-use crate::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
-use crate::texture_data::TextureData;
+use crate::level::texture_data::TextureData;
+use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
 //use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::pixels::Color as RGB;
 use sdl2::render::Texture;

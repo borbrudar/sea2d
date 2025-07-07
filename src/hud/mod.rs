@@ -16,10 +16,9 @@
 
 // sej bom naceloma probu kodo u kratkem mal bolj komentirat ampk kr upras ce ti ni jasn
 // pa uso sreco z implementacijo ;D
-use crate::{
-    button::{self, HealthBar},
-    shared::{SCREEN_HEIGHT, SCREEN_WIDTH},
-};
+pub mod button;
+use crate::hud::button::HealthBar;
+use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::TextureCreator;
