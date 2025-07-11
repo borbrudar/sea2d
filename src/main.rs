@@ -3,7 +3,9 @@ mod hud;
 mod level;
 mod networking;
 mod player;
+mod wfc;
 use crate::networking::{client::client, server::server, shared::CLIENT_LOCAL};
+use crate::wfc::run_wfc;
 use std::env;
 use std::thread;
 #[cfg(test)]
@@ -21,6 +23,8 @@ fn main() {
     } else if args.len() >= 2 && args[1] == "server" {
         println!("Running server on localhost:6000");
         server();
+    } else if args.contains(&"--wfc".to_string()) {
+        return run_wfc();
     } else {
         println!("Running server-client on localhost:6000");
         let _server = thread::spawn(|| {

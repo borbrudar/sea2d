@@ -1,4 +1,6 @@
+use crate::hud::Hud;
 use crate::hud::button::{Badge, Button, ButtonAction, Dropdown, HealthBar};
+use crate::level::{Level, texture_data::TextureData};
 use crate::networking::{packet::Packet, player_packets::*, shared::*};
 use crate::player::{
     Player,
@@ -6,9 +8,7 @@ use crate::player::{
     camera::Camera,
     enemy::Enemy,
 };
-
-use crate::hud::Hud;
-use crate::level::{Level, texture_data::TextureData};
+use crate::wfc;
 use sdl2::audio::AudioDevice;
 use sdl2::image::{self};
 use sdl2::mixer;
@@ -37,7 +37,7 @@ pub struct Game {
     game_state: GameState,
 }
 
-fn find_sdl_gl_driver() -> Option<u32> {
+pub fn find_sdl_gl_driver() -> Option<u32> {
     for (index, item) in sdl2::render::drivers().enumerate() {
         if item.name == "opengl" {
             return Some(index as u32);
