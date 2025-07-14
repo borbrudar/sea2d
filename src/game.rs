@@ -1,9 +1,9 @@
-use crate::hud::Hud;
-use crate::hud::button::{Badge, Button, ButtonAction, Dropdown, HealthBar};
-use crate::level::{Level, texture_data::TextureData};
+use crate::display::hud::Hud;
+use crate::display::button::{Badge, Button, ButtonAction, Dropdown, HealthBar};
+use crate::environment::{level::Level, texture_data::TextureData};
 use crate::networking::{packet::Packet, player_packets::*, shared::*};
-use crate::player::{
-    Player,
+use crate::entities::{
+    player::Player,
     animated_texture::{AnimatedTexture, AnimationType},
     camera::Camera,
     enemy::Enemy,

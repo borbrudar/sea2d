@@ -1,5 +1,5 @@
 use crate::game::GameState;
-use crate::level::texture_data::TextureData;
+use crate::environment::texture_data::TextureData;
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use sdl2::pixels::Color as RGB;
 use sdl2::render::Texture;

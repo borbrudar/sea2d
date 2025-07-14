@@ -1,6 +1,6 @@
 use sdl2::pixels::Color;
 
-use crate::player::camera::Camera;
+use crate::entities::camera::Camera;
 
 #[derive(Clone, Debug)]
 pub struct AABB {

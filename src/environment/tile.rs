@@ -1,6 +1,6 @@
-use crate::level::{aabb::AABB, texture_data::TextureData, tile_type::TileType};
+use crate::environment::{aabb::AABB, texture_data::TextureData, tile_type::TileType};
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
-use crate::player::camera::Camera;
+use crate::entities::camera::Camera;
 
 #[derive(Debug, Clone)]
 pub struct Tile {

@@ -1,17 +1,13 @@
-pub mod animated_texture;
-pub mod camera;
-pub mod enemy;
-pub mod point;
 
 use std::time::Instant;
 
-use crate::level::{Level, aabb::AABB, tile_type::ExitTile};
+use crate::environment::{level::Level, aabb::AABB, tile_type::ExitTile};
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use crate::networking::{
     packet::Packet,
     player_packets::{PlayerPacket, PlayerPosition},
 };
-use crate::player::{animated_texture::AnimatedTexture, camera::Camera, enemy::Enemy};
+use crate::entities::{animated_texture::AnimatedTexture, camera::Camera, enemy::Enemy};
 use sdl2::render::Canvas;
 use sdl2::render::Texture;
 use sdl2::video::Window;
@@ -198,7 +194,7 @@ impl Player {
         }
         for tile in collisions {
             match tile._tile_type {
-                crate::level::tile_type::TileType::Exit(inner) => {
+                crate::environment::tile_type::TileType::Exit(inner) => {
                     self.reached_end = Some(inner.clone());
                 }
                 _ => (),

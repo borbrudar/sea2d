@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::level::texture_data::TextureData;
+use crate::environment::texture_data::TextureData;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum AnimationType {

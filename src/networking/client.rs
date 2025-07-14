@@ -1,6 +1,6 @@
 use crate::game::Game;
 use crate::networking::packet::Packet;
-use crate::networking::{NetworkResult, deserialize_to_packet, serialize_and_send, try_read_tcp};
+use crate::networking::helpers::{NetworkResult, deserialize_to_packet, serialize_and_send, try_read_tcp};
 use std::net::TcpStream;
 use std::sync::mpsc as mspc;
 use std::thread;
