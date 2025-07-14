@@ -1,16 +1,6 @@
-// button nej sprejme neko callback funkcijo ki se bo izvedla ko kliknemo na gumb
-// button bo imel tudi svoj text / sliko
-// button bo imel svojo pozicijo in velikost
-// probi dodat se dropdown menu
-
-// aja life pro tip
-// za uporabo drugih modulov v projektu uporabi use crate::modul::modul
-// amapk mora bit dodan v main.rs kot `mod modul;` lhk pogledas
-
 use crate::game::GameState;
 use crate::level::texture_data::TextureData;
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
-//use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::pixels::Color as RGB;
 use sdl2::render::Texture;
 use sdl2::ttf;
@@ -29,9 +19,8 @@ pub struct Button<'a> {
     //text & texture
     pub text: Option<String>,
     pub texture: Option<TextureData>,
-    //colour
+    
     pub colour: RGB,
-    //position
     pub position: Rect,
 }
 
@@ -113,7 +102,7 @@ impl<'a> Button<'a> {
         }
     }
 
-    pub fn handle_event(&mut self, event: &Event) -> bool {
+    pub fn handle_event(&mut self, event: &Event, game_state : &mut GameState) -> bool {
         if let Event::MouseButtonDown {
             timestamp,
             window_id,
@@ -125,13 +114,16 @@ impl<'a> Button<'a> {
         } = event
         {
             if self.position.contains_point((*x, *y)) {
+                match self.action {
+                    ButtonAction::Callback(ref mut callback) => {
+                        callback();
+                    }
+                    ButtonAction::ChangeGameState(state) => *game_state = state,
+                }
                 return true;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
+            } 
+        } 
+        return false;
     }
 }
 

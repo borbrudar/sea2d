@@ -439,28 +439,10 @@ impl Game {
                         y,
                     } => {
                         for but in &mut hud.buttons {
-                            match but.handle_event(&event) {
-                                true => match but.action {
-                                    ButtonAction::Callback(ref mut callback) => {
-                                        callback();
-                                    }
-                                    ButtonAction::ChangeGameState(state) => self.game_state = state,
-                                },
-                                false => (),
-                            }
+                            but.handle_event(&event, &mut self.game_state);
                         }
                         for item in &mut hud.dropdown.items {
-                            match item.handle_event(&event) {
-                                true => match item.action {
-                                    ButtonAction::Callback(ref mut callback) => {
-                                        callback();
-                                    }
-                                    ButtonAction::ChangeGameState(state) => {
-                                        self.game_state = state;
-                                    }
-                                },
-                                false => (),
-                            }
+                            item.handle_event(&event, &mut self.game_state);
                         }
                     }
                     sdl2::event::Event::MouseMotion { x, y, .. } => {
