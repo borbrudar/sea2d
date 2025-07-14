@@ -1,21 +1,16 @@
-pub mod aabb;
-pub mod texture_data;
-pub mod tile;
-pub mod tile_type;
-
 use std::{collections::HashMap, io::BufRead};
 
 use ::image::RgbaImage;
 use sdl2::render::{Texture, TextureCreator};
 
 use crate::{
-    level::{
+    environment::{
         aabb::AABB,
         texture_data::TextureData,
         tile::Tile,
         tile_type::{ExitTile, TileType},
     },
-    player::{camera::Camera, point::Point},
+    entities::{camera::Camera, point::Point},
 };
 
 pub struct Level {

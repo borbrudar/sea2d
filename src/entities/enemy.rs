@@ -4,8 +4,8 @@ use sdl2::{
 };
 
 use crate::{
-    level::{Level, aabb::AABB},
-    player::{Player, animated_texture::AnimatedTexture, camera::Camera, point::Point},
+    environment::{level::Level, aabb::AABB},
+    entities::{player::Player, animated_texture::AnimatedTexture, camera::Camera, point::Point},
 };
 use std::{
     collections::{HashMap, VecDeque},

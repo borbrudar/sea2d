@@ -5,8 +5,8 @@ use crate::{
     networking::player_packets::{
         PlayerAnimation, PlayerDisconnect, PlayerPacket, PlayerPosition, PlayerWelcome,
     },
-    networking::{self, prepend_size, try_read_tcp},
-    player::animated_texture::AnimatedTexture,
+    networking::helpers::{NetworkResult,serialize_and_send,deserialize_to_packet, prepend_size, try_read_tcp},
+    entities::animated_texture::AnimatedTexture,
 };
 
 #[test]
@@ -33,11 +33,11 @@ fn serialize_deserialize_test() {
     if let Ok((mut socket, _)) = server.accept() {
         let mut test_packet = |packet: Packet| {
             // Send the packet
-            networking::serialize_and_send(&mut client, packet.clone());
+            serialize_and_send(&mut client, packet.clone());
             // Read and deserialize the packet
             match try_read_tcp(&mut socket) {
-                networking::NetworkResult::Ok(buf) => {
-                    let deserialized_packet = networking::deserialize_to_packet(buf);
+                NetworkResult::Ok(buf) => {
+                    let deserialized_packet = deserialize_to_packet(buf);
                     assert_eq!(deserialized_packet, Some(packet));
                 }
                 _ => panic!("Failed to read packet"),

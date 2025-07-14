@@ -1,7 +1,7 @@
 use crate::networking::packet::{ClientID, Packet, ServerInternal, ServerPacket};
-use crate::networking::{NetworkResult, deserialize_to_packet, serialize_and_send, try_read_tcp};
+use crate::networking::helpers::{NetworkResult, deserialize_to_packet, serialize_and_send, try_read_tcp};
 use crate::networking::{player_packets::*, shared::LOCAL};
-use crate::player::Player;
+use crate::entities::player::Player;
 use rand::Rng;
 use std::collections::{HashMap, HashSet};
 use std::net::{TcpListener, TcpStream};

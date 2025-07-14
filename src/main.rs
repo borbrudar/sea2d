@@ -1,8 +1,8 @@
 mod game;
-mod hud;
-mod level;
+mod display;
+mod environment;
 mod networking;
-mod player;
+mod entities;
 mod wfc;
 use crate::networking::{client::client, server::server, shared::CLIENT_LOCAL};
 use crate::wfc::run_wfc;

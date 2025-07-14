@@ -1,13 +1,13 @@
-use crate::hud::Hud;
-use crate::hud::button::{Badge, Button, ButtonAction, Dropdown, HealthBar};
-use crate::level::{Level, texture_data::TextureData};
-use crate::networking::{packet::Packet, player_packets::*, shared::*};
-use crate::player::{
-    Player,
+use crate::display::button::{Badge, Button, ButtonAction, Dropdown, HealthBar};
+use crate::display::hud::Hud;
+use crate::entities::{
     animated_texture::{AnimatedTexture, AnimationType},
     camera::Camera,
     enemy::Enemy,
+    player::Player,
 };
+use crate::environment::{level::Level, texture_data::TextureData};
+use crate::networking::{packet::Packet, player_packets::*, shared::*};
 use crate::wfc;
 use sdl2::audio::AudioDevice;
 use sdl2::image::{self};
@@ -248,7 +248,6 @@ impl Game {
         );
 
         // enemies
-
         let mut enemies: Vec<Enemy> = Vec::new();
         enemies.push(Enemy::new());
         enemies.last_mut().unwrap().animation_data = Some(AnimatedTexture::new(1.0 / 6.));
@@ -277,32 +276,6 @@ impl Game {
             .animation_type = AnimationType::PingPong;
 
         // hud
-
-        //non_functioning pause button
-        /*let mut pause = || {
-            match self.game_state {
-                GameState::Running => self.game_state = GameState::Paused,
-                GameState::Paused => self.game_state = GameState::Running,
-                GameState::GameOver => (),
-            };
-        };*/
-
-        // let pause_button = Button::new(
-        //     Box::new(|| {
-        //         match self.game_state {
-        //             GameState::Running => self.game_state = GameState::Paused,
-        //             GameState::Paused => self.game_state = GameState::Running,
-        //             GameState::GameOver => (),
-        //         };
-        //     }),
-        //     Some(String::from("Pause")),
-        //     None,
-        //     Color::RGB(255, 0, 0),
-        //     Rect::new(50, 0, 50, 50),
-        // );
-
-        //NEW PAUSE BUTTON
-
         let pavza = Button::new(
             ButtonAction::ChangeGameState(GameState::Paused),
             None,
@@ -320,9 +293,8 @@ impl Game {
             Color::RGB(0, 255, 0),
             Rect::new(50, 0, 50, 50),
         );
-        /**/
         //Health bar
-        let healbar = HealthBar::new();
+        let healthbar = HealthBar::new();
 
         //Badges
         let first_badge = Badge::new(
@@ -372,10 +344,11 @@ impl Game {
             vec![pavza, resume],
             vec![first_badge],
             ddm,
-            healbar,
+            healthbar,
             current_time,
         );
         let mut draw_hitboxes = false;
+        let mut draw_hud = true;
 
         self.game_state = GameState::Running;
 
@@ -423,6 +396,12 @@ impl Game {
                         _ => (),
                     },
                     sdl2::event::Event::KeyDown {
+                        keycode: Some(sdl2::keyboard::Keycode::T),
+                        ..
+                    } => {
+                        draw_hud = !draw_hud;
+                    }
+                    sdl2::event::Event::KeyDown {
                         keycode: Some(sdl2::keyboard::Keycode::L),
                         ..
                     } => {
@@ -439,28 +418,10 @@ impl Game {
                         y,
                     } => {
                         for but in &mut hud.buttons {
-                            match but.handle_event(&event) {
-                                true => match but.action {
-                                    ButtonAction::Callback(ref mut callback) => {
-                                        callback();
-                                    }
-                                    ButtonAction::ChangeGameState(state) => self.game_state = state,
-                                },
-                                false => (),
-                            }
+                            but.handle_event(&event, &mut self.game_state);
                         }
                         for item in &mut hud.dropdown.items {
-                            match item.handle_event(&event) {
-                                true => match item.action {
-                                    ButtonAction::Callback(ref mut callback) => {
-                                        callback();
-                                    }
-                                    ButtonAction::ChangeGameState(state) => {
-                                        self.game_state = state;
-                                    }
-                                },
-                                false => (),
-                            }
+                            item.handle_event(&event, &mut self.game_state);
                         }
                     }
                     sdl2::event::Event::MouseMotion { x, y, .. } => {
@@ -583,13 +544,15 @@ impl Game {
             }
 
             //hud
-            hud.draw(
-                player.health,
-                &mut canvas,
-                &ttf_context,
-                &texture_creator,
-                &mut texture_map,
-            );
+            if draw_hud {
+                hud.draw(
+                    player.health,
+                    &mut canvas,
+                    &ttf_context,
+                    &texture_creator,
+                    &mut texture_map,
+                );
+            }
 
             // clear screen
             match self.game_state {
