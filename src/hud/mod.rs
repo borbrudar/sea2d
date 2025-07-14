@@ -20,7 +20,6 @@ pub mod button;
 
 use crate::hud::button::HealthBar;
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
-use crate::wfc;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::TextureCreator;
@@ -131,6 +130,5 @@ impl<'a> Hud<'a> {
         //narise ddm
         self.dropdown
             .draw(canvas, ttf_context, texture_creator, texture_map);
-
     }
 }

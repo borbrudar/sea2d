@@ -1,7 +1,7 @@
 use crate::game::find_sdl_gl_driver;
 use crate::level::tile_type::TileType;
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
-use rand::{prelude::IndexedRandom, rng, seq::SliceRandom};
+use rand::{prelude::IndexedRandom, rng};
 use sdl2::{pixels::Color, rect::Rect, render::Canvas, video::Window};
 
 const TILE_SIZE: usize = 32;
@@ -20,7 +20,8 @@ pub struct WFCState {
 }
 
 impl WFCState {
-    pub fn new(tileset: Vec<WfcTile>) -> Self {
+    pub fn new(tileset: &Vec<WfcTile>) -> Self {
+        let tileset = tileset.to_vec();
         let mut grid =
             vec![vec![Cell::new(tileset.len()); GRID_WIDTH as usize]; GRID_HEIGHT as usize];
 
@@ -199,23 +200,23 @@ pub fn run_wfc() {
             ],
         },
     ];
-    let mut wfc_state = WFCState::new(tileset);
+    let mut wfc_state = WFCState::new(&tileset);
 
     let mut event_pump = sdl_context.event_pump().unwrap();
     'running: loop {
         for event in event_pump.poll_iter() {
             use sdl2::event::Event;
             match event {
-                //         Event::KeyDown {
-                //             keycode: Some(sdl2::keyboard::Keycode::N),
-                //             ..
-                //         } => {
-                //             // Press 'N' to generate a new WFC state
-                //             println!("Generating new WFC state...");
-                //             let new_wfc_state = WFCState::new(tileset.clone());
-                //             wfc_state.grid = new_wfc_state.grid;
-                //             wfc_state.tileset = new_wfc_state.tileset;
-                //         }
+                Event::KeyDown {
+                    keycode: Some(sdl2::keyboard::Keycode::N),
+                    ..
+                } => {
+                    // Press 'N' to generate a new WFC state
+                    println!("Generating new WFC state...");
+                    let new_wfc_state = WFCState::new(&tileset);
+                    wfc_state.grid = new_wfc_state.grid;
+                    wfc_state.tileset = new_wfc_state.tileset;
+                }
                 Event::Quit { .. } => {
                     break 'running;
                 }

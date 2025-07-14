@@ -305,22 +305,22 @@ impl Game {
 
         let pavza = Button::new(
             ButtonAction::ChangeGameState(GameState::Paused),
-            Some("Pause".to_string()),
             None,
+            Some(TextureData::new("resources/textures/pause.png".to_string())),
             Color::RGB(255, 0, 0),
-            Rect::new(50, 0, 100, 50),
+            Rect::new(100, 0, 50, 50),
         );
 
         let resume = Button::new(
             ButtonAction::ChangeGameState(GameState::Running),
             None,
-            None,
+            Some(TextureData::new(
+                "resources/textures/resume-2.png".to_string(),
+            )),
             Color::RGB(0, 255, 0),
-            Rect::new(150, 0, 100, 50),
+            Rect::new(50, 0, 50, 50),
         );
-        /*Some(TextureData::new(
-            "resources/textures/resume.png".to_string(),
-        ))*/
+        /**/
         //Health bar
         let healbar = HealthBar::new();
 
@@ -342,24 +342,24 @@ impl Game {
             vec![
                 Button::new(
                     ButtonAction::Callback(Box::new(|| println!("Item 1 clicked"))),
-                    Some("Item 1".to_string()),
+                    Some("Back to Main Menu".to_string()),
                     None,
                     Color::RGB(214, 2, 112),
-                    Rect::new(0, 50, 100, 50),
+                    Rect::new(0, 50, 300, 50),
                 ),
                 Button::new(
                     ButtonAction::Callback(Box::new(|| println!("Item 2 clicked"))),
-                    Some("Item 2".to_string()),
+                    Some("Character descriptions".to_string()),
                     None,
                     Color::RGB(155, 79, 150),
-                    Rect::new(0, 100, 100, 50),
+                    Rect::new(0, 100, 300, 50),
                 ),
                 Button::new(
                     ButtonAction::Callback(Box::new(|| println!("Item 3 clicked"))),
                     Some("Item 3".to_string()),
                     None,
                     Color::RGB(0, 56, 168),
-                    Rect::new(0, 150, 100, 50),
+                    Rect::new(0, 150, 300, 50),
                 ),
             ],
         );

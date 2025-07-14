@@ -25,7 +25,6 @@ pub enum ButtonAction<'a> {
 pub struct Button<'a> {
     //ukaz
     pub action: ButtonAction<'a>,
-    //pub function: Box<dyn FnMut() + 'a>,
     //text & texture
     pub text: Option<String>,
     pub texture: Option<TextureData>,
@@ -101,16 +100,18 @@ impl<'a> Button<'a> {
                     self.position.height(),
                 )
                 .expect("Failed to draw texture");
-
-            //text
-            let ttc = canvas.texture_creator();
-            let (texture, text_width, text_height) = self.create_text_texture(&ttc, ttf_context);
-            let text_x = self.position.x + ((self.position.width() - text_width) / 2) as i32;
-            let text_y = self.position.y + ((self.position.height() - text_height) / 2) as i32;
-
-            let target = Rect::new(text_x, text_y, text_width, text_height);
-            canvas.copy(&texture, None, Some(target)).unwrap();
         }
+        //text
+        if self.text.is_none() {
+            return;
+        }
+        let ttc = canvas.texture_creator();
+        let (texture, text_width, text_height) = self.create_text_texture(&ttc, ttf_context);
+        let text_x = self.position.x + ((self.position.width() - text_width) / 2) as i32;
+        let text_y = self.position.y + ((self.position.height() - text_height) / 2) as i32;
+
+        let target = Rect::new(text_x, text_y, text_width, text_height);
+        canvas.copy(&texture, None, Some(target)).unwrap();
     }
 
     pub fn handle_event(&mut self, event: &Event) -> bool {
