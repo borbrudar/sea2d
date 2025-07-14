@@ -322,7 +322,7 @@ impl Game {
             "resources/textures/resume.png".to_string(),
         ))*/
         //Health bar
-        let healbar = HealthBar::new();
+        let healthbar = HealthBar::new();
 
         //Badges
         let first_badge = Badge::new(
@@ -372,10 +372,11 @@ impl Game {
             vec![pavza, resume],
             vec![first_badge],
             ddm,
-            healbar,
+            healthbar,
             current_time,
         );
         let mut draw_hitboxes = false;
+        let mut draw_hud = true;
 
         self.game_state = GameState::Running;
 
@@ -422,6 +423,12 @@ impl Game {
                         }
                         _ => (),
                     },
+                    sdl2::event::Event::KeyDown {
+                        keycode: Some(sdl2::keyboard::Keycode::T),
+                        ..
+                    } => {
+                        draw_hud = !draw_hud;
+                    }
                     sdl2::event::Event::KeyDown {
                         keycode: Some(sdl2::keyboard::Keycode::L),
                         ..
@@ -565,13 +572,15 @@ impl Game {
             }
 
             //hud
-            hud.draw(
-                player.health,
-                &mut canvas,
-                &ttf_context,
-                &texture_creator,
-                &mut texture_map,
-            );
+            if draw_hud{
+                hud.draw(
+                    player.health,
+                    &mut canvas,
+                    &ttf_context,
+                    &texture_creator,
+                    &mut texture_map,
+                );
+            }
 
             // clear screen
             match self.game_state {
