@@ -248,7 +248,6 @@ impl Game {
         );
 
         // enemies
-
         let mut enemies: Vec<Enemy> = Vec::new();
         enemies.push(Enemy::new());
         enemies.last_mut().unwrap().animation_data = Some(AnimatedTexture::new(1.0 / 6.));
@@ -277,32 +276,6 @@ impl Game {
             .animation_type = AnimationType::PingPong;
 
         // hud
-
-        //non_functioning pause button
-        /*let mut pause = || {
-            match self.game_state {
-                GameState::Running => self.game_state = GameState::Paused,
-                GameState::Paused => self.game_state = GameState::Running,
-                GameState::GameOver => (),
-            };
-        };*/
-
-        // let pause_button = Button::new(
-        //     Box::new(|| {
-        //         match self.game_state {
-        //             GameState::Running => self.game_state = GameState::Paused,
-        //             GameState::Paused => self.game_state = GameState::Running,
-        //             GameState::GameOver => (),
-        //         };
-        //     }),
-        //     Some(String::from("Pause")),
-        //     None,
-        //     Color::RGB(255, 0, 0),
-        //     Rect::new(50, 0, 50, 50),
-        // );
-
-        //NEW PAUSE BUTTON
-
         let pavza = Button::new(
             ButtonAction::ChangeGameState(GameState::Paused),
             Some("Pause".to_string()),
@@ -318,9 +291,7 @@ impl Game {
             Color::RGB(0, 255, 0),
             Rect::new(150, 0, 100, 50),
         );
-        /*Some(TextureData::new(
-            "resources/textures/resume.png".to_string(),
-        ))*/
+
         //Health bar
         let healthbar = HealthBar::new();
 

@@ -16,7 +16,7 @@ pub struct Button<'a> {
     //ukaz
     pub action: ButtonAction<'a>,
     //pub function: Box<dyn FnMut() + 'a>,
-    //text & texture
+
     pub text: Option<String>,
     pub texture: Option<TextureData>,
     
