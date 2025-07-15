@@ -6,9 +6,13 @@ use crate::entities::{
     enemy::Enemy,
     player::Player,
 };
-use crate::environment::{level::Level, texture_data::TextureData};
+use crate::environment::{
+    level::Level,
+    texture_data::TextureData,
+    tile_type::{ExitTile, TileType},
+};
 use crate::networking::{packet::Packet, player_packets::*, shared::*};
-use crate::wfc;
+use crate::wfc::{WFCState, WfcTile};
 use sdl2::audio::AudioDevice;
 use sdl2::image::{self};
 use sdl2::mixer;
@@ -215,8 +219,50 @@ impl Game {
         let mut texture_map: HashMap<String, Texture> = HashMap::new();
 
         // level loading
-        let mut level = Level::new();
-        level.load_from_file(initial_level.clone(), &texture_creator, &mut texture_map);
+        let tileset = vec![
+            WfcTile {
+                tile_type: TileType::Water,
+                edges: [
+                    vec![TileType::Water, TileType::Grass, TileType::Sand],
+                    vec![TileType::Water, TileType::Grass, TileType::Sand],
+                    vec![TileType::Water, TileType::Grass, TileType::Sand],
+                    vec![TileType::Water, TileType::Grass, TileType::Sand],
+                ],
+            },
+            WfcTile {
+                tile_type: TileType::Grass,
+                edges: [
+                    vec![TileType::Grass, TileType::Water],
+                    vec![TileType::Grass, TileType::Water],
+                    vec![TileType::Grass, TileType::Water],
+                    vec![TileType::Grass, TileType::Water],
+                ],
+            },
+            WfcTile {
+                tile_type: TileType::Sand,
+                edges: [
+                    vec![TileType::Sand, TileType::Water],
+                    vec![TileType::Sand, TileType::Water],
+                    vec![TileType::Sand, TileType::Water],
+                    vec![TileType::Sand, TileType::Water],
+                ],
+            },
+            WfcTile {
+                tile_type: TileType::Exit(ExitTile {
+                    next_level: "level1_2".to_string(),
+                }),
+                edges: [
+                    vec![TileType::Grass, TileType::Water],
+                    vec![TileType::Grass, TileType::Water],
+                    vec![TileType::Grass, TileType::Water],
+                    vec![TileType::Grass, TileType::Water],
+                ],
+            },
+        ];
+        let mut wfc_state = WFCState::new(&tileset);
+        let mut level = wfc_state.to_level(&texture_creator, &mut texture_map);
+
+        //level.load_from_file(initial_level.clone(), &texture_creator, &mut texture_map);
 
         // player setup
         let mut player = Player::new(1_000_000);

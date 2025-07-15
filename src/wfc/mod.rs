@@ -1,55 +1,127 @@
+use crate::{
+    entities::{
+        animated_texture::{AnimatedTexture, AnimationType},
+        camera::Camera,
+        enemy::Enemy,
+        player::Player,
+    },
+    environment::{texture_data::TextureData, tile_type::ExitTile},
+};
+use sdl2::render::Texture;
+use sdl2::{
+    image::{self},
+    render::TextureCreator,
+    video::WindowContext,
+};
+use std::collections::HashMap;
+
+use crate::entities::point::Point;
+use crate::environment::{level::Level, tile::Tile, tile_type::TileType};
 use crate::game::find_sdl_gl_driver;
-use crate::environment::tile_type::TileType;
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use rand::{prelude::IndexedRandom, rng};
 use sdl2::{pixels::Color, rect::Rect, render::Canvas, video::Window};
 
-const TILE_SIZE: usize = 32;
+const TILE_SIZE: usize = 50;
 const GRID_WIDTH: usize = SCREEN_WIDTH as usize / TILE_SIZE;
 const GRID_HEIGHT: usize = SCREEN_HEIGHT as usize / TILE_SIZE;
 
 #[derive(Debug, Clone)]
 pub struct WfcTile {
-    tile_type: TileType,
-    edges: [Vec<TileType>; 4], // Up, Right, Down, Left
+    pub tile_type: TileType,
+    pub edges: [Vec<TileType>; 4], // Up, Right, Down, Left
 }
 
 pub struct WFCState {
-    grid: Vec<Vec<Cell>>,
-    tileset: Vec<WfcTile>,
+    pub grid: Vec<Vec<Cell>>,
+    pub tileset: Vec<WfcTile>,
 }
 
-impl WFCState {
+impl<'a> WFCState {
     pub fn new(tileset: &Vec<WfcTile>) -> Self {
         let tileset = tileset.to_vec();
-        let mut grid =
-            vec![vec![Cell::new(tileset.len()); GRID_WIDTH as usize]; GRID_HEIGHT as usize];
-
-        while grid
+        let valid_tile_count = tileset
             .iter()
-            .any(|row| row.iter().any(|cell| !cell.collapsed))
-        {
-            let mut uncollapsed = vec![];
-            for y in 0..GRID_HEIGHT {
-                for x in 0..GRID_WIDTH {
-                    if !grid[y][x].collapsed {
-                        uncollapsed.push((x, y));
+            .position(|tile| matches!(tile.tile_type, TileType::Exit(_)))
+            .unwrap_or(tileset.len());
+
+        loop {
+            let mut grid =
+                vec![vec![Cell::new(valid_tile_count); GRID_WIDTH as usize]; GRID_HEIGHT as usize];
+            let mut success = true;
+
+            while grid
+                .iter()
+                .any(|row| row.iter().any(|cell| !cell.collapsed))
+            {
+                let mut uncollapsed = vec![];
+                for y in 0..GRID_HEIGHT {
+                    for x in 0..GRID_WIDTH {
+                        if !grid[y][x].collapsed {
+                            uncollapsed.push((x, y));
+                        }
+                    }
+                }
+
+                if uncollapsed.is_empty() {
+                    break;
+                }
+
+                uncollapsed.sort_by_key(|&(x, y)| grid[y][x].entropy());
+
+                // Find all cells with minimum entropy
+                let min_entropy = grid[uncollapsed[0].1][uncollapsed[0].0].entropy();
+                let min_cells: Vec<_> = uncollapsed
+                    .into_iter()
+                    .filter(|&(x, y)| grid[y][x].entropy() == min_entropy)
+                    .collect();
+
+                // Randomly pick one among them
+                let (x, y) = *min_cells.choose(&mut rng()).unwrap();
+
+                grid[y][x].collapse();
+
+                if !propagate(&mut grid, &tileset) {
+                    success = false;
+                    break; // contradiction → restart
+                }
+            }
+
+            //add exit tile
+            let edge_cells = edge_coordinates(GRID_WIDTH as usize, GRID_HEIGHT as usize);
+            let mut rng = rng();
+            let mut exit_placed = false;
+
+            while !exit_placed {
+                let &(x, y) = edge_cells.choose(&mut rng).expect("No edge cells");
+
+                let cell = &mut grid[y][x];
+                if cell.collapsed {
+                    let tile_index = cell.options[0];
+                    let tile_type = &tileset[tile_index].tile_type;
+
+                    // Allow only certain tile types to be converted into Exit
+                    if matches!(
+                        tile_type,
+                        TileType::Grass | TileType::Sand | TileType::Stone
+                    ) {
+                        let exit_index = tileset
+                            .iter()
+                            .position(|t| matches!(t.tile_type, TileType::Exit(_)))
+                            .expect("No Exit tile in tileset");
+
+                        cell.options = vec![exit_index];
+                        exit_placed = true;
                     }
                 }
             }
 
-            if uncollapsed.is_empty() {
-                break;
+            if success {
+                return WFCState { grid, tileset };
+            } else {
+                eprintln!("Contradiction detected. Retrying WFC...");
             }
-            uncollapsed.sort_by_key(|&(x, y)| grid[y][x].entropy());
-
-            let (x, y) = uncollapsed[0];
-
-            grid[y][x].collapse();
-
-            propagate(&mut grid, &tileset);
         }
-        WFCState { grid, tileset }
     }
 
     pub fn draw(&self, canvas: &mut Canvas<Window>) {
@@ -71,12 +143,64 @@ impl WFCState {
             }
         }
     }
+    pub fn to_level(
+        &self,
+        texture_creator: &'a TextureCreator<sdl2::video::WindowContext>,
+        texture_map: &mut HashMap<String, Texture<'a>>,
+    ) -> Level {
+        let mut layer = HashMap::new();
+
+        for (y, row) in self.grid.iter().enumerate() {
+            for (x, cell) in row.iter().enumerate() {
+                let tile_index = cell.options[0];
+                let tile_type = &self.tileset[tile_index].tile_type;
+                let mut tile = Tile::new(
+                    x as i32 * TILE_SIZE as i32,
+                    y as i32 * TILE_SIZE as i32,
+                    TILE_SIZE as u32,
+                    tile_type.clone(),
+                    None, //fix it here!!
+                );
+                // Assign texture based on tile type
+                let texture_path = match tile_type {
+                    TileType::Stone => "resources/textures/tile.png",
+                    TileType::Water => "resources/textures/water.png",
+                    TileType::Grass => "resources/textures/grass.png",
+                    TileType::Sand => "resources/textures/sand.png",
+                    TileType::Rock => "resources/textures/rock.png",
+                    TileType::Tree => "resources/textures/tree.png",
+                    TileType::Wall => "resources/textures/wall.png",
+                    TileType::Inventory => "resources/textures/cogwheel.png",
+                    TileType::Exit(_) => "resources/textures/exit.png",
+                    _ => continue, // Skip unknown or unsupported types
+                };
+
+                let mut texture_data = TextureData::new(texture_path.to_string());
+                texture_data.load_texture(texture_creator, texture_map);
+                tile.texture_data = Some(texture_data);
+                println!(
+                    "Creating tile at ({}, {}) with type {:?} and texture {}",
+                    x, y, tile_type, texture_path
+                );
+                layer.insert(
+                    Point::new(x as i32 * TILE_SIZE as i32, y as i32 * TILE_SIZE as i32),
+                    tile,
+                );
+            }
+        }
+        let tiles = vec![layer]; //single layer for now
+        Level {
+            tiles,
+            player_spawn: (0, 0),
+            tile_size: TILE_SIZE as i32,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
-struct Cell {
-    options: Vec<usize>,
-    collapsed: bool,
+pub struct Cell {
+    pub options: Vec<usize>,
+    pub collapsed: bool,
 }
 
 impl Cell {
@@ -105,6 +229,22 @@ impl Cell {
     }
 }
 
+pub fn edge_coordinates(width: usize, height: usize) -> Vec<(usize, usize)> {
+    let mut edges = Vec::new();
+
+    for x in 0..width {
+        edges.push((x, 0)); // top edge
+        edges.push((x, height - 1)); // bottom edge
+    }
+
+    for y in 1..(height - 1) {
+        edges.push((0, y)); // left edge
+        edges.push((width - 1, y)); // right edge
+    }
+
+    edges
+}
+
 fn is_compatible(tile_a: &WfcTile, tile_b: &WfcTile, direction: usize) -> bool {
     let opposite = (direction + 2) % 4;
     tile_a.edges[direction]
@@ -112,13 +252,14 @@ fn is_compatible(tile_a: &WfcTile, tile_b: &WfcTile, direction: usize) -> bool {
         .any(|edge_a| tile_b.edges[opposite].contains(edge_a))
 }
 
-fn propagate(grid: &mut Vec<Vec<Cell>>, tileset: &[WfcTile]) {
+fn propagate(grid: &mut Vec<Vec<Cell>>, tileset: &[WfcTile]) -> bool {
     let directions = [(0, -1), (1, 0), (0, 1), (-1, 0)];
     let mut changed = true;
 
     while changed {
         changed = false;
         let mut updates = vec![];
+
         for y in 0..GRID_HEIGHT {
             for x in 0..GRID_WIDTH {
                 let cell = &grid[y as usize][x as usize];
@@ -145,6 +286,11 @@ fn propagate(grid: &mut Vec<Vec<Cell>>, tileset: &[WfcTile]) {
                     });
                 }
 
+                if new_options.is_empty() {
+                    eprintln!("Contradiction at ({}, {})", x, y);
+                    return false;
+                }
+
                 if new_options.len() < cell.options.len() {
                     updates.push((x, y, new_options));
                 }
@@ -154,14 +300,12 @@ fn propagate(grid: &mut Vec<Vec<Cell>>, tileset: &[WfcTile]) {
         if !updates.is_empty() {
             changed = true;
             for (x, y, new_options) in updates {
-                println!(
-                    "Propagated update at ({}, {}): options now {:?}",
-                    x, y, new_options
-                );
                 grid[y as usize][x as usize].options = new_options;
             }
         }
     }
+
+    true
 }
 
 pub fn run_wfc() {
@@ -184,14 +328,34 @@ pub fn run_wfc() {
         WfcTile {
             tile_type: TileType::Water,
             edges: [
-                vec![TileType::Water, TileType::Grass],
-                vec![TileType::Water, TileType::Grass],
-                vec![TileType::Water, TileType::Grass],
-                vec![TileType::Water, TileType::Grass],
+                vec![TileType::Water, TileType::Grass, TileType::Sand],
+                vec![TileType::Water, TileType::Grass, TileType::Sand],
+                vec![TileType::Water, TileType::Grass, TileType::Sand],
+                vec![TileType::Water, TileType::Grass, TileType::Sand],
             ],
         },
         WfcTile {
             tile_type: TileType::Grass,
+            edges: [
+                vec![TileType::Grass, TileType::Water],
+                vec![TileType::Grass, TileType::Water],
+                vec![TileType::Grass, TileType::Water],
+                vec![TileType::Grass, TileType::Water],
+            ],
+        },
+        WfcTile {
+            tile_type: TileType::Sand,
+            edges: [
+                vec![TileType::Sand, TileType::Water],
+                vec![TileType::Sand, TileType::Water],
+                vec![TileType::Sand, TileType::Water],
+                vec![TileType::Sand, TileType::Water],
+            ],
+        },
+        WfcTile {
+            tile_type: TileType::Exit(ExitTile {
+                next_level: "level1_2".to_string(),
+            }),
             edges: [
                 vec![TileType::Grass, TileType::Water],
                 vec![TileType::Grass, TileType::Water],
@@ -212,7 +376,7 @@ pub fn run_wfc() {
                     ..
                 } => {
                     // Press 'N' to generate a new WFC state
-                    println!("Generating new WFC state...");
+                    println!("Generating new WFCstate...");
                     let new_wfc_state = WFCState::new(&tileset);
                     wfc_state.grid = new_wfc_state.grid;
                     wfc_state.tileset = new_wfc_state.tileset;
@@ -223,6 +387,7 @@ pub fn run_wfc() {
                 _ => {}
             }
         }
+
         canvas.set_draw_color(Color::RGB(255, 255, 255));
         canvas.clear();
         wfc_state.draw(&mut canvas);

@@ -1,17 +1,17 @@
 use std::{collections::HashMap, io::BufRead};
 
-use ::image::RgbaImage;
-use sdl2::render::{Texture, TextureCreator};
-
+use crate::wfc::WFCState;
 use crate::{
+    entities::{camera::Camera, point::Point},
     environment::{
         aabb::AABB,
         texture_data::TextureData,
         tile::Tile,
         tile_type::{ExitTile, TileType},
     },
-    entities::{camera::Camera, point::Point},
 };
+use ::image::RgbaImage;
+use sdl2::render::{Texture, TextureCreator};
 
 pub struct Level {
     pub tiles: Vec<HashMap<Point<i32>, Tile>>, // vector for each layer, hashmap for fast position queries
