@@ -170,7 +170,7 @@ impl Game {
 
     // main game loop
     pub fn run(&mut self) {
-        let initial_level = "resources/levels/level1_1.png".to_string();
+        let initial_level = "resources/levels/autotiler_1.png".to_string();
 
         // initalize sdl2 stuff
         let sdl_context = sdl2::init().unwrap();
@@ -544,6 +544,7 @@ impl Game {
 
             //hud
             if draw_hud{
+
                 hud.draw(
                     player.health,
                     &mut canvas,

@@ -1,22 +1,20 @@
 use std::{collections::HashMap, io::BufRead};
-
+use crate::environment::autotiler::TileSetType;
+use image::Rgba;
 use ::image::RgbaImage;
 use sdl2::render::{Texture, TextureCreator};
 
 use crate::{
-    environment::{
-        aabb::AABB,
-        texture_data::TextureData,
-        tile::Tile,
-        tile_type::{ExitTile, TileType},
-    },
-    entities::{camera::Camera, point::Point},
+    entities::{camera::Camera, point::Point}, environment::{
+        aabb::AABB, autotiler::Autotiler, texture_data::TextureData, tile::Tile, tile_type::{ExitTile, TileType}
+    }
 };
 
 pub struct Level {
     pub tiles: Vec<HashMap<Point<i32>, Tile>>, // vector for each layer, hashmap for fast position queries
     pub player_spawn: (i32, i32),
     pub tile_size: i32,
+    pub autotiler : Autotiler,
 }
 
 impl<'a> Level {
@@ -25,7 +23,61 @@ impl<'a> Level {
             tiles: Vec::new(),
             player_spawn: (0, 0),
             tile_size: 50,
+            autotiler : Autotiler::new(),
         }
+    }
+
+    fn autotiler_init(&mut self) {
+        // Initialize autotiler with default tiles
+        self.autotiler.add_tile(
+            TileType::Stone,
+            TileSetType::Simple,
+            "resources/textures/tile.png".to_string(),
+        );
+        self.autotiler.add_tile(
+            TileType::Water,
+            TileSetType::Simple,
+            "resources/textures/water.png".to_string(),
+        );
+        self.autotiler.add_tile(
+            TileType::Grass,
+            //TileSetType::Simple,
+            //"resources/textures/grass.png".to_string(),
+            TileSetType::Complex,
+            "resources/textures/grass_3x3.png".to_string(),
+        );
+        self.autotiler.add_tile(
+            TileType::Sand,
+            TileSetType::Simple,
+            "resources/textures/sand.png".to_string(),
+        );
+        self.autotiler.add_tile(
+            TileType::Rock,
+            TileSetType::Simple,
+            "resources/textures/rock.png".to_string(),
+        );
+        self.autotiler.add_tile(
+            TileType::Tree,
+            TileSetType::Simple,
+            "resources/textures/tree.png".to_string(),
+        );
+        self.autotiler.add_tile(
+            TileType::Wall,
+            TileSetType::Simple,
+            "resources/textures/wall.png".to_string(),
+        );
+        self.autotiler.add_tile(
+            TileType::Inventory,
+            TileSetType::Simple,
+            "resources/textures/cogwheel.png".to_string(),
+        );
+        self.autotiler.add_tile(
+            TileType::Exit(ExitTile {
+                next_level: String::new(),
+            }),
+            TileSetType::Simple,
+            "resources/textures/exit.png".to_string(),
+        );
     }
 
     pub fn load_from_file(
@@ -38,19 +90,23 @@ impl<'a> Level {
         self.tiles.clear();
 
         // load exits file
-        let mut exits = path.clone();
-        exits = exits.chars().take(exits.chars().count() - 5).collect();
-        exits.push_str(String::from("exits.txt").as_str());
-        if !::std::path::Path::new(&exits).exists() {
-            panic!("Exits file not found");
-        }
-        let exits = ::std::fs::File::open(exits).expect("Failed to read exits file");
-        let exits = ::std::io::BufReader::new(exits);
-        let mut exits: Vec<String> = ::std::io::BufReader::new(exits)
+        let mut exits_strs = path.clone();
+        exits_strs = exits_strs.chars().take(exits_strs.chars().count() - 5).collect();
+        exits_strs.push_str(String::from("exits.txt").as_str());
+        let mut exits: Vec<String> = Vec::new();
+        if ::std::path::Path::new(&exits_strs).exists() {
+            
+            let exit = ::std::fs::File::open(exits_strs).expect("Failed to read exits file");
+            let exit = ::std::io::BufReader::new(exit);
+            exits = ::std::io::BufReader::new(exit)
             .lines()
             .filter_map(Result::ok)
             .collect();
-        exits.reverse();
+            exits.reverse();
+        }
+
+        // initialize autotiler
+        self.autotiler_init();
 
         // load layer by layer from file, change path for each layer from "layer1_1.png" to "layer_2.png" while you can
         self.load_layer(path.clone(), texture_creator, texture_map, &mut exits);
@@ -89,10 +145,10 @@ impl<'a> Level {
 
         for y in 0..height {
             for x in 0..width {
-                let pixel = img.get_pixel(x as u32, y as u32);
+                let pixel_rgb = img.get_pixel(x as u32, y as u32);
 
                 let mut default_bounding_box = None;
-                if pixel[3] >= 128 {
+                if pixel_rgb[3] >= 128 {
                     default_bounding_box = Some(AABB::new(
                         (x * self.tile_size) as f64,
                         (y * self.tile_size) as f64,
@@ -100,10 +156,29 @@ impl<'a> Level {
                         self.tile_size as u32,
                     ));
                 }
-                let pixel = (pixel[0], pixel[1], pixel[2]);
+                let pixel = (pixel_rgb[0], pixel_rgb[1], pixel_rgb[2]);
                 //println!("Pixel: {:?}",pixel);
                 let pos: Point<i32> =
                     Point::new((x * self.tile_size) as i32, (y * self.tile_size) as i32);
+
+                // get neihbours for autotiler
+                // 0/1 depending if they match the current pixel
+
+                let mut neighbours = [[false; 3]; 3]; // 3x3 grid of neighbours, center is the current pixel, y pol x
+                neighbours[1][1] = true; // center pixel is always true (current pixel)
+                for xoff in -1..2{
+                    for yoff in -1..2{
+                        if xoff == 0 && yoff == 0 {
+                            continue; // skip the current pixel
+                        }
+                        let neighbour_x = (x + xoff) as i32;
+                        let neighbour_y = (y + yoff) as i32;
+                        if neighbour_x < width  && neighbour_y < height && neighbour_x >= 0 && neighbour_y >= 0 {
+                            let neighbour_pixel = img.get_pixel(neighbour_x as u32, neighbour_y as u32);
+                            neighbours[(yoff + 1) as usize][(xoff + 1) as usize] = neighbour_pixel == pixel_rgb;
+                        }
+                    }
+                }
 
                 match pixel {
                     TileType::STONE_COLOR => {
@@ -118,7 +193,7 @@ impl<'a> Level {
                             ),
                         );
                         layer.get_mut(&pos).unwrap().texture_data =
-                            Some(TextureData::new("resources/textures/tile.png".to_string()));
+                            self.autotiler.get_tile_texture(neighbours, TileType::Stone);
                         layer
                             .get_mut(&pos)
                             .unwrap()
@@ -139,7 +214,7 @@ impl<'a> Level {
                             ),
                         );
                         layer.get_mut(&pos).unwrap().texture_data =
-                            Some(TextureData::new("resources/textures/water.png".to_string()));
+                            self.autotiler.get_tile_texture(neighbours, TileType::Water);
                         layer
                             .get_mut(&pos)
                             .unwrap()
@@ -160,7 +235,7 @@ impl<'a> Level {
                             ),
                         );
                         layer.get_mut(&pos).unwrap().texture_data =
-                            Some(TextureData::new("resources/textures/grass.png".to_string()));
+                            self.autotiler.get_tile_texture(neighbours, TileType::Grass);
                         layer
                             .get_mut(&pos)
                             .unwrap()
@@ -181,7 +256,7 @@ impl<'a> Level {
                             ),
                         );
                         layer.get_mut(&pos).unwrap().texture_data =
-                            Some(TextureData::new("resources/textures/sand.png".to_string()));
+                            self.autotiler.get_tile_texture(neighbours, TileType::Sand);
                         layer
                             .get_mut(&pos)
                             .unwrap()
@@ -202,7 +277,7 @@ impl<'a> Level {
                             ),
                         );
                         layer.get_mut(&pos).unwrap().texture_data =
-                            Some(TextureData::new("resources/textures/rock.png".to_string()));
+                            self.autotiler.get_tile_texture(neighbours, TileType::Rock);
                         layer
                             .get_mut(&pos)
                             .unwrap()
@@ -223,7 +298,7 @@ impl<'a> Level {
                             ),
                         );
                         layer.get_mut(&pos).unwrap().texture_data =
-                            Some(TextureData::new("resources/textures/tree.png".to_string()));
+                            self.autotiler.get_tile_texture(neighbours, TileType::Tree);
                         layer
                             .get_mut(&pos)
                             .unwrap()
@@ -244,7 +319,7 @@ impl<'a> Level {
                             ),
                         );
                         layer.get_mut(&pos).unwrap().texture_data =
-                            Some(TextureData::new("resources/textures/wall.png".to_string()));
+                            self.autotiler.get_tile_texture(neighbours, TileType::Wall);
                         layer
                             .get_mut(&pos)
                             .unwrap()
