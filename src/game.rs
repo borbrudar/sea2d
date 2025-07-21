@@ -1,5 +1,6 @@
 use crate::display::button::{Badge, Button, ButtonAction, Dropdown, HealthBar};
 use crate::display::hud::Hud;
+use crate::display::mainmenu::MainMenu;
 use crate::entities::{
     animated_texture::{AnimatedTexture, AnimationType},
     camera::Camera,
@@ -33,6 +34,7 @@ pub enum GameState {
     Running,
     Paused,
     GameOver,
+    MainMenu,
 }
 
 pub struct Game {
@@ -359,7 +361,7 @@ impl Game {
             ),
             vec![
                 Button::new(
-                    ButtonAction::Callback(Box::new(|| println!("Item 1 clicked"))),
+                    ButtonAction::ChangeGameState(GameState::MainMenu),
                     Some("Back to Main Menu".to_string()),
                     None,
                     Color::RGB(214, 2, 112),
@@ -396,7 +398,7 @@ impl Game {
         let mut draw_hitboxes = false;
         let mut draw_hud = true;
 
-        self.game_state = GameState::Running;
+        self.game_state = GameState::MainMenu;
 
         'running: loop {
             // event polling
@@ -405,6 +407,7 @@ impl Game {
                     GameState::Running => player.on_event(&event),
                     GameState::Paused => player.reset_velocity(),
                     GameState::GameOver => (),
+                    GameState::MainMenu => (),
                 }
                 //camera.handle_zoom(&event);
                 match event {
@@ -426,6 +429,7 @@ impl Game {
                         GameState::Paused => self.game_state = GameState::Running,
                         GameState::Running => self.game_state = GameState::Paused,
                         GameState::GameOver => (),
+                        GameState::MainMenu => (),
                     },
                     sdl2::event::Event::KeyDown {
                         keycode: Some(sdl2::keyboard::Keycode::R),
@@ -633,6 +637,34 @@ impl Game {
 
                     // Clear the screen and draw the texture
                     canvas.copy(&texture, None, Some(dest_rect)).unwrap();
+                }
+                GameState::MainMenu => {
+                    let mut main_menu = MainMenu::new("Game needs a new title".to_string());
+                    main_menu.draw(
+                        &mut canvas,
+                        &ttf_context,
+                        &texture_creator,
+                        &mut texture_map,
+                    );
+                    for event in event_pump.poll_iter() {
+                        main_menu
+                            .start_button
+                            .handle_event(&event, &mut self.game_state);
+                        match event {
+                            sdl2::event::Event::Quit { .. }
+                            | sdl2::event::Event::KeyDown {
+                                keycode: Some(sdl2::keyboard::Keycode::ESCAPE),
+                                ..
+                            } => break 'running,
+                            _ => (),
+                        }
+                    }
+                    // init_mm(
+                    //     &mut canvas,
+                    //     &ttf_context,
+                    //     &texture_creator,
+                    //     &mut texture_map,
+                    // );
                 }
                 _ => (),
             }
