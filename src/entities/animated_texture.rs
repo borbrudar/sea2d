@@ -81,8 +81,8 @@ impl<'a> AnimatedTexture {
     ) {
         for i in 0..frame_count {
             let mut frame = TextureData::new(path.clone());
-            frame.x = start_x + (i as i32) * width as i32;
-            frame.y = start_y;
+            frame.x = start_x as u32 + (i * width ) as u32;
+            frame.y = start_y as u32;
             frame.width = width;
             frame.height = height;
             frame.load_texture(texture_creator, texture_map);

@@ -9,8 +9,8 @@ pub struct TextureData {
     pub path : String,
     pub width : u32,
     pub height : u32,
-    pub x : i32,
-    pub y : i32,
+    pub x : u32,
+    pub y : u32,
 }
 
 impl<'a> TextureData{
@@ -21,6 +21,15 @@ impl<'a> TextureData{
             height : 0,
             x : 0,
             y : 0,
+        }
+    }
+    pub fn new_full(path : String, width : u32, height : u32, x : u32, y : u32) -> TextureData{
+        TextureData{
+            path,
+            width,
+            height,
+            x : x,
+            y : y,
         }
     }
     
@@ -44,7 +53,7 @@ impl<'a> TextureData{
         match texture_map.get(&self.path.clone()){
             Some(texture) => {
                // println!("self x: {}, self y: {}, self width: {}, self height: {}",self.x,self.y,self.width,self.height);
-                canvas.copy(texture,sdl2::rect::Rect::new(self.x,self.y,self.width,self.height),sdl2::rect::Rect::new(x as i32,y as i32,width,height)).map_err(|e| e.to_string())
+                canvas.copy(texture,sdl2::rect::Rect::new(self.x as i32,self.y as i32,self.width,self.height),sdl2::rect::Rect::new(x as i32,y as i32,width,height)).map_err(|e| e.to_string())
             },
             None => Err("Texture not loaded".into())
         }
