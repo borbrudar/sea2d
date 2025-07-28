@@ -1,26 +1,20 @@
-use crate::{
-    entities::{
-        animated_texture::{AnimatedTexture, AnimationType},
-        camera::Camera,
-        enemy::Enemy,
-        player::Player,
-    },
-    environment::{texture_data::TextureData, tile_type::ExitTile},
-};
-use sdl2::render::Texture;
-use sdl2::{
-    image::{self},
-    render::TextureCreator,
-    video::WindowContext,
-};
+use sdl2::render::{Texture, TextureCreator};
 use std::collections::HashMap;
 
 use crate::entities::point::Point;
-use crate::environment::{level::Level, tile::Tile, tile_type::TileType};
+use crate::environment::autotiler::Autotiler;
+use crate::environment::{
+    level::Level,
+    texture_data::TextureData,
+    tile::Tile,
+    tile_type::{ExitTile, TileType},
+};
 use crate::game::find_sdl_gl_driver;
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
-use rand::{prelude::IndexedRandom, rng};
+use rand::{Rng, prelude::IndexedRandom, rng};
 use sdl2::{pixels::Color, rect::Rect, render::Canvas, video::Window};
+
+pub mod overlap;
 
 const TILE_SIZE: usize = 50;
 const GRID_WIDTH: usize = SCREEN_WIDTH as usize / TILE_SIZE;
@@ -178,10 +172,6 @@ impl<'a> WFCState {
                 let mut texture_data = TextureData::new(texture_path.to_string());
                 texture_data.load_texture(texture_creator, texture_map);
                 tile.texture_data = Some(texture_data);
-                println!(
-                    "Creating tile at ({}, {}) with type {:?} and texture {}",
-                    x, y, tile_type, texture_path
-                );
                 layer.insert(
                     Point::new(x as i32 * TILE_SIZE as i32, y as i32 * TILE_SIZE as i32),
                     tile,
@@ -191,8 +181,9 @@ impl<'a> WFCState {
         let tiles = vec![layer]; //single layer for now
         Level {
             tiles,
-            player_spawn: (0, 0),
+            player_spawn: rand_player_spawn(&self),
             tile_size: TILE_SIZE as i32,
+            autotiler: Autotiler::new(),
         }
     }
 }
@@ -229,6 +220,28 @@ impl Cell {
     }
 }
 
+pub fn rand_player_spawn(wfc: &WFCState) -> (i32, i32) {
+    let mut rng = rng();
+    let mut spawn_x = 0;
+    let mut spawn_y = 0;
+
+    loop {
+        spawn_x = rng.random_range(0..GRID_WIDTH as i32);
+        spawn_y = rng.random_range(0..GRID_HEIGHT as i32);
+
+        let cell = &wfc.grid[spawn_y as usize][spawn_x as usize];
+        if cell.collapsed
+            && matches!(
+                wfc.tileset[cell.options[0]].tile_type,
+                TileType::Grass | TileType::Sand | TileType::Stone
+            )
+        {
+            break;
+        }
+    }
+    println!("Player spawn at: ({}, {})", spawn_x, spawn_y);
+    (spawn_x * TILE_SIZE as i32, spawn_y * TILE_SIZE as i32)
+}
 pub fn edge_coordinates(width: usize, height: usize) -> Vec<(usize, usize)> {
     let mut edges = Vec::new();
 

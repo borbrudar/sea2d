@@ -176,7 +176,7 @@ impl Game {
 
     // main game loop
     pub fn run(&mut self) {
-        let initial_level = "resources/levels/autotiler_1.png".to_string();
+        let initial_level = "resources/levels/output_image_5.png".to_string();
 
         // initalize sdl2 stuff
         let sdl_context = sdl2::init().unwrap();
@@ -261,10 +261,10 @@ impl Game {
                 ],
             },
         ];
-        let mut wfc_state = WFCState::new(&tileset);
-        let mut level = wfc_state.to_level(&texture_creator, &mut texture_map);
-
-        //level.load_from_file(initial_level.clone(), &texture_creator, &mut texture_map);
+        //let mut wfc_state = WFCState::new(&tileset);
+        //let mut level = wfc_state.to_level(&texture_creator, &mut texture_map);
+        let mut level = Level::new();
+        level.load_from_file(initial_level.clone(), &texture_creator, &mut texture_map);
 
         // player setup
         let mut player = Player::new(1_000_000);
@@ -398,7 +398,7 @@ impl Game {
         let mut draw_hitboxes = false;
         let mut draw_hud = true;
 
-        self.game_state = GameState::MainMenu;
+        self.game_state = GameState::Running;
 
         'running: loop {
             // event polling

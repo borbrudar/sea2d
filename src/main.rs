@@ -1,11 +1,11 @@
-mod game;
 mod display;
-mod environment;
-mod networking;
 mod entities;
+mod environment;
+mod game;
+mod networking;
 mod wfc;
 use crate::networking::{client::client, server::server, shared::CLIENT_LOCAL};
-use crate::wfc::run_wfc;
+use crate::wfc::overlap::run_overlap;
 use std::env;
 use std::thread;
 #[cfg(test)]
@@ -24,7 +24,7 @@ fn main() {
         println!("Running server on localhost:6000");
         server();
     } else if args.contains(&"--wfc".to_string()) {
-        return run_wfc();
+        return run_overlap();
     } else {
         println!("Running server-client on localhost:6000");
         let _server = thread::spawn(|| {

@@ -1,5 +1,6 @@
 use crate::display::button::{Button, ButtonAction};
 use crate::display::text::Text;
+use crate::environment::texture_data::TextureData;
 use crate::game::GameState;
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use sdl2::pixels::Color;
@@ -24,7 +25,7 @@ impl<'a> MainMenu<'a> {
             ButtonAction::ChangeGameState(GameState::Running),
             Some("Start".to_string()),
             None,
-            Color::RGB(0, 0, 0),
+            Color::RGB(30, 139, 195),
             dest_rect,
         );
 
@@ -50,14 +51,27 @@ impl<'a> MainMenu<'a> {
         texture_map: &mut std::collections::HashMap<String, Texture<'a>>,
     ) {
         // Draw background
-        canvas.set_draw_color(Color::RGB(0, 0, 250));
+        canvas.set_draw_color(Color::RGB(44, 130, 201));
         canvas.clear();
         let rect = Rect::new(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
         canvas.fill_rect(rect).unwrap();
 
         // Draw start button
+        //draw frame around the button
+        let (x, y, width, height) = (
+            self.start_button.position.x,
+            self.start_button.position.y,
+            self.start_button.position.width(),
+            self.start_button.position.height(),
+        );
+        canvas.set_draw_color(Color::RGB(255, 255, 255));
+        canvas
+            .draw_rect(Rect::new(x - 1, y - 1, width + 2, height + 2))
+            .expect("Failed to draw button frame");
+
         self.start_button
             .draw(canvas, ttf_context, texture_creator, texture_map);
+
         self.title.draw(canvas, ttf_context);
     }
 }

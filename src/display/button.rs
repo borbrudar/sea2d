@@ -1,3 +1,4 @@
+use crate::display::text::Text;
 use crate::environment::texture_data::TextureData;
 use crate::game::GameState;
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
@@ -152,8 +153,8 @@ impl HealthBar {
 
     pub fn draw(&self, health: i32, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
         let health_percent = health as f32 / 100.0;
-        let fill_width = (self.width as f32 * health_percent) as i32;
-        let fill_height = self.height;
+        let fill_width = (self.width as f32 * health_percent - 2.) as i32;
+        let fill_height = self.height - 2;
         canvas.set_draw_color(RGB::RGB(0, 0, 0));
         canvas
             .draw_rect(Rect::new(
@@ -172,8 +173,8 @@ impl HealthBar {
         }
         canvas
             .fill_rect(Rect::new(
-                self.x,
-                self.y,
+                self.x + 1,
+                self.y + 1,
                 fill_width as u32,
                 fill_height as u32,
             ))
