@@ -113,7 +113,7 @@ impl<'a> WFCState {
             if success {
                 return WFCState { grid, tileset };
             } else {
-                eprintln!("Contradiction detected. Retrying WFC...");
+                println!("Contradiction detected. Retrying WFC...");
             }
         }
     }
