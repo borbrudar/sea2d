@@ -257,6 +257,17 @@ impl Game {
             &texture_creator,
             &mut texture_map,
         );
+        player.animation_data.back = Some(AnimatedTexture::new(1.0 / 10.));
+        player.animation_data.back.as_mut().unwrap().load_animation(
+            "resources/player_animation/pretnar_spritesheet.png".to_string(),
+            0,
+            144,
+            32,
+            48,
+            5,
+            &texture_creator,
+            &mut texture_map,
+        );
 
         player.x = level.player_spawn.0 as f64;
         player.y = level.player_spawn.1 as f64;
