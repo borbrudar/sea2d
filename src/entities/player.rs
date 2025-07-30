@@ -110,10 +110,10 @@ impl Player {
             animation_data : AnimationData::new(),
 
             hitbox: AABB::new(
-                ((SCREEN_WIDTH as i32) / 2) as f64 + 10.0,
-                ((SCREEN_HEIGHT as i32) / 2) as f64 + 15.0,
-                30,
-                30,
+                ((SCREEN_WIDTH as i32) / 2) as f64,
+                ((SCREEN_HEIGHT as i32) / 2) as f64 + 76.0,
+                36,
+                20,
             ),
             colliding: false,
             speed: 250.0,
@@ -272,8 +272,8 @@ impl Player {
         }
 
         level.resolve_collision(&mut self.hitbox);
-        self.x = self.hitbox.x - 10.;
-        self.y = self.hitbox.y - 15.;
+        self.x = self.hitbox.x - 20.;
+        self.y = self.hitbox.y - 76.;
         //let send = Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{x : self.x, y : self.y, player_id: self.id}));
         //tx.send(send).unwrap();
 

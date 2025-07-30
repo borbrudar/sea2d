@@ -223,25 +223,24 @@ impl Game {
 
         // player setup
         let mut player = Player::new(1_000_000);
-        player.animation_data.front = Some(AnimatedTexture::new(1.0 / 6.));
+        player.animation_data.front = Some(AnimatedTexture::new(1.0 / 10.));
         player.animation_data.front.as_mut().unwrap().load_animation(
-            "resources/player_animation/pretnar.png".to_string(),
+            "resources/player_animation/pretnar_spritesheet.png".to_string(),
             0,
             0,
             32,
             48,
-            1,
+            5,
             &texture_creator,
             &mut texture_map,
         );
         player.x = level.player_spawn.0 as f64;
         player.y = level.player_spawn.1 as f64;
-        player.hitbox.x = player.x + 10.;
-        player.hitbox.y = player.y + 15.;
+        player.hitbox.x = player.x + 16.;
+        player.hitbox.y = player.y + 40.;
         player.current_level = initial_level.clone();
 
         // camera
-
         let mut camera = Camera::new(
             player.x + (player.size_x as i32 / 2 - SCREEN_WIDTH as i32 / 2) as f64,
             player.y + (player.size_y as i32 / 2 - SCREEN_HEIGHT as i32 / 2) as f64,
@@ -438,8 +437,8 @@ impl Game {
                 level.load_from_file(exit.next_level.clone(), &texture_creator, &mut texture_map);
                 player.x = level.player_spawn.0 as f64;
                 player.y = level.player_spawn.1 as f64;
-                player.hitbox.x = player.x + 10.0;
-                player.hitbox.y = player.y + 15.0;
+                player.hitbox.x = player.x + 20.0;
+                player.hitbox.y = player.y + 76.0;
                 camera.x = player.x + (player.size_x as i32 / 2 - SCREEN_WIDTH as i32 / 2) as f64;
                 camera.y = player.y + (player.size_y as i32 / 2 - SCREEN_HEIGHT as i32 / 2) as f64;
                 player.reached_end = None;
