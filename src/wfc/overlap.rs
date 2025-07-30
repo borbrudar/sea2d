@@ -178,7 +178,6 @@ pub fn is_fully_connected(tile_grid: &Vec<Vec<[u8; 4]>>) -> bool {
     visited_count == total_walkable
 }
 
-//generate_wfc function
 pub fn generate_wfc(
     patterns: &Vec<Pattern>,
     width: u32,
@@ -234,6 +233,9 @@ pub fn place_exit_tile(tile_grid: &Vec<Vec<[u8; 4]>>) -> Vec<Vec<[u8; 4]>> {
         new_grid
     }
 }
+
+//place player spawn point: rabim poiskat kje je exit tile od predhodnjega levela right?
+//pub fn place_player_spawn(tile_grid: &Vec<Vec<[u8; 4]>>)
 
 fn save_output_image(tile_grid: &Vec<Vec<[u8; 4]>>, tile_size: u32, output_path: &str) {
     let width = tile_grid[0].len() as u32;
