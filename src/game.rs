@@ -104,27 +104,32 @@ impl Game {
                                 println!("Got a disconnect packet");
                                 other_players.remove(&disconnected.id);
                             }
-                            PlayerPacket::PlayerAnimationPacket(animation) => {
-                                println!("Got an animation packet");
-                                if let Some(other_player) = other_players.get_mut(&animation.id) {
-                                    other_player.animation_data =
-                                        Some(animation.animation_data.clone());
-                                    other_player
-                                        .animation_data
-                                        .as_mut()
-                                        .unwrap()
-                                        .load_animation(
-                                            animation.animation_data.frames[0].path.clone(),
-                                            0,
-                                            0,
-                                            16,
-                                            16,
-                                            3,
-                                            &texture_creator,
-                                            texture_map,
-                                        );
-                                }
+                            PlayerPacket::PlayerAnimationPacket(_) => {
+                                println!(
+                                    "Got an animation packet, but animations are disabled for now"
+                                );
                             }
+                            //PlayerPacket::PlayerAnimationPacket(animation) => {
+                            //    println!("Got an animation packet");
+                            //    if let Some(other_player) = other_players.get_mut(&animation.id) {
+                            //        other_player.animation_data =
+                            //            Some(animation.animation_data.clone());
+                            //        other_player
+                            //            .animation_data
+                            //            .as_mut()
+                            //            .unwrap()
+                            //            .load_animation(
+                            //                animation.animation_data.frames[0].path.clone(),
+                            //                0,
+                            //                0,
+                            //                16,
+                            //                16,
+                            //                3,
+                            //                &texture_creator,
+                            //                texture_map,
+                            //            );
+                            //    }
+                            //}
                             PlayerPacket::PlayerLevelPacket(level) => {
                                 println!("Got a level packet");
                                 if let Some(other_player) = other_players.get_mut(&level.player_id)
@@ -149,15 +154,15 @@ impl Game {
                                 data,
                             )))
                             .unwrap();
-                        let data = PlayerAnimation {
-                            id: player.id,
-                            animation_data: player.animation_data.clone().unwrap(),
-                        };
-                        self.packet_sender
-                            .send(Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(
-                                data,
-                            )))
-                            .unwrap();
+                        //let data = PlayerAnimation {
+                        //    id: player.id,
+                        //    animation_data: player.animation_data.clone().unwrap(),
+                        //};
+                        //self.packet_sender
+                        //    .send(Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(
+                        //        data,
+                        //    )))
+                        //    .unwrap();
                         self.packet_sender
                             .send(Packet::PlayerPacket(PlayerPacket::PlayerLevelPacket(
                                 PlayerLevel {
@@ -176,7 +181,7 @@ impl Game {
 
     // main game loop
     pub fn run(&mut self) {
-        let initial_level = "resources/levels/output_image_4.png".to_string();
+        let initial_level = "resources/levels/autotiler_2.png".to_string();
 
         // initalize sdl2 stuff
         let sdl_context = sdl2::init().unwrap();
@@ -268,29 +273,32 @@ impl Game {
 
         // player setup
         let mut player = Player::new(1_000_000);
-        player.animation_data = Some(AnimatedTexture::new(1.0 / 6.));
-        player.animation_data.as_mut().unwrap().load_animation(
-            "resources/player_animation/player.png".to_string(),
-            0,
-            0,
-            16,
-            16,
-            3,
-            &texture_creator,
-            &mut texture_map,
-        );
-        player.animation_data.as_mut().unwrap().animation_type = AnimationType::PingPong;
+        player.animation_data.front = Some(AnimatedTexture::new(1.0 / 10.));
+        player
+            .animation_data
+            .front
+            .as_mut()
+            .unwrap()
+            .load_animation(
+                "resources/player_animation/pretnar_spritesheet.png".to_string(),
+                0,
+                0,
+                32,
+                48,
+                5,
+                &texture_creator,
+                &mut texture_map,
+            );
         player.x = level.player_spawn.0 as f64;
         player.y = level.player_spawn.1 as f64;
-        player.hitbox.x = player.x + 10.;
-        player.hitbox.y = player.y + 15.;
+        player.hitbox.x = player.x + 16.;
+        player.hitbox.y = player.y + 40.;
         player.current_level = initial_level.clone();
 
         // camera
-
         let mut camera = Camera::new(
-            player.x + (player.size as i32 / 2 - SCREEN_WIDTH as i32 / 2) as f64,
-            player.y + (player.size as i32 / 2 - SCREEN_HEIGHT as i32 / 2) as f64,
+            player.x + (player.size_x as i32 / 2 - SCREEN_WIDTH as i32 / 2) as f64,
+            player.y + (player.size_y as i32 / 2 - SCREEN_HEIGHT as i32 / 2) as f64,
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
         );
@@ -487,10 +495,10 @@ impl Game {
                 level.load_from_file(exit.next_level.clone(), &texture_creator, &mut texture_map);
                 player.x = level.player_spawn.0 as f64;
                 player.y = level.player_spawn.1 as f64;
-                player.hitbox.x = player.x + 10.0;
-                player.hitbox.y = player.y + 15.0;
-                camera.x = player.x + (player.size as i32 / 2 - SCREEN_WIDTH as i32 / 2) as f64;
-                camera.y = player.y + (player.size as i32 / 2 - SCREEN_HEIGHT as i32 / 2) as f64;
+                player.hitbox.x = player.x + 20.0;
+                player.hitbox.y = player.y + 76.0;
+                camera.x = player.x + (player.size_x as i32 / 2 - SCREEN_WIDTH as i32 / 2) as f64;
+                camera.y = player.y + (player.size_y as i32 / 2 - SCREEN_HEIGHT as i32 / 2) as f64;
                 player.reached_end = None;
                 player.current_level = exit.next_level.clone();
                 self.packet_sender
@@ -526,13 +534,7 @@ impl Game {
                         &global_clock,
                     );
                     for (_, other_player) in &mut other_players {
-                        if !other_player.animation_data.is_none() {
-                            other_player
-                                .animation_data
-                                .as_mut()
-                                .unwrap()
-                                .update(delta_time);
-                        }
+                        other_player.animation_data.update(delta_time);
                     }
                 }
                 _ => (),

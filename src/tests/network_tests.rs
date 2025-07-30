@@ -1,12 +1,9 @@
 use std::net::{TcpListener, TcpStream};
 
 use crate::{
-    networking::packet::{ClientID, Packet},
-    networking::player_packets::{
+    entities::{player::AnimationData}, networking::{helpers::{deserialize_to_packet, prepend_size, serialize_and_send, try_read_tcp, NetworkResult}, packet::{ClientID, Packet}, player_packets::{
         PlayerAnimation, PlayerDisconnect, PlayerPacket, PlayerPosition, PlayerWelcome,
-    },
-    networking::helpers::{NetworkResult,serialize_and_send,deserialize_to_packet, prepend_size, try_read_tcp},
-    entities::animated_texture::AnimatedTexture,
+    }}
 };
 
 #[test]
@@ -68,7 +65,7 @@ fn serialize_deserialize_test() {
         test_packet(Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(
             PlayerAnimation {
                 id: 0,
-                animation_data: AnimatedTexture::new(0.0),
+                animation_data: AnimationData::new(),
             },
         )));
         test_packet(Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(

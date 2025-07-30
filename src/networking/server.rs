@@ -38,12 +38,21 @@ fn handle_player_send(
             }));
         }
         PlayerPacket::PlayerAnimationPacket(PlayerAnimation { id, animation_data }) => {
-            players.get_mut(&player_id).unwrap().animation_data = Some(animation_data.clone());
+            if let Some(player) = players.get_mut(&id) {
+                player.animation_data = animation_data.clone();
+            }
             return Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(PlayerAnimation {
                 id,
                 animation_data,
             }));
         }
+        //PlayerPacket::PlayerAnimationPacket(PlayerAnimation { id, animation_data }) => {
+        //    players.get_mut(&player_id).unwrap().animation_data = Some(animation_data.clone());
+        //    return Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(PlayerAnimation {
+        //        id,
+        //        animation_data,
+        //    }));
+        //}
         PlayerPacket::PlayerWelcomePacket(PlayerWelcome { player_id, x, y }) => {
             return Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome {
                 player_id,

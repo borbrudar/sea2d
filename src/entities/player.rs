@@ -11,10 +11,62 @@ use crate::entities::{animated_texture::AnimatedTexture, camera::Camera, enemy::
 use sdl2::render::Canvas;
 use sdl2::render::Texture;
 use sdl2::video::Window;
+use serde::{Serialize,Deserialize};
 
 pub enum PlayerHitState {
     Invincible,
     Vulnerable,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize,PartialEq)]
+enum PlayerAnimationState {
+    Front,
+    Back,
+    Left,
+    Right,
+    Idle,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct AnimationData{
+    pub front: Option<AnimatedTexture>,
+    pub back: Option<AnimatedTexture>,
+    pub left: Option<AnimatedTexture>,
+    pub right: Option<AnimatedTexture>,
+    pub idle: Option<AnimatedTexture>,
+    pub current_animation: PlayerAnimationState,
+}
+impl AnimationData {
+    pub fn new() -> AnimationData {
+        AnimationData {
+            front: None,
+            back: None,
+            left: None,
+            right: None,
+            idle: None,
+            current_animation: PlayerAnimationState::Idle,
+        }
+    }
+
+    pub fn draw(
+        &self,
+        canvas: &mut Canvas<Window>,
+        texture_map: &std::collections::HashMap<String, Texture>,
+        x: f64,
+        y: f64,
+        width: u32,
+        height: u32,
+    ) {
+        if let Some(animation) = &self.front {
+            animation.draw(canvas, texture_map, x, y, width, height);
+        }
+    }
+
+    pub fn update(&mut self, dt: f64) {
+        if let Some(animation) = &mut self.front {
+            animation.update(dt);
+        }
+    }
 }
 
 pub struct Player {
@@ -23,8 +75,9 @@ pub struct Player {
     pub y: f64,
     velocity_x: f64,
     velocity_y: f64,
-    pub size: u32,
-    pub animation_data: Option<AnimatedTexture>,
+    pub size_x: u32,
+    pub size_y: u32,
+    pub animation_data: AnimationData,
     pub hitbox: AABB,
     pub colliding: bool,
     speed: f64,
@@ -52,13 +105,15 @@ impl Player {
             y: ((SCREEN_HEIGHT as i32) / 2) as f64,
             velocity_x: 0.0,
             velocity_y: 0.0,
-            size: 50,
-            animation_data: None,
+            size_x: 36*2,
+            size_y : 48*2,
+            animation_data : AnimationData::new(),
+
             hitbox: AABB::new(
-                ((SCREEN_WIDTH as i32) / 2) as f64 + 10.0,
-                ((SCREEN_HEIGHT as i32) / 2) as f64 + 15.0,
-                30,
-                30,
+                ((SCREEN_WIDTH as i32) / 2) as f64,
+                ((SCREEN_HEIGHT as i32) / 2) as f64 + 76.0,
+                36,
+                20,
             ),
             colliding: false,
             speed: 250.0,
@@ -93,7 +148,8 @@ impl Player {
         camera: &Camera,
         global_clock: &Instant,
     ) {
-        match self.animation_data {
+
+        match self.animation_data.front {
             Some(ref animation_data) => {
                 //println!("Drawing animation");
                 match self.hit_state {
@@ -119,8 +175,8 @@ impl Player {
                                 texture_map,
                                 self.x - camera.x,
                                 self.y - camera.y,
-                                self.size,
-                                self.size,
+                                self.size_x,
+                                self.size_y,
                             );
                         }
                     }
@@ -130,8 +186,8 @@ impl Player {
                             texture_map,
                             self.x - camera.x,
                             self.y - camera.y,
-                            self.size,
-                            self.size,
+                            self.size_x,
+                            self.size_y,
                         );
                     }
                 }
@@ -142,8 +198,8 @@ impl Player {
                     .fill_rect(sdl2::rect::Rect::new(
                         (self.x - camera.x) as i32,
                         (self.y - camera.y) as i32,
-                        self.size,
-                        self.size,
+                        self.size_x,
+                        self.size_y,
                     ))
                     .unwrap();
             }
@@ -162,12 +218,7 @@ impl Player {
         if self.id == 1_000_000 {
             return ();
         }
-        match self.animation_data {
-            Some(ref mut animation_data) => {
-                animation_data.update(dt);
-            }
-            None => (),
-        }
+        self.animation_data.update(dt);
 
         self.moved = false;
         if self.velocity_x != 0.0 && self.velocity_y != 0.0 {
@@ -221,13 +272,13 @@ impl Player {
         }
 
         level.resolve_collision(&mut self.hitbox);
-        self.x = self.hitbox.x - 10.;
-        self.y = self.hitbox.y - 15.;
+        self.x = self.hitbox.x - 20.;
+        self.y = self.hitbox.y - 76.;
         //let send = Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{x : self.x, y : self.y, player_id: self.id}));
         //tx.send(send).unwrap();
 
-        camera.x = self.x + (self.size as i32 / 2 - SCREEN_WIDTH as i32 / 2) as f64;
-        camera.y = self.y + (self.size as i32 / 2 - SCREEN_HEIGHT as i32 / 2) as f64;
+        camera.x = self.x + (self.size_x as i32 / 2 - SCREEN_WIDTH as i32 / 2) as f64;
+        camera.y = self.y + (self.size_y as i32 / 2 - SCREEN_HEIGHT as i32 / 2) as f64;
     }
 
     pub fn on_event(&mut self, event: &sdl2::event::Event) {
