@@ -22,7 +22,7 @@ impl<'a> Level {
         Level {
             tiles: Vec::new(),
             player_spawn: (0, 0),
-            tile_size: 50,
+            tile_size: 80,
             autotiler : Autotiler::new(),
         }
     }
@@ -43,8 +43,8 @@ impl<'a> Level {
             TileType::Grass,
             //TileSetType::Simple,
             //"resources/textures/grass.png".to_string(),
-            TileSetType::Complex,
-            "resources/textures/grass_3x3.png".to_string(),
+            TileSetType::Full,
+            "resources/textures/grass_full.png".to_string(),
         );
         self.autotiler.add_tile(
             TileType::Sand,
