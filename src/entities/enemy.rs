@@ -16,6 +16,7 @@ pub enum EnemyType {
     Slime,
     Stonewalker,
     Wizard,
+    Skull,
 }
 
 pub struct Enemy {
