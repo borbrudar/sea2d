@@ -25,6 +25,7 @@ pub struct Enemy {
     pub animation_data: Option<AnimatedTexture>,
     pub size: u32,
     pub hitbox: AABB,
+    pub kind : EnemyType,
 
     pub last_time: f64,
     pub dir: i32,
@@ -40,6 +41,7 @@ impl Enemy {
             hitbox: AABB::new(55., 55., 40, 40),
             last_time: 0.,
             dir: -1,
+            kind : EnemyType::Slime,
         }
     }
 
