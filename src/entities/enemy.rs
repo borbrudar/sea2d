@@ -12,6 +12,12 @@ use std::{
     time::Instant,
 };
 
+pub enum EnemyType {
+    Slime,
+    Stonewalker,
+    Wizard,
+}
+
 pub struct Enemy {
     pub x: f64,
     pub y: f64,
