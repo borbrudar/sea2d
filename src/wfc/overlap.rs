@@ -11,7 +11,7 @@ use std::path::Path;
 
 //sample: 5x5 ploščic, 10x10 pixlov
 const SAMPLE_TILE_SIZE: usize = 2;
-const TILE_SIZE: usize = 80;
+const TILE_SIZE: usize = 1;
 const GRID_HEIGHT: usize = 12;
 const GRID_WIDTH: usize = 16;
 
