@@ -286,7 +286,7 @@ impl Game {
             192,
             32,
             48,
-            6,
+            5,
             &texture_creator,
             &mut texture_map,
         );
