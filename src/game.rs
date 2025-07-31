@@ -231,6 +231,7 @@ impl Game {
 
         // player setup
         let mut player = Player::new(1_000_000);
+
         player.animation_data.front = Some(AnimatedTexture::new(1.0 / 10.));
         player
             .animation_data
@@ -247,6 +248,72 @@ impl Game {
                 &texture_creator,
                 &mut texture_map,
             );
+        player.animation_data.right = Some(AnimatedTexture::new(1.0 / 10.));
+        player
+            .animation_data
+            .right
+            .as_mut()
+            .unwrap()
+            .load_animation(
+                "resources/player_animation/pretnar_spritesheet.png".to_string(),
+                0,
+                48,
+                32,
+                48,
+                5,
+                &texture_creator,
+                &mut texture_map,
+            );
+        player.animation_data.left = Some(AnimatedTexture::new(1.0 / 10.));
+        player.animation_data.left.as_mut().unwrap().load_animation(
+            "resources/player_animation/pretnar_spritesheet.png".to_string(),
+            0,
+            96,
+            32,
+            48,
+            5,
+            &texture_creator,
+            &mut texture_map,
+        );
+        player.animation_data.back = Some(AnimatedTexture::new(1.0 / 10.));
+        player.animation_data.back.as_mut().unwrap().load_animation(
+            "resources/player_animation/pretnar_spritesheet.png".to_string(),
+            0,
+            144,
+            32,
+            48,
+            5,
+            &texture_creator,
+            &mut texture_map,
+        );
+        player.animation_data.default = Some(AnimatedTexture::new(1.0));
+        player
+            .animation_data
+            .default
+            .as_mut()
+            .unwrap()
+            .load_animation(
+                "resources/player_animation/pretnar_spritesheet.png".to_string(),
+                0,
+                0,
+                32,
+                48,
+                1,
+                &texture_creator,
+                &mut texture_map,
+            );
+        player.animation_data.idle = Some(AnimatedTexture::new(1.0 / 3.0));
+        player.animation_data.idle.as_mut().unwrap().load_animation(
+            "resources/player_animation/pretnar_spritesheet.png".to_string(),
+            0,
+            192,
+            32,
+            48,
+            6,
+            &texture_creator,
+            &mut texture_map,
+        );
+
         player.x = level.player_spawn.0 as f64;
         player.y = level.player_spawn.1 as f64;
         player.hitbox.x = player.x + 16.;
@@ -447,6 +514,8 @@ impl Game {
                     _ => {}
                 }
             }
+
+            //println!("player animation {:?}", player.animation_data.current_animation);
 
             // check if we need to load a new level
             if let Some(exit) = player.reached_end.clone() {

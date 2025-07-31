@@ -8,6 +8,7 @@ use crate::networking::{
     player_packets::{PlayerPacket, PlayerPosition},
 };
 use crate::entities::{animated_texture::AnimatedTexture, camera::Camera, enemy::Enemy};
+use bincode::de;
 use sdl2::render::Canvas;
 use sdl2::render::Texture;
 use sdl2::video::Window;
@@ -19,12 +20,13 @@ pub enum PlayerHitState {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize,PartialEq)]
-enum PlayerAnimationState {
+pub enum PlayerAnimationState {
     Front,
     Back,
     Left,
     Right,
     Idle,
+    Default,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -34,6 +36,7 @@ pub struct AnimationData{
     pub left: Option<AnimatedTexture>,
     pub right: Option<AnimatedTexture>,
     pub idle: Option<AnimatedTexture>,
+    pub default: Option<AnimatedTexture>,
     pub current_animation: PlayerAnimationState,
 }
 impl AnimationData {
@@ -44,7 +47,8 @@ impl AnimationData {
             left: None,
             right: None,
             idle: None,
-            current_animation: PlayerAnimationState::Idle,
+            default: None,
+            current_animation: PlayerAnimationState::Default,
         }
     }
 
@@ -57,14 +61,84 @@ impl AnimationData {
         width: u32,
         height: u32,
     ) {
-        if let Some(animation) = &self.front {
-            animation.draw(canvas, texture_map, x, y, width, height);
+        let default_draw = |canvas: &mut Canvas<Window>, texture_map: &std::collections::HashMap<String, Texture>, x: f64, y: f64, width: u32, height: u32| {
+            canvas.set_draw_color(sdl2::pixels::Color::RGB(255, 192, 203));
+            canvas
+                .fill_rect(sdl2::rect::Rect::new(x as i32, y as i32, width, height))
+                .unwrap();
+        };
+        match self.current_animation {
+            PlayerAnimationState::Default => {
+                if let Some(ref animation_data) = self.default {
+                    animation_data.draw(canvas, texture_map, x, y, width, height);
+                } else { default_draw(canvas, texture_map, x, y, width, height);}
+            }
+            PlayerAnimationState::Front => {
+                if let Some(ref animation_data) = self.front {
+                    animation_data.draw(canvas, texture_map, x, y, width, height);
+                } else { default_draw(canvas, texture_map, x, y, width, height);}
+            }
+            PlayerAnimationState::Back => {
+                if let Some(ref animation_data) = self.back {
+                    animation_data.draw(canvas, texture_map, x, y, width, height);
+                } else { default_draw(canvas, texture_map, x, y, width, height);}
+            }
+            PlayerAnimationState::Left => {
+                if let Some(ref animation_data) = self.left {
+                    animation_data.draw(canvas, texture_map, x, y, width, height);
+                } else { default_draw(canvas, texture_map, x, y, width, height);}
+            }
+            PlayerAnimationState::Right => {
+                if let Some(ref animation_data) = self.right {
+                    animation_data.draw(canvas, texture_map, x, y, width, height);
+                } else { default_draw(canvas, texture_map, x, y, width, height);}
+            }
+            PlayerAnimationState::Idle => {
+                if let Some(ref animation_data) = self.idle {
+                    animation_data.draw(canvas, texture_map, x, y, width, height);
+                } else { default_draw(canvas, texture_map, x, y, width, height);}
+            }
         }
     }
 
     pub fn update(&mut self, dt: f64) {
-        if let Some(animation) = &mut self.front {
-            animation.update(dt);
+        match self.current_animation {
+            PlayerAnimationState::Default => {
+                match self.default {
+                    Some(ref mut anim) => anim.update(dt),
+                    None => (),
+                }
+            }
+            PlayerAnimationState::Front => {
+                match self.front {
+                    Some(ref mut anim) => anim.update(dt),
+                    None => (),
+                }
+            }
+            PlayerAnimationState::Back => {
+                match self.back {
+                    Some(ref mut anim) => anim.update(dt),
+                    None => (),
+                }
+            }
+            PlayerAnimationState::Left => {
+                match self.left {
+                    Some(ref mut anim) => anim.update(dt),
+                    None => (),
+                }
+            }
+            PlayerAnimationState::Right => {
+                match self.right {
+                    Some(ref mut anim) => anim.update(dt),
+                    None => (),
+                }
+            }
+            PlayerAnimationState::Idle => {
+                match self.idle {
+                    Some(ref mut anim) => anim.update(dt),
+                    None => (),
+                }
+            }
         }
     }
 }
@@ -149,60 +223,44 @@ impl Player {
         global_clock: &Instant,
     ) {
 
-        match self.animation_data.front {
-            Some(ref animation_data) => {
-                //println!("Drawing animation");
-                match self.hit_state {
-                    PlayerHitState::Invincible => {
-                        let time_since_last_blink =
-                            global_clock.elapsed().as_secs_f64() - self.last_blink_time;
-                        if time_since_last_blink < 0.1 {
-                            return ();
-                        }
-                        let mut draw = false;
-                        let time_since_hit =
-                            global_clock.elapsed().as_secs_f64() - self.last_hit_time;
-                        for i in 0..4 {
-                            if self.invicibility_blinks <= i && time_since_hit > (i as f64) / 4. {
-                                self.invicibility_blinks += 1;
-                                self.last_blink_time = global_clock.elapsed().as_secs_f64();
-                                draw = true;
-                            }
-                        }
-                        if !draw {
-                            animation_data.draw(
-                                canvas,
-                                texture_map,
-                                self.x - camera.x,
-                                self.y - camera.y,
-                                self.size_x,
-                                self.size_y,
-                            );
-                        }
-                    }
-                    PlayerHitState::Vulnerable => {
-                        animation_data.draw(
-                            canvas,
-                            texture_map,
-                            self.x - camera.x,
-                            self.y - camera.y,
-                            self.size_x,
-                            self.size_y,
-                        );
+        match self.hit_state {
+            PlayerHitState::Invincible => {
+                let time_since_last_blink =
+                    global_clock.elapsed().as_secs_f64() - self.last_blink_time;
+                if time_since_last_blink < 0.1 {
+                    return ();
+                }
+                let mut draw = false;
+                let time_since_hit =
+                    global_clock.elapsed().as_secs_f64() - self.last_hit_time;
+                for i in 0..4 {
+                    if self.invicibility_blinks <= i && time_since_hit > (i as f64) / 4. {
+                        self.invicibility_blinks += 1;
+                        self.last_blink_time = global_clock.elapsed().as_secs_f64();
+                        draw = true;
                     }
                 }
-            }
-            None => {
-                canvas.set_draw_color(sdl2::pixels::Color::RGB(255, 192, 203));
-                canvas
-                    .fill_rect(sdl2::rect::Rect::new(
-                        (self.x - camera.x) as i32,
-                        (self.y - camera.y) as i32,
+                if !draw {
+                    self.animation_data.draw(
+                        canvas,
+                        texture_map,
+                        self.x - camera.x,
+                        self.y - camera.y,
                         self.size_x,
                         self.size_y,
-                    ))
-                    .unwrap();
+                    );
+                }
             }
+            PlayerHitState::Vulnerable => {
+                self.animation_data.draw(
+                    canvas,
+                    texture_map,
+                    self.x - camera.x,
+                    self.y - camera.y,
+                    self.size_x,
+                    self.size_y,
+                );
+            } 
         }
     }
 
@@ -237,6 +295,7 @@ impl Player {
         if self.velocity_x == 0.0 && self.velocity_y == 0.0 {
             self.moved = false;
         }
+
         let collisions = level.check_collision(&self.hitbox);
         if collisions.len() > 0 {
             self.colliding = true;
@@ -290,18 +349,22 @@ impl Player {
                 sdl2::keyboard::Keycode::Up | sdl2::keyboard::Keycode::W => {
                     self.velocity_y = -self.speed;
                     self.pressed_up = true;
+                    self.animation_data.current_animation = PlayerAnimationState::Back;
                 }
                 sdl2::keyboard::Keycode::Down | sdl2::keyboard::Keycode::S => {
                     self.velocity_y = self.speed;
                     self.pressed_down = true;
+                    self.animation_data.current_animation = PlayerAnimationState::Front;
                 }
                 sdl2::keyboard::Keycode::Left | sdl2::keyboard::Keycode::A => {
                     self.velocity_x = -self.speed;
                     self.pressed_left = true;
+                    self.animation_data.current_animation = PlayerAnimationState::Left;
                 }
                 sdl2::keyboard::Keycode::Right | sdl2::keyboard::Keycode::D => {
                     self.velocity_x = self.speed;
                     self.pressed_right = true;
+                    self.animation_data.current_animation = PlayerAnimationState::Right;
                 }
                 _ => (),
             },
