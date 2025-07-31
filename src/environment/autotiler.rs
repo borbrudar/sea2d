@@ -4,7 +4,7 @@ use crate::environment::{texture_data::TextureData, tile_type::TileType};
 
 const TILE_SIZE: u32 = 16;
 
-#[derive(Hash)]
+#[derive(Hash, Debug)]
 pub enum TileSetType {
     Simple,       // 1 tile
     Complex,      // 3x3
@@ -621,6 +621,7 @@ impl Autotiler {
                 }
             }
         } else {
+            println!("Tile type {:?} not found in autotiler", tile_type);
             None
         }
     }

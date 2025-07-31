@@ -95,21 +95,38 @@ impl<'a> Level {
         self.tiles.clear();
 
         // load exits file
-        let mut exits_strs = path.clone();
-        exits_strs = exits_strs
-            .chars()
-            .take(exits_strs.chars().count() - 5)
-            .collect();
-        exits_strs.push_str(String::from("exits.txt").as_str());
+        // let mut exits_strs = path.clone();
+        // exits_strs = exits_strs
+        //     .chars()
+        //     .take(exits_strs.chars().count() - 5)
+        //     .collect();
+        // exits_strs.push_str(String::from("exits.txt").as_str());
+        // let mut exits: Vec<String> = Vec::new();
+        // if ::std::path::Path::new(&exits_strs).exists() {
+        //     let exit = ::std::fs::File::open(exits_strs).expect("Failed to read exits file");
+        //     let exit = ::std::io::BufReader::new(exit);
+        //     exits = ::std::io::BufReader::new(exit)
+        //         .lines()
+        //         .filter_map(Result::ok)
+        //         .collect();
+        //     exits.reverse();
+        // }
+
+        use std::fs::File;
+        use std::io::{BufRead, BufReader};
+        use std::path::Path;
+
         let mut exits: Vec<String> = Vec::new();
-        if ::std::path::Path::new(&exits_strs).exists() {
-            let exit = ::std::fs::File::open(exits_strs).expect("Failed to read exits file");
-            let exit = ::std::io::BufReader::new(exit);
-            exits = ::std::io::BufReader::new(exit)
-                .lines()
-                .filter_map(Result::ok)
-                .collect();
-            exits.reverse();
+        let exits_path = path.replace(".png", "_exits.txt");
+        println!("Looking for exits file at: {}", exits_path);
+        if Path::new(&exits_path).exists() {
+            let file = File::open(&exits_path).expect("Failed to read exits file");
+            let reader = BufReader::new(file);
+
+            exits = reader.lines().filter_map(Result::ok).collect();
+            println!("Exits found: {:?}", exits);
+
+            exits.reverse(); // if needed for your logic
         }
 
         // initialize autotiler
@@ -345,7 +362,7 @@ impl<'a> Level {
                         self.player_spawn = (x * self.tile_size, y * self.tile_size)
                     }
                     TileType::EXIT_COLOR => {
-                        let last = exits.pop().unwrap();
+                        let last = exits[0].clone(); //tuki smo popravl!!
                         let exit_bb = Some(AABB::new(
                             (x * self.tile_size + self.tile_size / 4) as f64,
                             (y * self.tile_size + self.tile_size / 4) as f64,
