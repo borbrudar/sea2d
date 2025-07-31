@@ -7,13 +7,9 @@ use crate::entities::{
     enemy::Enemy,
     player::Player,
 };
-use crate::environment::{
-    level::Level,
-    texture_data::TextureData,
-    tile_type::{ExitTile, TileType},
-};
+use crate::environment::{level::Level, texture_data::TextureData};
 use crate::networking::{packet::Packet, player_packets::*, shared::*};
-use crate::wfc::{WFCState, WfcTile};
+use crate::wfc;
 use sdl2::audio::AudioDevice;
 use sdl2::image::{self};
 use sdl2::mixer;
@@ -25,7 +21,6 @@ use sdl2::rect::Rect;
 use sdl2::render::Texture;
 use sdl2::render::TextureQuery;
 use sdl2::ttf;
-use std::clone;
 use std::collections::HashMap;
 use std::sync::mpsc as mspc;
 
@@ -181,7 +176,7 @@ impl Game {
 
     // main game loop
     pub fn run(&mut self) {
-        let initial_level = "resources/levels/output_image_1.png".to_string();
+        let initial_level = "resources/levels/autotiler_2.png".to_string();
 
         // initalize sdl2 stuff
         let sdl_context = sdl2::init().unwrap();
@@ -378,10 +373,10 @@ impl Game {
         let healthbar = HealthBar::new();
 
         //Badges
-        let first_badge = Badge::new(
-            Rect::new(300, 0, 50, 50),
-            TextureData::new("resources/textures/scuba_mask.png".to_string()),
-        );
+        // let first_badge = Badge::new(
+        //     Rect::new(300, 0, 50, 50),
+        //     TextureData::new("resources/textures/scuba_mask.png".to_string()),
+        // );
 
         //dropdown menu
         let ddm = Dropdown::new(
@@ -423,7 +418,7 @@ impl Game {
 
         let mut hud = Hud::new(
             vec![pavza, resume],
-            vec![first_badge],
+            Vec::new(),
             ddm,
             healthbar,
             current_time,
@@ -431,7 +426,7 @@ impl Game {
         let mut draw_hitboxes = false;
         let mut draw_hud = true;
 
-        self.game_state = GameState::Running;
+        self.game_state = GameState::MainMenu;
 
         'running: loop {
             // event polling

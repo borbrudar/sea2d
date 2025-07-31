@@ -1,21 +1,19 @@
 use core::panic;
-use image::{GenericImageView, ImageBuffer, RgbaImage};
+use image;
 use rand::prelude::IndexedRandom;
+use rand::seq::SliceRandom;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::path::Path;
 
-use crate::environment::{
-    tile,
-    tile_type::{ExitTile, TileType},
-};
+//TODO:
+//exit files
 
-//TODO: can add symmetries, rotations
-//exits, exit files
-
-//nov sample: 5x5 ploščic, 10x10 pixlov
+//sample: 5x5 ploščic, 10x10 pixlov
 const SAMPLE_TILE_SIZE: usize = 2;
 const TILE_SIZE: usize = 80;
+const GRID_HEIGHT: usize = 12;
+const GRID_WIDTH: usize = 16;
 
 pub type Pattern = Vec<Vec<[u8; 4]>>; // 2D array of RGBA colors
 
@@ -195,29 +193,10 @@ pub fn generate_wfc(
     tile_grid
 }
 
-pub fn edge_coordinates(width: usize, height: usize) -> Vec<(usize, usize)> {
-    let mut edges = Vec::new();
-
-    for x in 0..width {
-        edges.push((x, 0)); // top edge
-        edges.push((x, height - 1)); // bottom edge
-    }
-
-    for y in 1..(height - 1) {
-        edges.push((0, y)); // left edge
-        edges.push((width - 1, y)); // right edge
-    }
-
-    edges
-}
-
 pub const EXIT_RGBA: [u8; 4] = [64, 58, 171, 102]; // RGBA color for exit tile
 pub const SPAWN_RGBA: [u8; 4] = [255, 0, 0, 102]; // RGBA color for player spawn tile
 
-//place player spawn point
-// Reads the exit tile position from a PNG file
-// Returns tile coordinates (x, y) if found
-
+//place special tiles in the grid (spawn, exit, etc.)
 pub fn place_tile(tile_grid: &mut Vec<Vec<[u8; 4]>>, (x, y): (usize, usize), color: [u8; 4]) {
     if y < tile_grid.len() && x < tile_grid[y].len() {
         tile_grid[y][x] = color;
@@ -225,7 +204,7 @@ pub fn place_tile(tile_grid: &mut Vec<Vec<[u8; 4]>>, (x, y): (usize, usize), col
         panic!("Attempted to place tile out of bounds at ({}, {})", x, y);
     }
 }
-use rand::seq::SliceRandom;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Edge {
     Top,
@@ -391,11 +370,11 @@ pub fn run_overlap() {
             extract_patterns(&format!("resources/levels/sample_{}.png", k), 3);
 
         for i in (k - 1) * 10..k * 10 {
-            let width = 16; // grid width in tiles <- te bi mogoče popravl v const
-            let height = 12; // grid height in tiles
+            let width = GRID_WIDTH as u32; // grid width in tiles <- te bi mogoče popravl v const
+            let height = GRID_HEIGHT as u32; // grid height in tiles
             let mut tile_grid = generate_wfc(&patterns, width, height, 3);
 
-            //place exit tile
+            //find exit tile
             let forbidden_exit_edge = find_exit_tile_edge(
                 &format!("resources/levels/output_image_{}.png", i),
                 TILE_SIZE as u32,
@@ -404,12 +383,14 @@ pub fn run_overlap() {
 
             let exit_pos = load_exit_tile(&tile_grid, forbidden_exit_edge);
 
+            //find spawn tile
             let spawn_pos = if let Some(prev_edge) = forbidden_exit_edge {
                 load_spawn(&tile_grid, prev_edge)
             } else {
                 random_walkable_tile(&tile_grid)
             };
 
+            //place exit and spawn tiles
             place_tile(&mut tile_grid, exit_pos, EXIT_RGBA);
             place_tile(&mut tile_grid, spawn_pos, SPAWN_RGBA);
 
