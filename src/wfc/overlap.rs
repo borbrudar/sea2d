@@ -4,10 +4,9 @@ use rand::prelude::IndexedRandom;
 use rand::seq::SliceRandom;
 use std::collections::HashMap;
 use std::collections::VecDeque;
+use std::fs::File;
+use std::io::Write;
 use std::path::Path;
-
-//TODO:
-//exit files
 
 //sample: 5x5 ploščic, 10x10 pixlov
 const SAMPLE_TILE_SIZE: usize = 2;
@@ -364,13 +363,25 @@ fn save_output_image(tile_grid: &Vec<Vec<[u8; 4]>>, tile_size: u32, output_path:
     println!("Saved output to {}", output_path);
 }
 
+/// Writes the next level path to an exits file for the current level
+pub fn write_exits_file(current_level_name: &str, next_level_path: &str) {
+    let exits_file_path = format!("resources/levels/{}_exits.txt", current_level_name);
+    let mut file = File::create(&exits_file_path)
+        .unwrap_or_else(|_| panic!("Failed to create exits file: {}", exits_file_path));
+
+    writeln!(file, "{}", next_level_path)
+        .unwrap_or_else(|_| panic!("Failed to write to exits file: {}", exits_file_path));
+
+    println!("Exit file created: {}", exits_file_path);
+}
+
 pub fn run_overlap() {
     for k in 1..2 {
         let (patterns, frequencies) =
             extract_patterns(&format!("resources/levels/sample_{}.png", k), 3);
 
         for i in (k - 1) * 10..k * 10 {
-            let width = GRID_WIDTH as u32; // grid width in tiles <- te bi mogoče popravl v const
+            let width = GRID_WIDTH as u32; // grid width in tiles
             let height = GRID_HEIGHT as u32; // grid height in tiles
             let mut tile_grid = generate_wfc(&patterns, width, height, 3);
 
@@ -394,12 +405,18 @@ pub fn run_overlap() {
             place_tile(&mut tile_grid, exit_pos, EXIT_RGBA);
             place_tile(&mut tile_grid, spawn_pos, SPAWN_RGBA);
 
+            //save level image
             save_output_image(
                 &tile_grid,
                 TILE_SIZE as u32,
                 &format!("resources/levels/output_image_{}.png", i + 1),
             );
+
             //create exit file
+            write_exits_file(
+                &format!("output_image_{}", i + 1),
+                &format!("resources/levels/output_image_{}.png", i + 2),
+            );
         }
     }
 }
