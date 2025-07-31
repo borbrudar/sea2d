@@ -166,6 +166,7 @@ pub struct Player {
     pub hit_state: PlayerHitState,
     pub health: i32,
     last_hit_time: f64,
+    last_moved_time : f64,
     invicibility_blinks: i32,
     last_blink_time: f64,
     pub moved: bool,
@@ -203,6 +204,7 @@ impl Player {
             invicibility_blinks: 0,
             last_blink_time: 0.0,
             moved: false,
+            last_moved_time : 0.0,
         }
     }
 
@@ -276,8 +278,7 @@ impl Player {
         if self.id == 1_000_000 {
             return ();
         }
-        self.animation_data.update(dt);
-
+        
         self.moved = false;
         if self.velocity_x != 0.0 && self.velocity_y != 0.0 {
             self.x += self.velocity_x * dt * 0.7071; // sqrt(2)/2
@@ -294,6 +295,14 @@ impl Player {
         }
         if self.velocity_x == 0.0 && self.velocity_y == 0.0 {
             self.moved = false;
+        }
+        
+        if self.moved{
+            self.animation_data.update(dt);
+            self.last_moved_time = global_clock.elapsed().as_secs_f64();
+        } else if self.last_moved_time + 5.0 < global_clock.elapsed().as_secs_f64() {
+            self.animation_data.update(dt);
+            self.animation_data.current_animation = PlayerAnimationState::Idle;
         }
 
         let collisions = level.check_collision(&self.hitbox);
