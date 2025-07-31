@@ -1,1 +1,0 @@
-resources/levels/output_image_11.png
