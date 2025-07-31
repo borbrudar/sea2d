@@ -181,7 +181,7 @@ impl Game {
 
     // main game loop
     pub fn run(&mut self) {
-        let initial_level = "resources/levels/autotiler_2.png".to_string();
+        let initial_level = "resources/levels/output_image_1.png".to_string();
 
         // initalize sdl2 stuff
         let sdl_context = sdl2::init().unwrap();
@@ -226,48 +226,6 @@ impl Game {
         let mut texture_map: HashMap<String, Texture> = HashMap::new();
 
         // level loading
-        let tileset = vec![
-            WfcTile {
-                tile_type: TileType::Water,
-                edges: [
-                    vec![TileType::Water, TileType::Grass, TileType::Sand],
-                    vec![TileType::Water, TileType::Grass, TileType::Sand],
-                    vec![TileType::Water, TileType::Grass, TileType::Sand],
-                    vec![TileType::Water, TileType::Grass, TileType::Sand],
-                ],
-            },
-            WfcTile {
-                tile_type: TileType::Grass,
-                edges: [
-                    vec![TileType::Grass, TileType::Water],
-                    vec![TileType::Grass, TileType::Water],
-                    vec![TileType::Grass, TileType::Water],
-                    vec![TileType::Grass, TileType::Water],
-                ],
-            },
-            WfcTile {
-                tile_type: TileType::Sand,
-                edges: [
-                    vec![TileType::Sand, TileType::Water],
-                    vec![TileType::Sand, TileType::Water],
-                    vec![TileType::Sand, TileType::Water],
-                    vec![TileType::Sand, TileType::Water],
-                ],
-            },
-            WfcTile {
-                tile_type: TileType::Exit(ExitTile {
-                    next_level: "level1_2".to_string(),
-                }),
-                edges: [
-                    vec![TileType::Grass, TileType::Water],
-                    vec![TileType::Grass, TileType::Water],
-                    vec![TileType::Grass, TileType::Water],
-                    vec![TileType::Grass, TileType::Water],
-                ],
-            },
-        ];
-        //let mut wfc_state = WFCState::new(&tileset);
-        //let mut level = wfc_state.to_level(&texture_creator, &mut texture_map);
         let mut level = Level::new();
         level.load_from_file(initial_level.clone(), &texture_creator, &mut texture_map);
 
