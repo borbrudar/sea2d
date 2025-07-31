@@ -298,6 +298,15 @@ impl Player {
         }
         
         if self.moved{
+            if self.velocity_x > 0.0 {
+                self.animation_data.current_animation = PlayerAnimationState::Right;
+            } else if self.velocity_x < 0.0 {
+                self.animation_data.current_animation = PlayerAnimationState::Left;
+            } else if self.velocity_y > 0.0 {
+                self.animation_data.current_animation = PlayerAnimationState::Front;
+            } else if self.velocity_y < 0.0 {
+                self.animation_data.current_animation = PlayerAnimationState::Back;
+            } 
             self.animation_data.update(dt);
             self.last_moved_time = global_clock.elapsed().as_secs_f64();
         } else if self.last_moved_time + 5.0 < global_clock.elapsed().as_secs_f64() {
@@ -358,22 +367,18 @@ impl Player {
                 sdl2::keyboard::Keycode::Up | sdl2::keyboard::Keycode::W => {
                     self.velocity_y = -self.speed;
                     self.pressed_up = true;
-                    self.animation_data.current_animation = PlayerAnimationState::Back;
                 }
                 sdl2::keyboard::Keycode::Down | sdl2::keyboard::Keycode::S => {
                     self.velocity_y = self.speed;
                     self.pressed_down = true;
-                    self.animation_data.current_animation = PlayerAnimationState::Front;
                 }
                 sdl2::keyboard::Keycode::Left | sdl2::keyboard::Keycode::A => {
                     self.velocity_x = -self.speed;
                     self.pressed_left = true;
-                    self.animation_data.current_animation = PlayerAnimationState::Left;
                 }
                 sdl2::keyboard::Keycode::Right | sdl2::keyboard::Keycode::D => {
                     self.velocity_x = self.speed;
                     self.pressed_right = true;
-                    self.animation_data.current_animation = PlayerAnimationState::Right;
                 }
                 _ => (),
             },
