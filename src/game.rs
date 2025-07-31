@@ -334,7 +334,7 @@ impl Game {
             .as_mut()
             .unwrap()
             .load_animation(
-                "resources/textures/enemy.png".to_string(),
+                "resources/enemies/slime.png".to_string(),
                 0,
                 0,
                 16,
