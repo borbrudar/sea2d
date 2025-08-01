@@ -10,9 +10,9 @@ use crate::networking::{
 };
 use crate::entities::{animated_texture::AnimatedTexture, camera::Camera, enemy::Enemy};
 use bincode::de;
-use sdl2::render::Canvas;
+use sdl2::render::{Canvas, TextureCreator};
 use sdl2::render::Texture;
-use sdl2::video::Window;
+use sdl2::video::{Window, WindowContext};
 use serde::{Serialize,Deserialize};
 
 pub enum PlayerHitState {
@@ -51,7 +51,7 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(id: u64) -> Player {
+    pub fn new(id : u64) -> Player{
         Player {
             id: id,
             x: ((SCREEN_WIDTH as i32) / 2) as f64,
@@ -84,6 +84,33 @@ impl Player {
             moved: false,
             last_moved_time : 0.0,
         }
+    }
+
+    pub fn load_player_texture<'a>(&mut self,texture_creator : &'a TextureCreator<WindowContext>, texture_map: &mut std::collections::HashMap<String, Texture<'a>>) {
+        self.animation_data.front = Some(AnimatedTexture::new(1.0 / 12.));
+        self.animation_data.front.as_mut().unwrap().load_animation(
+            "resources/player_animation/pretnar_spritesheet.png".to_string(),0,0,32, 48,6,&texture_creator,texture_map,
+        );
+        self.animation_data.right = Some(AnimatedTexture::new(1.0 / 12.));
+        self.animation_data.right.as_mut().unwrap().load_animation(
+            "resources/player_animation/pretnar_spritesheet.png".to_string(),0,48,32,48,6,&texture_creator,texture_map,
+        );
+        self.animation_data.left = Some(AnimatedTexture::new(1.0 / 12.));
+        self.animation_data.left.as_mut().unwrap().load_animation(
+            "resources/player_animation/pretnar_spritesheet.png".to_string(),0,96,32,48,6,&texture_creator,texture_map,
+        );
+        self.animation_data.back = Some(AnimatedTexture::new(1.0 / 12.));
+        self.animation_data.back.as_mut().unwrap().load_animation(
+            "resources/player_animation/pretnar_spritesheet.png".to_string(),0,144,32,48,6,&texture_creator,texture_map,
+        );
+        self.animation_data.default = Some(AnimatedTexture::new(1.0));
+        self.animation_data.default.as_mut().unwrap().load_animation(
+            "resources/player_animation/pretnar_spritesheet.png".to_string(),0,0,32,48,1,&texture_creator,texture_map,
+        );
+        self.animation_data.idle = Some(AnimatedTexture::new(1.0/3.0));
+        self.animation_data.idle.as_mut().unwrap().load_animation(
+            "resources/player_animation/pretnar_spritesheet.png".to_string(),0,192,32,48,6,&texture_creator,texture_map,
+        );
     }
 
     pub fn reset_velocity(&mut self) {
