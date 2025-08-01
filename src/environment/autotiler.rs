@@ -100,7 +100,7 @@ impl Autotiler {
                         ));
                     }
                     // left side
-                    if check([2, 1, 2, 0, 0, 1, 0, 1, 2], neighbours) {
+                    if check([2, 1, 2, 0, 0, 1, 2, 1, 2], neighbours) {
                         return Some(TextureData::new_full(
                             path.clone(),
                             TILE_SIZE,
@@ -573,7 +573,7 @@ impl Autotiler {
                         ));
                     }
                     // left side
-                    if check([2, 1, 2, 0, 0, 1, 0, 1, 2], neighbours) {
+                    if check([2, 1, 2, 0, 0, 1, 2, 1, 2], neighbours) {
                         return Some(TextureData::new_full(
                             path.clone(),
                             TILE_SIZE,
