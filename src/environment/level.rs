@@ -22,7 +22,7 @@ impl<'a> Level {
         Level {
             tiles: Vec::new(),
             player_spawn: (0, 0),
-            tile_size: 80,
+            tile_size: 60,
             autotiler : Autotiler::new(),
         }
     }

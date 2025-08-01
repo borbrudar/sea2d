@@ -1,3 +1,4 @@
+use rand::seq::IndexedRandom;
 use sdl2::{
     render::{Canvas, Texture, TextureCreator},
     video::{Window, WindowContext},
@@ -30,6 +31,7 @@ pub struct Enemy {
 
     pub last_time: f64,
     pub dir: i32,
+    pub spotted_player: bool,
 }
 
 impl Enemy {
@@ -122,15 +124,16 @@ impl Enemy {
         }
         
         Enemy {
-            x: 50.,
-            y: 50.,
+            x: 1000.,
+            y: 1000.,
             animation_data: ani_data,
             size_x: size_x,
             size_y: size_y,
-            hitbox: AABB::new(55., 55., size_x - ((0.1* (size_x as f32)) as u32) , size_y - ((0.1* (size_y as f32)) as u32)),
+            hitbox: AABB::new(100., 100., size_x - ((0.1* (size_x as f32)) as u32) , size_y - ((0.1* (size_y as f32)) as u32)),
             last_time: 0.,
             dir: -1,
             kind : kind,
+            spotted_player: false,
         }
     }
 
@@ -166,6 +169,7 @@ impl Enemy {
     }
 
     pub fn update(&mut self, dt: f64, level: &Level, player: &Player, instant: &Instant) {
+        println!("called function");
         match self.animation_data {
             Some(ref mut animation_data) => {
                 animation_data.update(dt);
@@ -173,16 +177,52 @@ impl Enemy {
             None => (),
         };
 
-        //println!("TIme: {}",instant.elapsed().as_secs_f64());
-        if instant.elapsed().as_secs_f64() - self.last_time > 0.5 {
-            //println!("Enemy moving");
-            self.dir = self.calculate_player_direction(level, player);
-            self.last_time = instant.elapsed().as_secs_f64();
+        // enemy behaviour depends on type
+        self.dir = 4;
+        let distance_to_player = ((self.x - player.x).powi(2) + (self.y - player.y).powi(2)).sqrt();
+        let can_move = instant.elapsed().as_secs_f64() - self.last_time > 0.5;
+
+        if self.spotted_player == false {
+            match self.kind {
+                EnemyType::Slime => self.spotted_player = true,
+                EnemyType::Stonewalker => self.spotted_player = distance_to_player < 200.,
+                EnemyType::Skull => self.spotted_player = distance_to_player < 1000.,
+                EnemyType::Wizard => self.spotted_player = distance_to_player < 1100.,
+                _ => (),
+            }
         }
 
+        // move towards player if spotted, else move randomly
+        if can_move{
+            match self.kind {
+                EnemyType::Slime => self.dir = self.calculate_player_direction(level, player),
+                EnemyType::Stonewalker | EnemyType::Skull=> {
+                    if self.spotted_player {
+                        self.dir = self.calculate_player_direction(level, player);
+                    } else {
+                        self.choose_random_move(&level);
+                    } 
+                }
+                EnemyType::Wizard => {
+                    if self.spotted_player {
+                        if distance_to_player < 800. {
+                            //attack
+                        } else {
+                            self.dir = self.calculate_player_direction(level, player);
+                        }
+                    } else {
+                        self.choose_random_move(&level);
+                    }
+                }
+                _ => {}
+            }
+            self.last_time = instant.elapsed().as_secs_f64();
+        }
+        // move in the chosen direction
+        println!("moving in direction {:}", self.dir);
         match self.dir {
             0 => {
-                self.y -= 2. * level.tile_size as f64 * dt;
+                self.y -= 2.* (level.tile_size as f64) * dt;
                 match self.kind {
                     EnemyType::Stonewalker | EnemyType::Slime => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Front,
                     EnemyType::Wizard | EnemyType::Skull => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Back,
@@ -190,7 +230,7 @@ impl Enemy {
                 }
             }
             1 => {
-                self.x += 2. * level.tile_size as f64 * dt;
+                self.x += 2. * (level.tile_size as f64) * dt;
                 match self.kind {
                     EnemyType::Stonewalker | EnemyType::Slime => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Front,
                     EnemyType::Wizard | EnemyType::Skull => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Right,
@@ -198,7 +238,7 @@ impl Enemy {
                 }
             }
             2 => {
-                self.y += 2. * level.tile_size as f64 * dt;
+                self.y += 2. * (level.tile_size as f64) * dt;
                 match self.kind {
                     EnemyType::Stonewalker | EnemyType::Slime => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Front,
                     EnemyType::Wizard | EnemyType::Skull => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Front,
@@ -206,7 +246,7 @@ impl Enemy {
                 }
             }
             3 => {
-                self.x -= 2. * level.tile_size as f64 * dt;
+                self.x -= 2. * (level.tile_size as f64) * dt;
                 match self.kind {
                     EnemyType::Stonewalker | EnemyType::Slime => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Front,
                     EnemyType::Wizard | EnemyType::Skull => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Left,
@@ -217,6 +257,39 @@ impl Enemy {
         }
         self.hitbox.x = self.x + 5.;
         self.hitbox.y = self.y + 5.;
+    }
+
+    pub fn choose_random_move(&mut self, level: &Level) {
+        let mut possible_moves = Vec::new();
+        if self.can_move_to_tile(&level,Point::new(self.x as i32, self.y as i32 - level.tile_size), ) {possible_moves.push(0);}
+        if self.can_move_to_tile(&level,Point::new(self.x as i32 + level.tile_size, self.y as i32), ) {possible_moves.push(1);}
+        if self.can_move_to_tile(&level,Point::new(self.x as i32, self.y as i32 + level.tile_size), ) {possible_moves.push(2);}
+        if self.can_move_to_tile(&level,Point::new(self.x as i32 - level.tile_size, self.y as i32), ) {possible_moves.push(3);}
+        match possible_moves.choose(&mut rand::rng()) {
+            Some(&0) => self.dir = 0,
+            Some(&1) => self.dir = 1,
+            Some(&2) => self.dir = 2,
+            Some(&3) => self.dir = 3,
+            _ => {
+                self.dir = -1;
+                println!("No possible moves found");
+            }
+        };
+    }
+
+    pub fn can_move_to_tile(&self, level: &Level, pt : Point<i32>) -> bool {
+        let mut exists = false;
+        let mut obstacle = false;
+
+        for i in 0..level.tiles.len() {
+            if level.tiles[i].contains_key(&pt) {
+                exists = true;
+                if level.tiles[i][&pt].bounding_box.is_some() {
+                    obstacle = true;
+                }
+            }
+        }
+        exists && !obstacle
     }
 
     pub fn calculate_player_direction(&self, level: &Level, player: &Player) -> i32 {
@@ -250,34 +323,19 @@ impl Enemy {
             let (x, y) = (current.x, current.y);
             let mut next = Point::new(x + level.tile_size, y);
 
-            let check = |next| -> bool {
-                let mut exists = false;
-                let mut obstacle = false;
-
-                for i in 0..level.tiles.len() {
-                    if level.tiles[i].contains_key(&next) {
-                        exists = true;
-                        if level.tiles[i][&next].bounding_box.is_some() {
-                            obstacle = true;
-                        }
-                    }
-                }
-                exists && !obstacle
-            };
-
-            if check(next) {
+            if self.can_move_to_tile(&level,next) {
                 queue.push_back((next, current, 1));
             }
             next = Point::new(x - level.tile_size, y);
-            if check(next) {
+            if self.can_move_to_tile(&level,next) {
                 queue.push_back((next, current, 3));
             }
             next = Point::new(x, y + level.tile_size);
-            if check(next) {
+            if self.can_move_to_tile(&level,next) {
                 queue.push_back((next, current, 2));
             }
             next = Point::new(x, y - level.tile_size);
-            if check(next) {
+            if self.can_move_to_tile(&level,next) {
                 queue.push_back((next, current, 0));
             }
         }
