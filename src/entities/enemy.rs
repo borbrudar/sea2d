@@ -5,7 +5,7 @@ use sdl2::{
 };
 
 use crate::{
-    entities::{animated_texture::{AnimatedTexture, AnimationType}, animation_data::{AnimationData, AnimationState}, camera::Camera, player::Player, point::Point}, environment::{aabb::AABB, level::Level}
+    entities::{animated_texture::{AnimatedTexture, AnimationType}, animation_data::{AnimationData, AnimationState}, camera::Camera, player::Player, point::Point}, environment::{aabb::AABB, level::{self, Level}}
 };
 use std::{
     collections::{HashMap, VecDeque},
@@ -32,6 +32,7 @@ pub struct Enemy {
     pub last_time: f64,
     pub dir: i32,
     pub spotted_player: bool,
+    pub moving_speed : f64,
 }
 
 impl Enemy {
@@ -47,7 +48,11 @@ impl Enemy {
                 ani_data.as_mut().unwrap().front.as_mut().unwrap().load_animation(
                     "resources/enemies/slime.png".to_string(), 0, 0, 16, 16, 3, texture_creator, texture_map);
                 ani_data.as_mut().unwrap().current_animation = AnimationState::Front;
-                ani_data.as_mut().unwrap().front.as_mut().unwrap().animation_type = AnimationType::PingPong
+                ani_data.as_mut().unwrap().front.as_mut().unwrap().animation_type = AnimationType::PingPong;
+
+                ani_data.as_mut().unwrap().default = Some(AnimatedTexture::new(1.0));
+                ani_data.as_mut().unwrap().default.as_mut().unwrap().load_animation(
+                    "resources/enemies/slime.png".to_string(), 0, 0, 16, 16, 1, texture_creator, texture_map);
             }
             EnemyType::Stonewalker => {
                 ani_data = Some(AnimationData::new());
@@ -134,6 +139,7 @@ impl Enemy {
             dir: -1,
             kind : kind,
             spotted_player: false,
+            moving_speed : 3.0,
         }
     }
 
@@ -169,7 +175,6 @@ impl Enemy {
     }
 
     pub fn update(&mut self, dt: f64, level: &Level, player: &Player, instant: &Instant) {
-        println!("called function");
         match self.animation_data {
             Some(ref mut animation_data) => {
                 animation_data.update(dt);
@@ -178,7 +183,6 @@ impl Enemy {
         };
 
         // enemy behaviour depends on type
-        self.dir = 4;
         let distance_to_player = ((self.x - player.x).powi(2) + (self.y - player.y).powi(2)).sqrt();
         let can_move = instant.elapsed().as_secs_f64() - self.last_time > 0.5;
 
@@ -186,14 +190,15 @@ impl Enemy {
             match self.kind {
                 EnemyType::Slime => self.spotted_player = true,
                 EnemyType::Stonewalker => self.spotted_player = distance_to_player < 200.,
-                EnemyType::Skull => self.spotted_player = distance_to_player < 1000.,
-                EnemyType::Wizard => self.spotted_player = distance_to_player < 1100.,
+                EnemyType::Skull => self.spotted_player = distance_to_player < 800.,
+                EnemyType::Wizard => self.spotted_player = distance_to_player < 800.,
                 _ => (),
             }
         }
 
         // move towards player if spotted, else move randomly
         if can_move{
+            self.dir = 4;
             match self.kind {
                 EnemyType::Slime => self.dir = self.calculate_player_direction(level, player),
                 EnemyType::Stonewalker | EnemyType::Skull=> {
@@ -205,7 +210,7 @@ impl Enemy {
                 }
                 EnemyType::Wizard => {
                     if self.spotted_player {
-                        if distance_to_player < 800. {
+                        if distance_to_player < 300. {
                             //attack
                         } else {
                             self.dir = self.calculate_player_direction(level, player);
@@ -219,10 +224,9 @@ impl Enemy {
             self.last_time = instant.elapsed().as_secs_f64();
         }
         // move in the chosen direction
-        println!("moving in direction {:}", self.dir);
         match self.dir {
             0 => {
-                self.y -= 2.* (level.tile_size as f64) * dt;
+                self.y -= self.moving_speed * (level.tile_size as f64) * dt;
                 match self.kind {
                     EnemyType::Stonewalker | EnemyType::Slime => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Front,
                     EnemyType::Wizard | EnemyType::Skull => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Back,
@@ -230,7 +234,7 @@ impl Enemy {
                 }
             }
             1 => {
-                self.x += 2. * (level.tile_size as f64) * dt;
+                self.x += self.moving_speed * (level.tile_size as f64) * dt;
                 match self.kind {
                     EnemyType::Stonewalker | EnemyType::Slime => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Front,
                     EnemyType::Wizard | EnemyType::Skull => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Right,
@@ -238,7 +242,7 @@ impl Enemy {
                 }
             }
             2 => {
-                self.y += 2. * (level.tile_size as f64) * dt;
+                self.y += self.moving_speed * (level.tile_size as f64) * dt;
                 match self.kind {
                     EnemyType::Stonewalker | EnemyType::Slime => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Front,
                     EnemyType::Wizard | EnemyType::Skull => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Front,
@@ -246,7 +250,7 @@ impl Enemy {
                 }
             }
             3 => {
-                self.x -= 2. * (level.tile_size as f64) * dt;
+                self.x -= self.moving_speed * (level.tile_size as f64) * dt;
                 match self.kind {
                     EnemyType::Stonewalker | EnemyType::Slime => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Front,
                     EnemyType::Wizard | EnemyType::Skull => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Left,

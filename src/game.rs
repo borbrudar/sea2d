@@ -243,7 +243,7 @@ impl Game {
 
         // enemies
         let mut enemies: Vec<Enemy> = Vec::new();
-        enemies.push(Enemy::new(EnemyType::Stonewalker,&texture_creator, &mut texture_map));
+        enemies.push(Enemy::new(EnemyType::Wizard,&texture_creator, &mut texture_map));
 
         // hud
         let pavza = Button::new(
