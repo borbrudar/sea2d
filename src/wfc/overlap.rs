@@ -195,14 +195,55 @@ pub fn generate_wfc(
 
 pub const EXIT_RGBA: [u8; 4] = [64, 58, 171, 102]; // RGBA color for exit tile
 pub const SPAWN_RGBA: [u8; 4] = [255, 0, 0, 102]; // RGBA color for player spawn tile
+pub const WALL_RGBA: [u8; 4] = [50, 47, 77, 255]; //RGBA color for wrap around wall
 
-//place special tiles in the grid (spawn, exit, etc.)
-pub fn place_tile(tile_grid: &mut Vec<Vec<[u8; 4]>>, (x, y): (usize, usize), color: [u8; 4]) {
-    if y < tile_grid.len() && x < tile_grid[y].len() {
-        tile_grid[y][x] = color;
+//place special tiles on the edge of wrapped grid (spawn, exit, etc.)
+pub fn place_tile_on_edge(
+    wrapped_grid: &mut Vec<Vec<[u8; 4]>>,
+    edge: Option<Edge>,
+    (x, y): (usize, usize),
+    color: [u8; 4],
+) {
+    if let Some(e) = edge {
+        let mut adj_coord = (0, 0);
+        match e {
+            Edge::Bottom => adj_coord = (x + 1, y + 2),
+            Edge::Top => adj_coord = (x + 1, 0),
+            Edge::Left => adj_coord = (0, y + 1),
+            Edge::Right => adj_coord = (x + 2, y + 1),
+        }
+        if adj_coord.1 < wrapped_grid.len() && adj_coord.0 < wrapped_grid[adj_coord.1].len() {
+            wrapped_grid[adj_coord.1][adj_coord.0] = color;
+        } else {
+            panic!(
+                "Attempted to place tile out of bounds at ({}, {})",
+                adj_coord.0, adj_coord.1
+            );
+        }
     } else {
-        panic!("Attempted to place tile out of bounds at ({}, {})", x, y);
+        if y < wrapped_grid.len() && x < wrapped_grid[y].len() {
+            wrapped_grid[y][x] = color
+        } else {
+            panic!("Attempted to place tile out of bounds at ({}, {})", x, y);
+        }
     }
+}
+
+pub fn wrap_edge(tile_grid: &Vec<Vec<[u8; 4]>>, tile_color: [u8; 4]) -> Vec<Vec<[u8; 4]>> {
+    let height = tile_grid.len();
+    let width = tile_grid[0].len();
+
+    // Create a new grid with +2 in both dimensions
+    let mut new_grid = vec![vec![tile_color; width + 2]; height + 2];
+
+    // Copy old grid into center of new grid
+    for y in 0..height {
+        for x in 0..width {
+            new_grid[y + 1][x + 1] = tile_grid[y][x];
+        }
+    }
+
+    new_grid
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -259,7 +300,10 @@ pub fn find_exit_tile_edge(path: &str, tile_size: u32) -> Option<Edge> {
     None
 }
 
-fn load_exit_tile(tile_grid: &Vec<Vec<[u8; 4]>>, forbidden_edge: Option<Edge>) -> (usize, usize) {
+fn load_exit_tile(
+    tile_grid: &Vec<Vec<[u8; 4]>>,
+    forbidden_edge: Option<Edge>,
+) -> ((usize, usize), Option<Edge>) {
     let mut rng = rand::rng();
     let width = tile_grid[0].len();
     let height = tile_grid.len();
@@ -285,13 +329,13 @@ fn load_exit_tile(tile_grid: &Vec<Vec<[u8; 4]>>, forbidden_edge: Option<Edge>) -
 
     // Shuffle edges and pick one
     edge_tiles.shuffle(&mut rng);
-    for (_, tiles) in edge_tiles {
+    for (edge, tiles) in edge_tiles {
         let candidates: Vec<_> = tiles
             .into_iter()
             .filter(|&(x, y)| tile_grid[y][x][3] < 128) // walkable
             .collect();
         if let Some(&exit_pos) = candidates.choose(&mut rng) {
-            return exit_pos;
+            return (exit_pos, Some(edge));
         }
     }
 
@@ -400,18 +444,21 @@ pub fn run_overlap() {
             )
             .map(|e| opposite_edge(&e));
 
-            let exit_pos = load_exit_tile(&tile_grid, forbidden_exit_edge);
+            let (exit_pos, exit_edge) = load_exit_tile(&tile_grid, forbidden_exit_edge);
 
             //find spawn tile
-            let spawn_pos = if let Some(prev_edge) = forbidden_exit_edge {
-                load_spawn(&tile_grid, prev_edge)
+            let (spawn_pos, spawn_edge) = if let Some(prev_edge) = forbidden_exit_edge {
+                (load_spawn(&tile_grid, prev_edge), Some(prev_edge))
             } else {
-                random_walkable_tile(&tile_grid)
+                (random_walkable_tile(&tile_grid), None)
             };
 
+            //wrap edge of the map
+            tile_grid = wrap_edge(&tile_grid, WALL_RGBA);
+
             //place exit and spawn tiles
-            place_tile(&mut tile_grid, exit_pos, EXIT_RGBA);
-            place_tile(&mut tile_grid, spawn_pos, SPAWN_RGBA);
+            place_tile_on_edge(&mut tile_grid, exit_edge, exit_pos, EXIT_RGBA);
+            place_tile_on_edge(&mut tile_grid, spawn_edge, spawn_pos, SPAWN_RGBA);
 
             //save level image
             save_output_image(
