@@ -1,11 +1,10 @@
 use sdl2::{
-    render::{Canvas, Texture},
-    video::Window,
+    render::{Canvas, Texture, TextureCreator},
+    video::{Window, WindowContext},
 };
 
 use crate::{
-    environment::{level::Level, aabb::AABB},
-    entities::{player::Player, animated_texture::AnimatedTexture, camera::Camera, point::Point},
+    entities::{animated_texture::{AnimatedTexture, AnimationType}, animation_data::{AnimationData, AnimationState}, camera::Camera, player::Player, point::Point}, environment::{aabb::AABB, level::Level}
 };
 use std::{
     collections::{HashMap, VecDeque},
@@ -17,13 +16,15 @@ pub enum EnemyType {
     Stonewalker,
     Wizard,
     Skull,
+    Placeholder,
 }
 
 pub struct Enemy {
     pub x: f64,
     pub y: f64,
-    pub animation_data: Option<AnimatedTexture>,
-    pub size: u32,
+    pub animation_data: Option<AnimationData>,
+    pub size_x: u32,
+    pub size_y: u32,
     pub hitbox: AABB,
     pub kind : EnemyType,
 
@@ -32,16 +33,104 @@ pub struct Enemy {
 }
 
 impl Enemy {
-    pub fn new() -> Enemy {
+    pub fn new<'a>(kind : EnemyType, texture_creator : &'a TextureCreator<WindowContext>, texture_map: &mut std::collections::HashMap<String, Texture<'a>>) -> Enemy {
+        let mut ani_data : Option<AnimationData> = None;
+        let mut size_x = 50;
+        let mut size_y = 50;
+
+        match kind {
+            EnemyType::Slime => {
+                ani_data = Some(AnimationData::new());
+                ani_data.as_mut().unwrap().front = Some(AnimatedTexture::new(1.0/5.0));
+                ani_data.as_mut().unwrap().front.as_mut().unwrap().load_animation(
+                    "resources/enemies/slime.png".to_string(), 0, 0, 16, 16, 3, texture_creator, texture_map);
+                ani_data.as_mut().unwrap().current_animation = AnimationState::Front;
+                ani_data.as_mut().unwrap().front.as_mut().unwrap().animation_type = AnimationType::PingPong
+            }
+            EnemyType::Stonewalker => {
+                ani_data = Some(AnimationData::new());
+                ani_data.as_mut().unwrap().front = Some(AnimatedTexture::new(1.0/10.0));
+                ani_data.as_mut().unwrap().front.as_mut().unwrap().load_animation(
+                    "resources/enemies/stonewalker.png".to_string(), 0, 0, 16, 16, 4, texture_creator, texture_map);
+                ani_data.as_mut().unwrap().current_animation = AnimationState::Front;
+
+                ani_data.as_mut().unwrap().default = Some(AnimatedTexture::new(1.0/10.0));
+                ani_data.as_mut().unwrap().default.as_mut().unwrap().load_animation(
+                    "resources/enemies/stonewalker.png".to_string(), 0, 16, 16, 16, 1, texture_creator, texture_map);
+            }
+            EnemyType::Wizard => {
+                size_x = 64; size_y = 64*2;
+                ani_data = Some(AnimationData::new());
+                ani_data.as_mut().unwrap().current_animation = AnimationState::Default;
+                ani_data.as_mut().unwrap().idle = Some(AnimatedTexture::new(1.0));
+                ani_data.as_mut().unwrap().idle.as_mut().unwrap().load_animation(
+                    "resources/enemies/wizard.png".to_string(), 0, 0, 32, 64, 1, texture_creator, texture_map);
+
+                ani_data.as_mut().unwrap().front = Some(AnimatedTexture::new(1.0/5.0));
+                ani_data.as_mut().unwrap().front.as_mut().unwrap().load_animation(
+                    "resources/enemies/wizard.png".to_string(), 0, 0, 32, 64, 6, texture_creator, texture_map);
+
+                ani_data.as_mut().unwrap().right = Some(AnimatedTexture::new(1.0/5.0));
+                ani_data.as_mut().unwrap().right.as_mut().unwrap().load_animation(
+                    "resources/enemies/wizard.png".to_string(), 0, 64, 32, 64, 6, texture_creator, texture_map);
+
+                ani_data.as_mut().unwrap().left = Some(AnimatedTexture::new(1.0/5.0));
+                ani_data.as_mut().unwrap().left.as_mut().unwrap().load_animation(
+                    "resources/enemies/wizard.png".to_string(), 0, 128, 32, 64, 6, texture_creator, texture_map);
+
+                ani_data.as_mut().unwrap().back = Some(AnimatedTexture::new(1.0/5.0));
+                ani_data.as_mut().unwrap().back.as_mut().unwrap().load_animation(
+                    "resources/enemies/wizard.png".to_string(), 0, 64*3, 32, 64, 6, texture_creator, texture_map);
+                
+                ani_data.as_mut().unwrap().default = Some(AnimatedTexture::new(1.0));
+                ani_data.as_mut().unwrap().default.as_mut().unwrap().load_animation(
+                    "resources/enemies/wizard.png".to_string(), 0, 0, 32, 64, 1, texture_creator, texture_map);
+            }
+            EnemyType::Skull => {
+                size_x = 32*2; size_y = 32*2;
+                ani_data = Some(AnimationData::new());
+                ani_data.as_mut().unwrap().current_animation = AnimationState::Default;
+                ani_data.as_mut().unwrap().idle = Some(AnimatedTexture::new(1.0));
+                ani_data.as_mut().unwrap().idle.as_mut().unwrap().load_animation(
+                    "resources/enemies/skull.png".to_string(), 0, 0, 32, 32, 1, texture_creator, texture_map);
+
+                ani_data.as_mut().unwrap().front = Some(AnimatedTexture::new(1.0/5.0));
+                ani_data.as_mut().unwrap().front.as_mut().unwrap().load_animation(
+                    "resources/enemies/skull.png".to_string(), 0, 0, 32, 32, 3, texture_creator, texture_map);
+                ani_data.as_mut().unwrap().front.as_mut().unwrap().animation_type = AnimationType::PingPong;
+
+                ani_data.as_mut().unwrap().right = Some(AnimatedTexture::new(1.0/5.0));
+                ani_data.as_mut().unwrap().right.as_mut().unwrap().load_animation(
+                    "resources/enemies/skull.png".to_string(), 0, 32, 32, 32, 3, texture_creator, texture_map);
+                ani_data.as_mut().unwrap().right.as_mut().unwrap().animation_type = AnimationType::PingPong;
+                
+                ani_data.as_mut().unwrap().left = Some(AnimatedTexture::new(1.0/5.0));
+                ani_data.as_mut().unwrap().left.as_mut().unwrap().load_animation(
+                    "resources/enemies/skull.png".to_string(), 0, 64, 32, 32, 3, texture_creator, texture_map);
+                ani_data.as_mut().unwrap().left.as_mut().unwrap().animation_type = AnimationType::PingPong; 
+                
+                ani_data.as_mut().unwrap().back = Some(AnimatedTexture::new(1.0/5.0));
+                ani_data.as_mut().unwrap().back.as_mut().unwrap().load_animation(
+                    "resources/enemies/skull.png".to_string(), 0, 96, 32, 32, 3, texture_creator, texture_map);
+                ani_data.as_mut().unwrap().back.as_mut().unwrap().animation_type = AnimationType::PingPong; 
+            
+                ani_data.as_mut().unwrap().default = Some(AnimatedTexture::new(1.0));
+                ani_data.as_mut().unwrap().default.as_mut().unwrap().load_animation(
+                    "resources/enemies/skull.png".to_string(), 0, 0, 32, 32, 1, texture_creator, texture_map);
+            }
+            EnemyType::Placeholder => {}
+        }
+        
         Enemy {
             x: 50.,
             y: 50.,
-            animation_data: None,
-            size: 50,
-            hitbox: AABB::new(55., 55., 40, 40),
+            animation_data: ani_data,
+            size_x: size_x,
+            size_y: size_y,
+            hitbox: AABB::new(55., 55., size_x - ((0.1* (size_x as f32)) as u32) , size_y - ((0.1* (size_y as f32)) as u32)),
             last_time: 0.,
             dir: -1,
-            kind : EnemyType::Slime,
+            kind : kind,
         }
     }
 
@@ -58,8 +147,8 @@ impl Enemy {
                     texture_map,
                     self.x - camera.x,
                     self.y - camera.y,
-                    self.size,
-                    self.size,
+                    self.size_x,
+                    self.size_y,
                 );
             }
             None => {
@@ -68,8 +157,8 @@ impl Enemy {
                     .fill_rect(sdl2::rect::Rect::new(
                         (self.x - camera.x) as i32,
                         (self.y - camera.y) as i32,
-                        self.size,
-                        self.size,
+                        self.size_x,
+                        self.size_y,
                     ))
                     .unwrap();
             }

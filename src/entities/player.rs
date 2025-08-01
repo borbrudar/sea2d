@@ -1,6 +1,7 @@
 
 use std::time::Instant;
 
+use crate::entities::animation_data::{AnimationData, AnimationState};
 use crate::environment::{level::Level, aabb::AABB, tile_type::ExitTile};
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use crate::networking::{
@@ -19,129 +20,6 @@ pub enum PlayerHitState {
     Vulnerable,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize,PartialEq)]
-pub enum PlayerAnimationState {
-    Front,
-    Back,
-    Left,
-    Right,
-    Idle,
-    Default,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-pub struct AnimationData{
-    pub front: Option<AnimatedTexture>,
-    pub back: Option<AnimatedTexture>,
-    pub left: Option<AnimatedTexture>,
-    pub right: Option<AnimatedTexture>,
-    pub idle: Option<AnimatedTexture>,
-    pub default: Option<AnimatedTexture>,
-    pub current_animation: PlayerAnimationState,
-}
-impl AnimationData {
-    pub fn new() -> AnimationData {
-        AnimationData {
-            front: None,
-            back: None,
-            left: None,
-            right: None,
-            idle: None,
-            default: None,
-            current_animation: PlayerAnimationState::Default,
-        }
-    }
-
-    pub fn draw(
-        &self,
-        canvas: &mut Canvas<Window>,
-        texture_map: &std::collections::HashMap<String, Texture>,
-        x: f64,
-        y: f64,
-        width: u32,
-        height: u32,
-    ) {
-        let default_draw = |canvas: &mut Canvas<Window>, texture_map: &std::collections::HashMap<String, Texture>, x: f64, y: f64, width: u32, height: u32| {
-            canvas.set_draw_color(sdl2::pixels::Color::RGB(255, 192, 203));
-            canvas
-                .fill_rect(sdl2::rect::Rect::new(x as i32, y as i32, width, height))
-                .unwrap();
-        };
-        match self.current_animation {
-            PlayerAnimationState::Default => {
-                if let Some(ref animation_data) = self.default {
-                    animation_data.draw(canvas, texture_map, x, y, width, height);
-                } else { default_draw(canvas, texture_map, x, y, width, height);}
-            }
-            PlayerAnimationState::Front => {
-                if let Some(ref animation_data) = self.front {
-                    animation_data.draw(canvas, texture_map, x, y, width, height);
-                } else { default_draw(canvas, texture_map, x, y, width, height);}
-            }
-            PlayerAnimationState::Back => {
-                if let Some(ref animation_data) = self.back {
-                    animation_data.draw(canvas, texture_map, x, y, width, height);
-                } else { default_draw(canvas, texture_map, x, y, width, height);}
-            }
-            PlayerAnimationState::Left => {
-                if let Some(ref animation_data) = self.left {
-                    animation_data.draw(canvas, texture_map, x, y, width, height);
-                } else { default_draw(canvas, texture_map, x, y, width, height);}
-            }
-            PlayerAnimationState::Right => {
-                if let Some(ref animation_data) = self.right {
-                    animation_data.draw(canvas, texture_map, x, y, width, height);
-                } else { default_draw(canvas, texture_map, x, y, width, height);}
-            }
-            PlayerAnimationState::Idle => {
-                if let Some(ref animation_data) = self.idle {
-                    animation_data.draw(canvas, texture_map, x, y, width, height);
-                } else { default_draw(canvas, texture_map, x, y, width, height);}
-            }
-        }
-    }
-
-    pub fn update(&mut self, dt: f64) {
-        match self.current_animation {
-            PlayerAnimationState::Default => {
-                match self.default {
-                    Some(ref mut anim) => anim.update(dt),
-                    None => (),
-                }
-            }
-            PlayerAnimationState::Front => {
-                match self.front {
-                    Some(ref mut anim) => anim.update(dt),
-                    None => (),
-                }
-            }
-            PlayerAnimationState::Back => {
-                match self.back {
-                    Some(ref mut anim) => anim.update(dt),
-                    None => (),
-                }
-            }
-            PlayerAnimationState::Left => {
-                match self.left {
-                    Some(ref mut anim) => anim.update(dt),
-                    None => (),
-                }
-            }
-            PlayerAnimationState::Right => {
-                match self.right {
-                    Some(ref mut anim) => anim.update(dt),
-                    None => (),
-                }
-            }
-            PlayerAnimationState::Idle => {
-                match self.idle {
-                    Some(ref mut anim) => anim.update(dt),
-                    None => (),
-                }
-            }
-        }
-    }
-}
 
 pub struct Player {
     pub id: u64,
@@ -299,19 +177,19 @@ impl Player {
         
         if self.moved{
             if self.velocity_x > 0.0 {
-                self.animation_data.current_animation = PlayerAnimationState::Right;
+                self.animation_data.current_animation = AnimationState::Right;
             } else if self.velocity_x < 0.0 {
-                self.animation_data.current_animation = PlayerAnimationState::Left;
+                self.animation_data.current_animation = AnimationState::Left;
             } else if self.velocity_y > 0.0 {
-                self.animation_data.current_animation = PlayerAnimationState::Front;
+                self.animation_data.current_animation = AnimationState::Front;
             } else if self.velocity_y < 0.0 {
-                self.animation_data.current_animation = PlayerAnimationState::Back;
+                self.animation_data.current_animation = AnimationState::Back;
             } 
             self.animation_data.update(dt);
             self.last_moved_time = global_clock.elapsed().as_secs_f64();
         } else if self.last_moved_time + 5.0 < global_clock.elapsed().as_secs_f64() {
             self.animation_data.update(dt);
-            self.animation_data.current_animation = PlayerAnimationState::Idle;
+            self.animation_data.current_animation = AnimationState::Idle;
         }
 
         let collisions = level.check_collision(&self.hitbox);

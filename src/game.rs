@@ -1,5 +1,6 @@
 use crate::display::hud::Hud;
 use crate::display::button::{Badge, Button, ButtonAction, Dropdown, HealthBar};
+use crate::entities::enemy::EnemyType;
 use crate::environment::{level::Level, texture_data::TextureData};
 use crate::networking::{packet::Packet, player_packets::*, shared::*};
 use crate::entities::{
@@ -308,31 +309,7 @@ impl Game {
 
         // enemies
         let mut enemies: Vec<Enemy> = Vec::new();
-        enemies.push(Enemy::new());
-        enemies.last_mut().unwrap().animation_data = Some(AnimatedTexture::new(1.0 / 6.));
-        enemies
-            .last_mut()
-            .unwrap()
-            .animation_data
-            .as_mut()
-            .unwrap()
-            .load_animation(
-                "resources/enemies/slime.png".to_string(),
-                0,
-                0,
-                16,
-                16,
-                3,
-                &texture_creator,
-                &mut texture_map,
-            );
-        enemies
-            .last_mut()
-            .unwrap()
-            .animation_data
-            .as_mut()
-            .unwrap()
-            .animation_type = AnimationType::PingPong;
+        enemies.push(Enemy::new(EnemyType::Skull,&texture_creator, &mut texture_map));
 
         // hud
         let pavza = Button::new(
