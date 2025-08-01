@@ -179,12 +179,41 @@ impl Enemy {
             self.dir = self.calculate_player_direction(level, player);
             self.last_time = instant.elapsed().as_secs_f64();
         }
+
         match self.dir {
-            0 => self.y -= 2. * level.tile_size as f64 * dt,
-            1 => self.x += 2. * level.tile_size as f64 * dt,
-            2 => self.y += 2. * level.tile_size as f64 * dt,
-            3 => self.x -= 2. * level.tile_size as f64 * dt,
-            _ => (),
+            0 => {
+                self.y -= 2. * level.tile_size as f64 * dt;
+                match self.kind {
+                    EnemyType::Stonewalker | EnemyType::Slime => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Front,
+                    EnemyType::Wizard | EnemyType::Skull => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Back,
+                    _ => (),
+                }
+            }
+            1 => {
+                self.x += 2. * level.tile_size as f64 * dt;
+                match self.kind {
+                    EnemyType::Stonewalker | EnemyType::Slime => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Front,
+                    EnemyType::Wizard | EnemyType::Skull => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Right,
+                    _ => (),
+                }
+            }
+            2 => {
+                self.y += 2. * level.tile_size as f64 * dt;
+                match self.kind {
+                    EnemyType::Stonewalker | EnemyType::Slime => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Front,
+                    EnemyType::Wizard | EnemyType::Skull => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Front,
+                    _ => (),
+                }
+            }
+            3 => {
+                self.x -= 2. * level.tile_size as f64 * dt;
+                match self.kind {
+                    EnemyType::Stonewalker | EnemyType::Slime => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Front,
+                    EnemyType::Wizard | EnemyType::Skull => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Left,
+                    _ => (),
+                }
+            }
+            _ => self.animation_data.as_mut().unwrap().current_animation = AnimationState::Default,
         }
         self.hitbox.x = self.x + 5.;
         self.hitbox.y = self.y + 5.;
