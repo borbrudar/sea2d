@@ -1,6 +1,7 @@
 use crate::display::hud::Hud;
 use crate::display::button::{Badge, Button, ButtonAction, Dropdown, HealthBar};
 use crate::entities::enemy::EnemyType;
+use crate::entities::projectile::Projectile;
 use crate::environment::{level::Level, texture_data::TextureData};
 use crate::networking::{packet::Packet, player_packets::*, shared::*};
 use crate::entities::{
@@ -245,6 +246,8 @@ impl Game {
         let mut enemies: Vec<Enemy> = Vec::new();
         enemies.push(Enemy::new(EnemyType::Wizard,&texture_creator, &mut texture_map));
 
+        let mut projectiles = Vec::new();
+
         // hud
         let pavza = Button::new(
             ButtonAction::ChangeGameState(GameState::Paused),
@@ -386,6 +389,20 @@ impl Game {
                         x,
                         y,
                     } => {
+                        if mouse_btn == sdl2::mouse::MouseButton::Left {
+                            projectiles.push(Projectile::new(
+                                SCREEN_WIDTH as f64 / 2.0,
+                                SCREEN_HEIGHT as f64 / 2.0,
+                                15,
+                                x as f64,
+                                y as f64,
+                            ));
+                            projectiles.last_mut().unwrap().load_projectile_texture(
+                                &texture_creator,
+                                &mut texture_map,
+                            );
+                        }
+
                         for but in &mut hud.buttons {
                             but.handle_event(&event, &mut self.game_state);
                         }
@@ -396,7 +413,6 @@ impl Game {
                     sdl2::event::Event::MouseMotion { x, y, .. } => {
                         hud.dropdown.handle_event(&event);
                     }
-
                     _ => {}
                 }
             }
@@ -485,6 +501,13 @@ impl Game {
             for enemy in &enemies {
                 enemy.draw(&mut canvas, &texture_map, &camera);
             }
+
+            // draw projectiles
+            for projectile in &mut projectiles {
+                projectile.update(delta_time);
+                projectile.draw(&mut canvas, &texture_map);
+            }
+
             //draw other player if on the same level
             for (_, other_player) in &mut other_players {
                 if other_player.current_level == player.current_level {
