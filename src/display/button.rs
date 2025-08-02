@@ -122,7 +122,7 @@ impl<'a> Button<'a> {
                 return true;
             }
         }
-        return false;
+        false
     }
 }
 
@@ -293,17 +293,14 @@ impl<'a> Dropdown<'a> {
     }
 
     pub fn handle_event(&mut self, event: &Event) {
-        match event {
-            Event::MouseMotion { x, y, .. } => {
-                let mouse_point = Point::new(*x, *y);
-                let inside_trigger = self.trigger.position.contains_point(mouse_point);
-                let inside_items = self
-                    .items
-                    .iter()
-                    .any(|item| item.position.contains_point(mouse_point));
-                self.visible = inside_trigger || inside_items;
-            }
-            _ => {}
+        if let Event::MouseMotion { x, y, .. } = event {
+            let mouse_point = Point::new(*x, *y);
+            let inside_trigger = self.trigger.position.contains_point(mouse_point);
+            let inside_items = self
+                .items
+                .iter()
+                .any(|item| item.position.contains_point(mouse_point));
+            self.visible = inside_trigger || inside_items;
         }
     }
 }

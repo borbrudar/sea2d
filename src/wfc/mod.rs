@@ -22,7 +22,7 @@ pub struct WFCState {
 impl WFCState {
     pub fn new(tileset: Vec<WfcTile>) -> Self {
         let mut grid =
-            vec![vec![Cell::new(tileset.len()); GRID_WIDTH as usize]; GRID_HEIGHT as usize];
+            vec![vec![Cell::new(tileset.len()); GRID_WIDTH]; GRID_HEIGHT];
 
         while grid
             .iter()
@@ -52,15 +52,15 @@ impl WFCState {
     }
 
     pub fn draw(&self, canvas: &mut Canvas<Window>) {
-        for y in 0..GRID_HEIGHT as usize {
-            for x in 0..GRID_WIDTH as usize {
+        for y in 0..GRID_HEIGHT {
+            for x in 0..GRID_WIDTH {
                 let cell = &self.grid[y][x];
                 if cell.collapsed {
                     let tile_index = cell.options[0];
                     let tile = &self.tileset[tile_index];
                     let rect = Rect::new(
-                        (x as usize * TILE_SIZE) as i32,
-                        (y as usize * TILE_SIZE) as i32,
+                        (x * TILE_SIZE) as i32,
+                        (y * TILE_SIZE) as i32,
                         TILE_SIZE as u32,
                         TILE_SIZE as u32,
                     );
@@ -120,7 +120,7 @@ fn propagate(grid: &mut Vec<Vec<Cell>>, tileset: &[WfcTile]) {
         let mut updates = vec![];
         for y in 0..GRID_HEIGHT {
             for x in 0..GRID_WIDTH {
-                let cell = &grid[y as usize][x as usize];
+                let cell = &grid[y][x];
                 if cell.collapsed {
                     continue;
                 }
@@ -157,7 +157,7 @@ fn propagate(grid: &mut Vec<Vec<Cell>>, tileset: &[WfcTile]) {
                     "Propagated update at ({}, {}): options now {:?}",
                     x, y, new_options
                 );
-                grid[y as usize][x as usize].options = new_options;
+                grid[y][x].options = new_options;
             }
         }
     }

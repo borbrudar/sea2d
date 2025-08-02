@@ -124,7 +124,7 @@ impl<'a> Level {
                 .chars()
                 .take(new_path.chars().count() - 5)
                 .collect();
-            new_path.push_str(String::from(format!("{}.png", i)).as_str());
+            new_path.push_str(format!("{}.png", i).as_str());
             if !::std::path::Path::new(&new_path).exists() {
                 break;
             }
@@ -165,7 +165,7 @@ impl<'a> Level {
                 let pixel = (pixel_rgb[0], pixel_rgb[1], pixel_rgb[2]);
                 //println!("Pixel: {:?}",pixel);
                 let pos: Point<i32> =
-                    Point::new((x * self.tile_size) as i32, (y * self.tile_size) as i32);
+                    Point::new(x * self.tile_size, y * self.tile_size);
 
                 // get neihbours for autotiler
                 // 0/1 depending if they match the current pixel
@@ -177,8 +177,8 @@ impl<'a> Level {
                         if xoff == 0 && yoff == 0 {
                             continue; // skip the current pixel
                         }
-                        let neighbour_x = (x + xoff) as i32;
-                        let neighbour_y = (y + yoff) as i32;
+                        let neighbour_x = x + xoff;
+                        let neighbour_y = y + yoff;
                         if neighbour_x < width
                             && neighbour_y < height
                             && neighbour_x >= 0
@@ -212,7 +212,7 @@ impl<'a> Level {
                             .texture_data
                             .as_mut()
                             .unwrap()
-                            .load_texture(&texture_creator, texture_map);
+                            .load_texture(texture_creator, texture_map);
                     }
                     TileType::WATER_COLOR => {
                         layer.insert(
@@ -233,7 +233,7 @@ impl<'a> Level {
                             .texture_data
                             .as_mut()
                             .unwrap()
-                            .load_texture(&texture_creator, texture_map);
+                            .load_texture(texture_creator, texture_map);
                     }
                     TileType::GRASS_COLOR => {
                         layer.insert(
@@ -254,7 +254,7 @@ impl<'a> Level {
                             .texture_data
                             .as_mut()
                             .unwrap()
-                            .load_texture(&texture_creator, texture_map);
+                            .load_texture(texture_creator, texture_map);
                     }
                     TileType::SAND_COLOR => {
                         layer.insert(
@@ -275,7 +275,7 @@ impl<'a> Level {
                             .texture_data
                             .as_mut()
                             .unwrap()
-                            .load_texture(&texture_creator, texture_map);
+                            .load_texture(texture_creator, texture_map);
                     }
                     TileType::ROCK_COLOR => {
                         layer.insert(
@@ -296,7 +296,7 @@ impl<'a> Level {
                             .texture_data
                             .as_mut()
                             .unwrap()
-                            .load_texture(&texture_creator, texture_map);
+                            .load_texture(texture_creator, texture_map);
                     }
                     TileType::TREE_COLOR => {
                         layer.insert(
@@ -317,7 +317,7 @@ impl<'a> Level {
                             .texture_data
                             .as_mut()
                             .unwrap()
-                            .load_texture(&texture_creator, texture_map);
+                            .load_texture(texture_creator, texture_map);
                     }
                     TileType::WALL_COLOR => {
                         layer.insert(
@@ -338,7 +338,7 @@ impl<'a> Level {
                             .texture_data
                             .as_mut()
                             .unwrap()
-                            .load_texture(&texture_creator, texture_map);
+                            .load_texture(texture_creator, texture_map);
                     }
                     TileType::PLAYER_SPAWN_COLOR => {
                         self.player_spawn = (x * self.tile_size, y * self.tile_size)
@@ -371,7 +371,7 @@ impl<'a> Level {
                             .texture_data
                             .as_mut()
                             .unwrap()
-                            .load_texture(&texture_creator, texture_map);
+                            .load_texture(texture_creator, texture_map);
                     }
                     TileType::INVENTORY_COLOR => {
                         layer.insert(
@@ -393,7 +393,7 @@ impl<'a> Level {
                             .texture_data
                             .as_mut()
                             .unwrap()
-                            .load_texture(&texture_creator, texture_map);
+                            .load_texture(texture_creator, texture_map);
                     }
                     _ => (),
                 }
@@ -410,7 +410,7 @@ impl<'a> Level {
         camera: &Camera,
     ) {
         for layer in &self.tiles {
-            for (_, tile) in layer {
+            for tile in layer.values() {
                 tile.draw(canvas, texture_map, camera);
             }
         }
@@ -422,12 +422,9 @@ impl<'a> Level {
         camera: &Camera,
     ) {
         for layer in &self.tiles {
-            for (_, tile) in layer {
-                match tile.bounding_box {
-                    Some(ref bounding_box) => {
-                        bounding_box.draw(canvas, sdl2::pixels::Color::RGB(255, 0, 0), camera);
-                    }
-                    None => (),
+            for tile in layer.values() {
+                if let Some(ref bounding_box) = tile.bounding_box {
+                    bounding_box.draw(canvas, sdl2::pixels::Color::RGB(255, 0, 0), camera);
                 }
             }
         }
@@ -458,17 +455,11 @@ impl<'a> Level {
                 );
 
                 for layer in &self.tiles {
-                    match layer.get(&offset_pos) {
-                        Some(tile) => match tile.bounding_box {
-                            Some(ref bounding_box) => {
-                                if hitbox.intersects(bounding_box) {
-                                    ret.push(tile.clone());
-                                }
-                            }
-                            None => (),
-                        },
-                        None => (),
-                    }
+                    if let Some(tile) = layer.get(&offset_pos) { if let Some(ref bounding_box) = tile.bounding_box {
+                        if hitbox.intersects(bounding_box) {
+                            ret.push(tile.clone());
+                        }
+                    } }
                 }
             }
         }
@@ -487,31 +478,25 @@ impl<'a> Level {
                 );
 
                 for layer in &self.tiles {
-                    match layer.get(&offset_pos) {
-                        Some(tile) => {
-                            match tile.bounding_box {
-                                Some(ref bounding_box) => {
-                                    if hitbox.intersects(bounding_box) {
-                                        let x1 = hitbox.x + hitbox.w as f64 - bounding_box.x; // right side of player - left side of tile
-                                        let x2 = bounding_box.x + bounding_box.w as f64 - hitbox.x; // right side of tile - left side of player
-                                        let y1 = hitbox.y + hitbox.h as f64 - bounding_box.y; // bottom side of player - top side of tile
-                                        let y2 = bounding_box.y + bounding_box.h as f64 - hitbox.y; // bottom side of tile - top side of player
-                                        let min = x1.min(x2).min(y1).min(y2);
-                                        if min == x1 {
-                                            hitbox.x -= x1;
-                                        } else if min == x2 {
-                                            hitbox.x += x2;
-                                        } else if min == y1 {
-                                            hitbox.y -= y1;
-                                        } else if min == y2 {
-                                            hitbox.y += y2;
-                                        }
-                                    }
+                    if let Some(tile) = layer.get(&offset_pos) {
+                        if let Some(ref bounding_box) = tile.bounding_box {
+                            if hitbox.intersects(bounding_box) {
+                                let x1 = hitbox.x + hitbox.w as f64 - bounding_box.x; // right side of player - left side of tile
+                                let x2 = bounding_box.x + bounding_box.w as f64 - hitbox.x; // right side of tile - left side of player
+                                let y1 = hitbox.y + hitbox.h as f64 - bounding_box.y; // bottom side of player - top side of tile
+                                let y2 = bounding_box.y + bounding_box.h as f64 - hitbox.y; // bottom side of tile - top side of player
+                                let min = x1.min(x2).min(y1).min(y2);
+                                if min == x1 {
+                                    hitbox.x -= x1;
+                                } else if min == x2 {
+                                    hitbox.x += x2;
+                                } else if min == y1 {
+                                    hitbox.y -= y1;
+                                } else if min == y2 {
+                                    hitbox.y += y2;
                                 }
-                                None => (),
                             }
                         }
-                        None => (),
                     }
                 }
             }

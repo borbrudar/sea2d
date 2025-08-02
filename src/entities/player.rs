@@ -45,7 +45,7 @@ pub struct Player {
 impl Player {
     pub fn new(id: u64) -> Player {
         Player {
-            id: id,
+            id,
             x: ((SCREEN_WIDTH as i32) / 2) as f64,
             y: ((SCREEN_HEIGHT as i32) / 2) as f64,
             velocity_x: 0.0,
@@ -91,7 +91,7 @@ impl Player {
             32,
             48,
             6,
-            &texture_creator,
+            texture_creator,
             texture_map,
         );
         self.animation_data.right = Some(AnimatedTexture::new(1.0 / 12.));
@@ -102,7 +102,7 @@ impl Player {
             32,
             48,
             6,
-            &texture_creator,
+            texture_creator,
             texture_map,
         );
         self.animation_data.left = Some(AnimatedTexture::new(1.0 / 12.));
@@ -113,7 +113,7 @@ impl Player {
             32,
             48,
             6,
-            &texture_creator,
+            texture_creator,
             texture_map,
         );
         self.animation_data.back = Some(AnimatedTexture::new(1.0 / 12.));
@@ -124,7 +124,7 @@ impl Player {
             32,
             48,
             6,
-            &texture_creator,
+            texture_creator,
             texture_map,
         );
         self.animation_data.default = Some(AnimatedTexture::new(1.0));
@@ -139,7 +139,7 @@ impl Player {
                 32,
                 48,
                 1,
-                &texture_creator,
+                texture_creator,
                 texture_map,
             );
         self.animation_data.idle = Some(AnimatedTexture::new(1.0 / 3.0));
@@ -150,7 +150,7 @@ impl Player {
             32,
             48,
             6,
-            &texture_creator,
+            texture_creator,
             texture_map,
         );
     }
@@ -176,7 +176,7 @@ impl Player {
                 let time_since_last_blink =
                     global_clock.elapsed().as_secs_f64() - self.last_blink_time;
                 if time_since_last_blink < 0.1 {
-                    return ();
+                    return ;
                 }
                 let mut draw = false;
                 let time_since_hit = global_clock.elapsed().as_secs_f64() - self.last_hit_time;
@@ -221,7 +221,7 @@ impl Player {
         global_clock: &Instant,
     ) {
         if self.id == 1_000_000 {
-            return ();
+            return ;
         }
 
         self.moved = false;
@@ -260,30 +260,20 @@ impl Player {
         }
 
         let collisions = level.check_collision(&self.hitbox);
-        if collisions.len() > 0 {
-            self.colliding = true;
-        } else {
-            self.colliding = false;
-        }
+        self.colliding = !collisions.is_empty();
         for tile in collisions {
-            match tile.tile_type {
-                crate::environment::tile_type::TileType::Exit(inner) => {
-                    self.reached_end = Some(inner.clone());
-                }
-                _ => (),
+            if let crate::environment::tile_type::TileType::Exit(inner) = tile.tile_type {
+                self.reached_end = Some(inner.clone());
             }
         }
 
         for enemy in enemies {
             if self.hitbox.intersects(&enemy.hitbox) {
-                match self.hit_state {
-                    PlayerHitState::Vulnerable => {
-                        self.hit_state = PlayerHitState::Invincible;
-                        self.health -= 15;
-                        println!("Health : {}", self.health);
-                        self.last_hit_time = global_clock.elapsed().as_secs_f64();
-                    }
-                    _ => (),
+                if let PlayerHitState::Vulnerable = self.hit_state {
+                    self.hit_state = PlayerHitState::Invincible;
+                    self.health -= 15;
+                    println!("Health : {}", self.health);
+                    self.last_hit_time = global_clock.elapsed().as_secs_f64();
                 }
             }
         }

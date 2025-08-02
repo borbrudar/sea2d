@@ -22,12 +22,9 @@ pub fn client(address: &str) {
             // read from server and send to game thread
             match try_read_tcp(&mut client) {
                 NetworkResult::Ok(buf) => {
-                    match deserialize_to_packet(buf) {
-                        Some(packet) => tx2
-                            .send(packet)
-                            .expect("Failed to send packet to game thread"),
-                        None => (),
-                    };
+                    if let Some(packet) = deserialize_to_packet(buf) { tx2
+                    .send(packet)
+                    .expect("Failed to send packet to game thread") };
                 }
                 NetworkResult::WouldBlock => (),
                 NetworkResult::ConnectionLost => {

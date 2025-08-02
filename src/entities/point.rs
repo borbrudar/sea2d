@@ -8,6 +8,6 @@ pub struct Point<T> {
 
 impl<T> Point<T> {
     pub fn new(x: T, y: T) -> Self {
-        Point { x: x, y: y }
+        Point { x, y }
     }
 }

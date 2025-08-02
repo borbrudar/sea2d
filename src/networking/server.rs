@@ -28,25 +28,25 @@ fn handle_player_send(
         PlayerPacket::PlayerPositionPacket(PlayerPosition { x, y, player_id }) => {
             players.get_mut(&player_id).unwrap().x = x;
             players.get_mut(&player_id).unwrap().y = y;
-            return Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition {
-                player_id: player_id as u64,
+            Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition {
+                player_id,
                 x,
                 y,
-            }));
+            }))
         }
         PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect { id }) => {
-            return Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect {
+            Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect {
                 id,
-            }));
+            }))
         }
         PlayerPacket::PlayerAnimationPacket(PlayerAnimation { id, animation_data }) => {
             if let Some(player) = players.get_mut(&id) {
                 player.animation_data = animation_data.clone();
             }
-            return Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(PlayerAnimation {
+            Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(PlayerAnimation {
                 id,
                 animation_data,
-            }));
+            }))
         }
         //PlayerPacket::PlayerAnimationPacket(PlayerAnimation { id, animation_data }) => {
         //    players.get_mut(&player_id).unwrap().animation_data = Some(animation_data.clone());
@@ -56,32 +56,29 @@ fn handle_player_send(
         //    }));
         //}
         PlayerPacket::PlayerWelcomePacket(PlayerWelcome { player_id, x, y }) => {
-            return Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome {
+            Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(PlayerWelcome {
                 player_id,
                 x,
                 y,
-            }));
+            }))
         }
         PlayerPacket::PlayerLevelPacket(PlayerLevel { player_id, level }) => {
             players.get_mut(&player_id).unwrap().current_level = level.clone();
-            return Packet::PlayerPacket(PlayerPacket::PlayerLevelPacket(PlayerLevel {
+            Packet::PlayerPacket(PlayerPacket::PlayerLevelPacket(PlayerLevel {
                 player_id,
                 level,
-            }));
+            }))
         }
     }
 }
 
 fn send_to_clients(packet: Packet, clients: &mut HashMap<u64, TcpStream>) {
-    match packet {
-        Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect { id })) => {
-            clients.remove(&id);
-        }
-        _ => (),
+    if let Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect { id })) = packet {
+        clients.remove(&id);
     }
 
-    for (_, mut client) in clients.iter_mut() {
-        serialize_and_send(&mut client, packet.clone());
+    for (_, client) in clients.iter_mut() {
+        serialize_and_send(client, packet.clone());
     }
 }
 
@@ -159,13 +156,10 @@ pub fn server() {
             match packet {
                 ServerPacket::ServerInternalPacket(packet) => {
                     let (addr, packet) = (packet.address, packet.packet);
-                    match packet {
-                        Packet::PlayerPacket(packet) => {
-                            let sender_uuid = ip_to_uuid.get(&addr).unwrap().clone();
-                            let packet = handle_player_send(packet, sender_uuid, &mut players);
-                            send_to_clients(packet, &mut clients);
-                        }
-                        _ => (),
+                    if let Packet::PlayerPacket(packet) = packet {
+                        let sender_uuid = *ip_to_uuid.get(&addr).unwrap();
+                        let packet = handle_player_send(packet, sender_uuid, &mut players);
+                        send_to_clients(packet, &mut clients);
                     }
                 }
                 ServerPacket::AddPlayer(addr) => {
@@ -176,7 +170,7 @@ pub fn server() {
                     let uuid = *ip_to_uuid.get(&addr).unwrap();
                     //players.remove(&uuid);
                     let disconnect_packet = Packet::PlayerPacket(
-                        PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect { id: uuid as u64 }),
+                        PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect { id: uuid }),
                     );
                     send_to_clients(disconnect_packet, &mut clients);
                 }

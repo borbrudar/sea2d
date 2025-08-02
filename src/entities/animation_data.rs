@@ -103,30 +103,12 @@ impl AnimationData {
 
     pub fn update(&mut self, dt: f64) {
         match self.current_animation {
-            AnimationState::Default => match self.default {
-                Some(ref mut anim) => anim.update(dt),
-                None => (),
-            },
-            AnimationState::Front => match self.front {
-                Some(ref mut anim) => anim.update(dt),
-                None => (),
-            },
-            AnimationState::Back => match self.back {
-                Some(ref mut anim) => anim.update(dt),
-                None => (),
-            },
-            AnimationState::Left => match self.left {
-                Some(ref mut anim) => anim.update(dt),
-                None => (),
-            },
-            AnimationState::Right => match self.right {
-                Some(ref mut anim) => anim.update(dt),
-                None => (),
-            },
-            AnimationState::Idle => match self.idle {
-                Some(ref mut anim) => anim.update(dt),
-                None => (),
-            },
+            AnimationState::Default => if let Some(ref mut anim) = self.default { anim.update(dt) },
+            AnimationState::Front => if let Some(ref mut anim) = self.front { anim.update(dt) },
+            AnimationState::Back => if let Some(ref mut anim) = self.back { anim.update(dt) },
+            AnimationState::Left => if let Some(ref mut anim) = self.left { anim.update(dt) },
+            AnimationState::Right => if let Some(ref mut anim) = self.right { anim.update(dt) },
+            AnimationState::Idle => if let Some(ref mut anim) = self.idle { anim.update(dt) },
         }
     }
 }

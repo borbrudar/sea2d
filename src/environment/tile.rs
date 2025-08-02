@@ -52,19 +52,16 @@ impl Tile {
                     scaled_w,
                     scaled_h,
                 );
-                match res {
-                    Err(..) => {
-                        canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
-                        canvas
-                            .fill_rect(sdl2::rect::Rect::new(
-                                (self.x as f64 - camera.x) as i32,
-                                (self.y as f64 - camera.y) as i32,
-                                scaled_w,
-                                scaled_h,
-                            ))
-                            .unwrap();
-                    }
-                    Ok(..) => (),
+                if res.is_err() {
+                    canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
+                    canvas
+                        .fill_rect(sdl2::rect::Rect::new(
+                            (self.x as f64 - camera.x) as i32,
+                            (self.y as f64 - camera.y) as i32,
+                            scaled_w,
+                            scaled_h,
+                        ))
+                        .unwrap();
                 }
             }
             None => {

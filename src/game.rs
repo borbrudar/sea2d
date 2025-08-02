@@ -351,16 +351,13 @@ impl Game {
                     sdl2::event::Event::KeyDown {
                         keycode: Some(sdl2::keyboard::Keycode::R),
                         ..
-                    } => match self.game_state {
-                        GameState::GameOver => {
-                            self.game_state = GameState::Running;
-                            player.health = 100;
-                            player.pressed_down = false;
-                            player.pressed_left = false;
-                            player.pressed_right = false;
-                            player.pressed_up = false;
-                        }
-                        _ => (),
+                    } => if let GameState::GameOver = self.game_state {
+                        self.game_state = GameState::Running;
+                        player.health = 100;
+                        player.pressed_down = false;
+                        player.pressed_left = false;
+                        player.pressed_right = false;
+                        player.pressed_up = false;
                     },
                     sdl2::event::Event::KeyDown {
                         keycode: Some(sdl2::keyboard::Keycode::T),
@@ -451,51 +448,48 @@ impl Game {
             //  while frame_time > std::time::Duration::from_secs_f64(0.0){
             let delta_time = f64::min(frame_time.as_secs_f64(), time_step);
 
-            match self.game_state {
-                GameState::Running => {
-                    for enemy in &mut enemies {
-                        let prev_size = projectiles.len();
-                        enemy.update(delta_time, &level, &player, &global_clock, &mut projectiles);
-                        if projectiles.len() > prev_size {
-                            // if new projectiles were added, we need to load their textures
-                            projectiles
-                                .last_mut()
-                                .unwrap()
-                                .load_projectile_texture(&texture_creator, &mut texture_map);
-                        }
+            if let GameState::Running = self.game_state {
+                for enemy in &mut enemies {
+                    let prev_size = projectiles.len();
+                    enemy.update(delta_time, &level, &player, &global_clock, &mut projectiles);
+                    if projectiles.len() > prev_size {
+                        // if new projectiles were added, we need to load their textures
+                        projectiles
+                            .last_mut()
+                            .unwrap()
+                            .load_projectile_texture(&texture_creator, &mut texture_map);
                     }
-                    player.update(
-                        delta_time,
-                        &self.packet_sender,
-                        &level,
-                        &mut camera,
-                        &enemies,
-                        &global_clock,
-                    );
-                    for (_, other_player) in &mut other_players {
-                        other_player.animation_data.update(delta_time);
-                    }
-                    // update projectiles
-                    let mut remove_projectiles = Vec::new();
-                    for projectile in &mut projectiles {
-                        projectile.update(delta_time);
-                        if projectile.resolve_collision(&level, &mut enemies, &mut player) {
-                            // remove projectile if it collides with something
-                            remove_projectiles.push(projectile.clone());
-                        }
-                    }
-                    for projectile in &remove_projectiles {
-                        if let Some(pos) = projectiles
-                            .iter()
-                            .position(|p| p.x == projectile.x && p.y == projectile.y)
-                        {
-                            projectiles.remove(pos);
-                        }
-                    }
-                    // remove dead enemies
-                    enemies.retain(|enemy| enemy.health > 0);
                 }
-                _ => (),
+                player.update(
+                    delta_time,
+                    &self.packet_sender,
+                    &level,
+                    &mut camera,
+                    &enemies,
+                    &global_clock,
+                );
+                for other_player in other_players.values_mut() {
+                    other_player.animation_data.update(delta_time);
+                }
+                // update projectiles
+                let mut remove_projectiles = Vec::new();
+                for projectile in &mut projectiles {
+                    projectile.update(delta_time);
+                    if projectile.resolve_collision(&level, &mut enemies, &mut player) {
+                        // remove projectile if it collides with something
+                        remove_projectiles.push(projectile.clone());
+                    }
+                }
+                for projectile in &remove_projectiles {
+                    if let Some(pos) = projectiles
+                        .iter()
+                        .position(|p| p.x == projectile.x && p.y == projectile.y)
+                    {
+                        projectiles.remove(pos);
+                    }
+                }
+                // remove dead enemies
+                enemies.retain(|enemy| enemy.health > 0);
             }
 
             frame_time -= std::time::Duration::from_secs_f64(delta_time);
@@ -537,7 +531,7 @@ impl Game {
             }
 
             //draw other player if on the same level
-            for (_, other_player) in &mut other_players {
+            for other_player in other_players.values_mut() {
                 if other_player.current_level == player.current_level {
                     other_player.draw(&mut canvas, &texture_map, &camera, &global_clock);
                 }
@@ -584,30 +578,27 @@ impl Game {
                 }
                 _ => (),
             }
-            match self.game_state {
-                GameState::GameOver => {
-                    let color = Color::RGB(255, 255, 255);
-                    let surface = font.render("Game Joever").blended(color).unwrap(); // Create a blended surface (anti-aliased)
+            if let GameState::GameOver = self.game_state {
+                let color = Color::RGB(255, 255, 255);
+                let surface = font.render("Game Joever").blended(color).unwrap(); // Create a blended surface (anti-aliased)
 
-                    let texture = texture_creator
-                        .create_texture_from_surface(&surface)
-                        .unwrap();
+                let texture = texture_creator
+                    .create_texture_from_surface(&surface)
+                    .unwrap();
 
-                    // Get the size of the texture
-                    let TextureQuery { width, height, .. } = texture.query();
+                // Get the size of the texture
+                let TextureQuery { width, height, .. } = texture.query();
 
-                    // Set up the destination rectangle (where the text will appear)
-                    let dest_rect = Rect::new(
-                        (SCREEN_WIDTH / 2) as i32 - 200,
-                        (SCREEN_HEIGHT / 2) as i32 - 30,
-                        width,
-                        height,
-                    ); // Position at (100, 100)
+                // Set up the destination rectangle (where the text will appear)
+                let dest_rect = Rect::new(
+                    (SCREEN_WIDTH / 2) as i32 - 200,
+                    (SCREEN_HEIGHT / 2) as i32 - 30,
+                    width,
+                    height,
+                ); // Position at (100, 100)
 
-                    // Clear the screen and draw the texture
-                    canvas.copy(&texture, None, Some(dest_rect)).unwrap();
-                }
-                _ => (),
+                // Clear the screen and draw the texture
+                canvas.copy(&texture, None, Some(dest_rect)).unwrap();
             }
 
             canvas.present();

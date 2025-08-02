@@ -107,8 +107,8 @@ impl Projectile {
                 texture_map,
                 self.x - camera.x,
                 self.y - camera.y,
-                self.size as u32,
-                self.size as u32,
+                self.size,
+                self.size,
             );
         } else {
             canvas.set_draw_color(sdl2::pixels::Color::RGB(255, 0, 0));
@@ -116,8 +116,8 @@ impl Projectile {
                 .fill_rect(sdl2::rect::Rect::new(
                     (self.x - camera.x) as i32,
                     (self.y - camera.y) as i32,
-                    self.size as u32,
-                    self.size as u32,
+                    self.size,
+                    self.size,
                 ))
                 .unwrap();
         }

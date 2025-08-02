@@ -408,8 +408,8 @@ impl Enemy {
             x: 1000.,
             y: 1000.,
             animation_data: ani_data,
-            size_x: size_x,
-            size_y: size_y,
+            size_x,
+            size_y,
             hitbox: AABB::new(
                 100.,
                 100.,
@@ -418,7 +418,7 @@ impl Enemy {
             ),
             last_time: 0.,
             dir: -1,
-            kind: kind,
+            kind,
             spotted_player: false,
             moving_speed: 3.0,
             health,
@@ -464,18 +464,15 @@ impl Enemy {
         instant: &Instant,
         projectiles: &mut Vec<Projectile>,
     ) {
-        match self.animation_data {
-            Some(ref mut animation_data) => {
-                animation_data.update(dt);
-            }
-            None => (),
+        if let Some(ref mut animation_data) = self.animation_data {
+            animation_data.update(dt);
         };
 
         // enemy behaviour depends on type
         let distance_to_player = ((self.x - player.x).powi(2) + (self.y - player.y).powi(2)).sqrt();
         let can_move = instant.elapsed().as_secs_f64() - self.last_time > 0.5;
 
-        if self.spotted_player == false {
+        if !self.spotted_player {
             match self.kind {
                 EnemyType::Slime => self.spotted_player = true,
                 EnemyType::Stonewalker => self.spotted_player = distance_to_player < 200.,
@@ -494,7 +491,7 @@ impl Enemy {
                     if self.spotted_player {
                         self.dir = self.calculate_player_direction(level, player);
                     } else {
-                        self.choose_random_move(&level);
+                        self.choose_random_move(level);
                     }
                 }
                 EnemyType::Wizard => {
@@ -516,7 +513,7 @@ impl Enemy {
                             self.dir = self.calculate_player_direction(level, player);
                         }
                     } else {
-                        self.choose_random_move(&level);
+                        self.choose_random_move(level);
                     }
                 }
                 _ => {}
@@ -590,25 +587,25 @@ impl Enemy {
     pub fn choose_random_move(&mut self, level: &Level) {
         let mut possible_moves = Vec::new();
         if self.can_move_to_tile(
-            &level,
+            level,
             Point::new(self.x as i32, self.y as i32 - level.tile_size),
         ) {
             possible_moves.push(0);
         }
         if self.can_move_to_tile(
-            &level,
+            level,
             Point::new(self.x as i32 + level.tile_size, self.y as i32),
         ) {
             possible_moves.push(1);
         }
         if self.can_move_to_tile(
-            &level,
+            level,
             Point::new(self.x as i32, self.y as i32 + level.tile_size),
         ) {
             possible_moves.push(2);
         }
         if self.can_move_to_tile(
-            &level,
+            level,
             Point::new(self.x as i32 - level.tile_size, self.y as i32),
         ) {
             possible_moves.push(3);
@@ -671,19 +668,19 @@ impl Enemy {
             let (x, y) = (current.x, current.y);
             let mut next = Point::new(x + level.tile_size, y);
 
-            if self.can_move_to_tile(&level, next) {
+            if self.can_move_to_tile(level, next) {
                 queue.push_back((next, current, 1));
             }
             next = Point::new(x - level.tile_size, y);
-            if self.can_move_to_tile(&level, next) {
+            if self.can_move_to_tile(level, next) {
                 queue.push_back((next, current, 3));
             }
             next = Point::new(x, y + level.tile_size);
-            if self.can_move_to_tile(&level, next) {
+            if self.can_move_to_tile(level, next) {
                 queue.push_back((next, current, 2));
             }
             next = Point::new(x, y - level.tile_size);
-            if self.can_move_to_tile(&level, next) {
+            if self.can_move_to_tile(level, next) {
                 queue.push_back((next, current, 0));
             }
         }
