@@ -1,4 +1,4 @@
-use crate::{entities::{animated_texture::AnimatedTexture, enemy::Enemy, player::Player}, environment::{aabb::AABB, level::Level, tile_type::TileType}};
+use crate::{entities::{animated_texture::AnimatedTexture, camera::Camera, enemy::Enemy, player::Player}, environment::{aabb::AABB, level::Level, tile_type::TileType}};
 
 
 #[derive(Debug, Clone)]
@@ -10,18 +10,20 @@ pub struct Projectile{
     pub direction: f64, // Angle in radians
     pub texture: Option<AnimatedTexture>,
     pub hitbox : AABB,
+    pub fired_by_player: bool, 
 }
 
 impl Projectile {
-    pub fn new(x: f64, y: f64, size : u32, end_x : f64, end_y : f64) -> Projectile {
+    pub fn new(x: f64, y: f64, size : u32, direction : f64, fired_by_player : bool) -> Projectile {
         Projectile {
             x,
             y,
             speed : 400.0,
             size,
-            direction : (end_y - y).atan2(end_x - x), // Calculate angle to target
+            direction,
             texture: None,
             hitbox: AABB::new(x, y, size, size),   
+            fired_by_player,
         }
     }
 
@@ -57,15 +59,16 @@ impl Projectile {
         &self,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
         texture_map: &std::collections::HashMap<String, sdl2::render::Texture>,
+        camera : &Camera,
     ) {
         if let Some(ref texture) = self.texture {
-            texture.draw(canvas, texture_map, self.x, self.y, self.size as u32, self.size as u32);
+            texture.draw(canvas, texture_map, self.x - camera.x, self.y - camera.y, self.size as u32, self.size as u32);
         } else {
             // Draw a placeholder rectangle if no texture is available
             canvas.set_draw_color(sdl2::pixels::Color::RGB(255, 0, 0));
             canvas.fill_rect(sdl2::rect::Rect::new(
-                self.x as i32,
-                self.y as i32,
+                (self.x - camera.x) as i32,
+                (self.y - camera.y) as i32,
                 self.size as u32,
                 self.size as u32,
             )).unwrap();
@@ -94,7 +97,7 @@ impl Projectile {
             }
         }
 
-        if self.hitbox.intersects(&player.hitbox) {
+        if self.hitbox.intersects(&player.hitbox) && !self.fired_by_player {
             player.health -= 15; 
             ret = true;
         }

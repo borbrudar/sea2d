@@ -397,11 +397,11 @@ impl Game {
                                 last_time_clicked = std::time::Instant::elapsed(&global_clock).as_secs_f32();
                                 
                                 projectiles.push(Projectile::new(
-                                    SCREEN_WIDTH as f64 / 2.0,
-                                    SCREEN_HEIGHT as f64 / 2.0,
+                                    player.x + player.size_x as f64 / 2.0,
+                                    player.y + player.size_y as f64 / 2.0,
                                     15,
-                                    x as f64,
-                                    y as f64,
+                                    ((y - (SCREEN_HEIGHT/2) as i32) as f64).atan2((x - (SCREEN_WIDTH/2) as i32) as f64),
+                                    true
                                 ));
                                 projectiles.last_mut().unwrap().load_projectile_texture(
                                     &texture_creator,
@@ -476,7 +476,6 @@ impl Game {
                         projectile.update(delta_time);
                         if projectile.resolve_collision(&level, &mut enemies, &mut player) {
                             // remove projectile if it collides with something
-                            println!("Projectile hit something");
                             remove_projectiles.push(projectile.clone());
                         }
                     }
@@ -524,7 +523,7 @@ impl Game {
 
             // draw projectiles
             for projectile in &mut projectiles {
-                projectile.draw(&mut canvas, &texture_map);
+                projectile.draw(&mut canvas, &texture_map, &camera);
             }
 
             //draw other player if on the same level
