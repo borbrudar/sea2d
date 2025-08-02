@@ -5,7 +5,7 @@ use sdl2::{
 };
 
 use crate::{
-    entities::{animated_texture::{AnimatedTexture, AnimationType}, animation_data::{AnimationData, AnimationState}, camera::Camera, player::Player, point::Point}, environment::{aabb::AABB, level::{self, Level}}
+    entities::{animated_texture::{AnimatedTexture, AnimationType}, animation_data::{AnimationData, AnimationState}, camera::Camera, player::Player, point::Point, projectile::Projectile}, environment::{aabb::AABB, level::{self, Level}}
 };
 use std::{
     collections::{HashMap, VecDeque},
@@ -183,7 +183,7 @@ impl Enemy {
         }
     }
 
-    pub fn update(&mut self, dt: f64, level: &Level, player: &Player, instant: &Instant) {
+    pub fn update(&mut self, dt: f64, level: &Level, player: &Player, instant: &Instant, projectiles : &mut Vec<Projectile>) {
         match self.animation_data {
             Some(ref mut animation_data) => {
                 animation_data.update(dt);
@@ -220,7 +220,18 @@ impl Enemy {
                 EnemyType::Wizard => {
                     if self.spotted_player {
                         if distance_to_player < 300. {
-                            //attack
+                            projectiles.push(Projectile::new(
+                                self.x + (self.size_x / 2) as f64,
+                                self.y + (self.size_y / 2) as f64,
+                                15,
+                                Projectile::calculate_direction(
+                                    self.x + (self.size_x / 2) as f64,
+                                    self.y + (self.size_y / 2) as f64,
+                                    player.x + (player.size_x / 2) as f64,
+                                    player.y + (player.size_y / 2) as f64,
+                                ),
+                                false,
+                            ));
                         } else {
                             self.dir = self.calculate_player_direction(level, player);
                         }

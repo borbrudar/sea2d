@@ -55,6 +55,12 @@ impl Projectile {
         self.hitbox.y = self.y;
     }
 
+    pub fn calculate_direction(start_x : f64, start_y : f64, target_x: f64, target_y: f64) -> f64{
+        let delta_x = target_x - start_x;
+        let delta_y = target_y - start_y;
+        (delta_y / delta_x).atan()
+    }
+
     pub fn draw(
         &self,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
@@ -90,10 +96,12 @@ impl Projectile {
             break;
         }
 
-        for enemy in enemies.iter_mut() {
-            if self.hitbox.intersects(&enemy.hitbox) {
-                enemy.health -= 15; 
-                ret = true;
+        if self.fired_by_player{
+            for enemy in enemies.iter_mut() {
+                if self.hitbox.intersects(&enemy.hitbox) {
+                    enemy.health -= 15; 
+                    ret = true;
+                }
             }
         }
 

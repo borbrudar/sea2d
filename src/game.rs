@@ -457,7 +457,15 @@ impl Game {
             match self.game_state {
                 GameState::Running => {
                     for enemy in &mut enemies {
-                        enemy.update(delta_time, &level, &player, &global_clock);
+                        let prev_size = projectiles.len();
+                        enemy.update(delta_time, &level, &player, &global_clock, &mut projectiles);
+                        if projectiles.len() > prev_size {
+                            // if new projectiles were added, we need to load their textures
+                            projectiles.last_mut().unwrap().load_projectile_texture(
+                                &texture_creator,
+                                &mut texture_map,
+                            );
+                        }
                     }
                     player.update(
                         delta_time,
@@ -484,6 +492,8 @@ impl Game {
                             projectiles.remove(pos);
                         }
                     }
+                    // remove dead enemies
+                    enemies.retain(|enemy| enemy.health > 0);
                 }
                 _ => (),
             }
