@@ -23,7 +23,7 @@ use sdl2::render::Texture;
 use sdl2::render::TextureQuery;
 use sdl2::ttf;
 use std::clone;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::mpsc as mspc;
 
 #[derive(Clone, Copy, Debug)]
@@ -245,6 +245,7 @@ impl Game {
         // enemies
         let mut enemies: Vec<Enemy> = Vec::new();
         enemies.push(Enemy::new(EnemyType::Wizard,&texture_creator, &mut texture_map));
+        
 
         let mut projectiles = Vec::new();
 
@@ -391,8 +392,7 @@ impl Game {
                         y,
                     } => {
                         if mouse_btn == sdl2::mouse::MouseButton::Left {
-                            println!("time clicke {:?}", last_time_clicked);
-                            println!("current time {:?}", std::time::Instant::elapsed(&global_clock).as_secs_f32());
+                            // delay to prevent spam
                             if last_time_clicked + 0.4 < std::time::Instant::elapsed(&global_clock).as_secs_f32() {
                                 last_time_clicked = std::time::Instant::elapsed(&global_clock).as_secs_f32();
                                 
@@ -470,6 +470,9 @@ impl Game {
                     for (_, other_player) in &mut other_players {
                         other_player.animation_data.update(delta_time);
                     }
+                    // update projectiles
+
+
                 }
                 _ => (),
             }

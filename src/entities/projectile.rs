@@ -1,4 +1,4 @@
-use crate::{entities::animated_texture::AnimatedTexture, environment::aabb::AABB};
+use crate::{entities::{animated_texture::AnimatedTexture, enemy::Enemy, player::Player}, environment::{aabb::AABB, level::Level}};
 
 
 
@@ -66,6 +66,13 @@ impl Projectile {
                 self.size as u32,
             )).unwrap();
         }
+    }
+
+    pub fn resolve_collision(&self, level : &Level, enemies : &mut Vec<Enemy>, player : &Player ) -> bool {
+        let mut ret = false;
+
+
+        ret
     }
 
 }
