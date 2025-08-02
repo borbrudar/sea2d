@@ -311,6 +311,7 @@ impl Game {
         let global_clock = std::time::Instant::now();
         let mut current_time = std::time::Instant::now();
         let time_step = 1.0 / 60.0;
+        let mut last_time_clicked = 0.0;
 
         let mut hud = Hud::new(
             vec![pavza, resume],
@@ -390,17 +391,23 @@ impl Game {
                         y,
                     } => {
                         if mouse_btn == sdl2::mouse::MouseButton::Left {
-                            projectiles.push(Projectile::new(
-                                SCREEN_WIDTH as f64 / 2.0,
-                                SCREEN_HEIGHT as f64 / 2.0,
-                                15,
-                                x as f64,
-                                y as f64,
-                            ));
-                            projectiles.last_mut().unwrap().load_projectile_texture(
-                                &texture_creator,
-                                &mut texture_map,
-                            );
+                            println!("time clicke {:?}", last_time_clicked);
+                            println!("current time {:?}", std::time::Instant::elapsed(&global_clock).as_secs_f32());
+                            if last_time_clicked + 0.4 < std::time::Instant::elapsed(&global_clock).as_secs_f32() {
+                                last_time_clicked = std::time::Instant::elapsed(&global_clock).as_secs_f32();
+                                
+                                projectiles.push(Projectile::new(
+                                    SCREEN_WIDTH as f64 / 2.0,
+                                    SCREEN_HEIGHT as f64 / 2.0,
+                                    15,
+                                    x as f64,
+                                    y as f64,
+                                ));
+                                projectiles.last_mut().unwrap().load_projectile_texture(
+                                    &texture_creator,
+                                    &mut texture_map,
+                                );
+                            }
                         }
 
                         for but in &mut hud.buttons {
@@ -416,8 +423,6 @@ impl Game {
                     _ => {}
                 }
             }
-
-            //println!("player animation {:?}", player.animation_data.current_animation);
 
             // check if we need to load a new level
             if let Some(exit) = player.reached_end.clone() {
