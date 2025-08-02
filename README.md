@@ -9,7 +9,7 @@ Ne pozabite imeti nameščenih razvojnih različic (devel) `SDL2` in `SDL2_image
 Uporabniki Arch Linuxa: `sudo pacman -S sdl2-compat sdl2_image`
 Uporabniki Windows: razpakirajte datoteke v mapi `windows_dependencies` in kopirajte datoteke .lib in .dll za SDL2 in SDL2_image v direktorij, kjer je `Cargo.toml`, pa tudi v mapo `target/`.
 
-Uporabniki Maca – srečno. (Žal, poskušal sem urediti Dockerfile za ta namen, ampak potrebuje GUI passthrough, tako da je več težav kot je vredno.)
+Uporabniki Maca – srečno. (Žal, poskušal sem urediti Dockerfile za ta namen, ampak potrebuje GUI passthrough, tako da je več težav kot je vredno. Sicer se prevede, tako da neustrašni lahko poskusijo tudi na ta način, Dockerfile je priložen. Ukaza sta `docker build -t sea2d-image .` in pa `docker run --rm sea2d-image`.)
 
 
 ## Opis projekta:
