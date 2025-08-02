@@ -58,7 +58,7 @@ impl Projectile {
     pub fn calculate_direction(start_x : f64, start_y : f64, target_x: f64, target_y: f64) -> f64{
         let delta_x = target_x - start_x;
         let delta_y = target_y - start_y;
-        (delta_y / delta_x).atan()
+        delta_y.atan2(delta_x) // atan2 handles the quadrant correctly
     }
 
     pub fn draw(
