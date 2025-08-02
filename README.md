@@ -1,31 +1,23 @@
 # sea2d
-Project authors: Bor Brudar, Lara Velkavrh
+Avtorja projekta: Bor Brudar, Lara Velkavrh
 
-## Running instructions 
+## Navodila za uporabo 
 
-The program can be run as either the server, the client, or both at the same time by using `cargo r server`, `cargo r client` or just 
-`cargo r` respectively. The client command takes an optional argument, namely the IP address and the port it should try to connect to, 
-separated by a colon, e.g. `cargo r client 127.0.0.1:6000`. By running on localhost the default port is 6000. Remember to have devel versions
-of sdl2 and sdl2_image installed on your system or you won't be able to compile the program. Arch users: `sudo pacman -S sdl2-compat sdl2_image`,
-windows users unzip the files provided in `windows_dependencies` and copy
-sdl2 .lib/.dll as well as sdl2_image .lib/.dll to `Cargo.toml` directory, as well as `target/` directory.
-Mac users figure it out :p
+Program lahko zaženete kot strežnik, odjemalec ali oboje hkrati z ukazi `cargo r server`, `cargo r client` ali preprosto `cargo r`, glede na primer. Ukaz za odjemalca sprejme neobvezen argument – IP naslov in port, na katera naj se poskusi povezati, ločena z dvopičjem, npr. `cargo r client 127.0.0.1:6000`. Če poganjate lokalno (localhost), je privzet port 6000.
 
+Ne pozabite imeti nameščenih razvojnih različic `SDL2` in `SDL2_image`, sicer programa ne boste mogli prevesti.
+Uporabniki Arch Linuxa: `sudo pacman -S sdl2-compat sdl2_image`
+Uporabniki Windows: razpakirajte datoteke v mapi `windows_dependencies` in kopirajte datoteke .lib in .dll za SDL2 in SDL2_image v direktorij, kjer je `Cargo.toml`, pa tudi v mapo `target/`.
 
+Uporabniki Maca – srečno. 
 
-## General description:
-
-A 2D multiplayer (2-player) computer game:
-- level based game with puzzle solving,
-- pixel art aesthetics.
+Teste poženete z `cargo t`, dokumentacija pa se prevede z ukazom `cargo doc`.
+Obe poženete z vrha direktorija.
 
 
+## Opis projekta:
 
-### Storyline:
-You are one of the scientists on a research trip to the depths of the ocean when suddenly your submarine stops operating. 
+2D igra v pixel-art stilu. Spustite se čim globlje v zemljo in premagajte nasprotnike. Vsaka stopnja je najključno generirana z uporabo algoritma WFC (wave-function collapse), zato je vsaka izkušnja unikatna. Multiplayer podpora je žal v povojih, kjer bo tudi ostala. 
 
-It is your and your partner's job to navigate your way out of the malfunctioned vessel, escape dangers of the vast ocean and find a way back to civilization after being standed on a tropical island. 
-
-And perhaps even solve some ancient mysteries in the process...
 
 ![Current state of the game](resources/screenshots/image.png)
