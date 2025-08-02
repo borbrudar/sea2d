@@ -1,17 +1,16 @@
 //use sdl2::{event::Event, keyboard::Keycode};
 
-
-pub struct Camera{
-    pub x : f64,
-    pub y : f64,
-    pub width : u32,
-    pub height : u32,
+pub struct Camera {
+    pub x: f64,
+    pub y: f64,
+    pub width: u32,
+    pub height: u32,
     //zoom : f32,
 }
 
-impl Camera{
-    pub fn new(x : f64, y : f64, width : u32, height : u32) -> Camera{
-        Camera{
+impl Camera {
+    pub fn new(x: f64, y: f64, width: u32, height: u32) -> Camera {
+        Camera {
             x,
             y,
             width,
@@ -23,7 +22,7 @@ impl Camera{
     pub fn apply_zoom(&self, size: f32) -> f32 {
         size * self.zoom
     }
-    
+
     pub fn adjust_zoom(&mut self, delta: f32) {
         self.zoom += delta;
         // Clamp zoom level to a reasonable range

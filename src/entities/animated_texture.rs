@@ -34,7 +34,7 @@ impl<'a> AnimatedTexture {
         self.current_time += dt;
         if self.current_time >= self.frame_time {
             self.current_time = 0.0;
-            let dir = self.current_frame as i32 - self.previous_frame as i32;
+            let dir = self.current_frame - self.previous_frame;
             self.previous_frame = self.current_frame;
             if dir != 0 {
                 self.current_frame += dir;
@@ -81,7 +81,7 @@ impl<'a> AnimatedTexture {
     ) {
         for i in 0..frame_count {
             let mut frame = TextureData::new(path.clone());
-            frame.x = start_x as u32 + (i * width ) as u32;
+            frame.x = start_x as u32 + (i * width);
             frame.y = start_y as u32;
             frame.width = width;
             frame.height = height;

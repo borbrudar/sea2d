@@ -106,11 +106,11 @@ impl<'a> Button<'a> {
 
     pub fn handle_event(&mut self, event: &Event, game_state: &mut GameState) -> bool {
         if let Event::MouseButtonDown {
-            timestamp,
-            window_id,
-            which,
-            mouse_btn,
-            clicks,
+            timestamp: _,
+            window_id: _,
+            which: _,
+            mouse_btn: _,
+            clicks: _,
             x,
             y,
         } = event
@@ -125,29 +125,29 @@ impl<'a> Button<'a> {
                 return true;
             }
         }
-        return false;
+        false
     }
 }
 
 //health bar
 pub struct HealthBar {
-    offset: i32,
+    _offset: i32,
     width: i32,
     height: i32,
     x: i32,
     y: i32,
-    pub health: i32,
+    pub _health: i32,
 }
 
 impl HealthBar {
     pub fn new() -> HealthBar {
         HealthBar {
-            offset: 20,
+            _offset: 20,
             width: 200,
             height: 30,
             x: (SCREEN_WIDTH - 205) as i32,
             y: (SCREEN_HEIGHT - 45) as i32,
-            health: 100,
+            _health: 100,
         }
     }
 
@@ -296,17 +296,14 @@ impl<'a> Dropdown<'a> {
     }
 
     pub fn handle_event(&mut self, event: &Event) {
-        match event {
-            Event::MouseMotion { x, y, .. } => {
-                let mouse_point = Point::new(*x, *y);
-                let inside_trigger = self.trigger.position.contains_point(mouse_point);
-                let inside_items = self
-                    .items
-                    .iter()
-                    .any(|item| item.position.contains_point(mouse_point));
-                self.visible = inside_trigger || inside_items;
-            }
-            _ => {}
+        if let Event::MouseMotion { x, y, .. } = event {
+            let mouse_point = Point::new(*x, *y);
+            let inside_trigger = self.trigger.position.contains_point(mouse_point);
+            let inside_items = self
+                .items
+                .iter()
+                .any(|item| item.position.contains_point(mouse_point));
+            self.visible = inside_trigger || inside_items;
         }
     }
 }

@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, PartialEq, Eq,Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum TileType {
     Grass,
     Water,
@@ -12,7 +12,7 @@ pub enum TileType {
     Exit(ExitTile),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq,Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExitTile {
     pub next_level: String,
 }

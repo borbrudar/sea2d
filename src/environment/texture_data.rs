@@ -27,8 +27,8 @@ impl<'a> TextureData {
             path,
             width,
             height,
-            x: x,
-            y: y,
+            x,
+            y,
         }
     }
 

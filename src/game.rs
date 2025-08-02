@@ -1,20 +1,11 @@
 use crate::display::button::{Badge, Button, ButtonAction, Dropdown, HealthBar};
-use crate::display::hud::Hud;
-use crate::display::mainmenu::MainMenu;
-use crate::entities::{
-    animated_texture::{AnimatedTexture, AnimationType},
-    camera::Camera,
-    enemy::Enemy,
-    player::Player,
-};
+use crate::display::{hud::Hud, mainmenu::MainMenu};
+use crate::entities::enemy::EnemyType;
+use crate::entities::projectile::Projectile;
+use crate::entities::{camera::Camera, enemy::Enemy, player::Player};
 use crate::environment::{level::Level, texture_data::TextureData};
 use crate::networking::{packet::Packet, player_packets::*, shared::*};
-use crate::wfc;
-use sdl2::audio::AudioDevice;
 use sdl2::image::{self};
-use sdl2::mixer;
-use sdl2::mixer::Chunk;
-use sdl2::mixer::Music;
 use sdl2::pixels::Color;
 use sdl2::rect;
 use sdl2::rect::Rect;
@@ -63,8 +54,8 @@ impl Game {
         &self,
         player: &mut Player,
         other_players: &mut HashMap<u64, Player>,
-        texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>,
-        texture_map: &mut HashMap<String, Texture<'a>>,
+        _texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>,
+        _texture_map: &mut HashMap<String, Texture<'a>>,
     ) {
         match self.packet_receiver.try_recv() {
             Ok(packet) => {
@@ -176,8 +167,8 @@ impl Game {
 
     // main game loop
     pub fn run(&mut self) {
-        let initial_level = "resources/levels/level1/level1_1.png".to_string();
-        //let initial_level = "resources/levels/autotiler_2.png".to_string();
+        let initial_level = "resources/levels/level1_1.png".to_string();
+
         // initalize sdl2 stuff
         let sdl_context = sdl2::init().unwrap();
         let video_subsystem = sdl_context.video().unwrap();
@@ -226,88 +217,7 @@ impl Game {
 
         // player setup
         let mut player = Player::new(1_000_000);
-
-        player.animation_data.front = Some(AnimatedTexture::new(1.0 / 10.));
-        player
-            .animation_data
-            .front
-            .as_mut()
-            .unwrap()
-            .load_animation(
-                "resources/player_animation/pretnar_spritesheet.png".to_string(),
-                0,
-                0,
-                32,
-                48,
-                5,
-                &texture_creator,
-                &mut texture_map,
-            );
-        player.animation_data.right = Some(AnimatedTexture::new(1.0 / 10.));
-        player
-            .animation_data
-            .right
-            .as_mut()
-            .unwrap()
-            .load_animation(
-                "resources/player_animation/pretnar_spritesheet.png".to_string(),
-                0,
-                48,
-                32,
-                48,
-                5,
-                &texture_creator,
-                &mut texture_map,
-            );
-        player.animation_data.left = Some(AnimatedTexture::new(1.0 / 10.));
-        player.animation_data.left.as_mut().unwrap().load_animation(
-            "resources/player_animation/pretnar_spritesheet.png".to_string(),
-            0,
-            96,
-            32,
-            48,
-            5,
-            &texture_creator,
-            &mut texture_map,
-        );
-        player.animation_data.back = Some(AnimatedTexture::new(1.0 / 10.));
-        player.animation_data.back.as_mut().unwrap().load_animation(
-            "resources/player_animation/pretnar_spritesheet.png".to_string(),
-            0,
-            144,
-            32,
-            48,
-            5,
-            &texture_creator,
-            &mut texture_map,
-        );
-        player.animation_data.default = Some(AnimatedTexture::new(1.0));
-        player
-            .animation_data
-            .default
-            .as_mut()
-            .unwrap()
-            .load_animation(
-                "resources/player_animation/pretnar_spritesheet.png".to_string(),
-                0,
-                0,
-                32,
-                48,
-                1,
-                &texture_creator,
-                &mut texture_map,
-            );
-        player.animation_data.idle = Some(AnimatedTexture::new(1.0 / 3.0));
-        player.animation_data.idle.as_mut().unwrap().load_animation(
-            "resources/player_animation/pretnar_spritesheet.png".to_string(),
-            0,
-            192,
-            32,
-            48,
-            5,
-            &texture_creator,
-            &mut texture_map,
-        );
+        player.load_player_texture(&texture_creator, &mut texture_map);
 
         player.x = level.player_spawn.0 as f64;
         player.y = level.player_spawn.1 as f64;
@@ -325,31 +235,13 @@ impl Game {
 
         // enemies
         let mut enemies: Vec<Enemy> = Vec::new();
-        enemies.push(Enemy::new());
-        enemies.last_mut().unwrap().animation_data = Some(AnimatedTexture::new(1.0 / 6.));
-        enemies
-            .last_mut()
-            .unwrap()
-            .animation_data
-            .as_mut()
-            .unwrap()
-            .load_animation(
-                "resources/enemies/slime.png".to_string(),
-                0,
-                0,
-                16,
-                16,
-                3,
-                &texture_creator,
-                &mut texture_map,
-            );
-        enemies
-            .last_mut()
-            .unwrap()
-            .animation_data
-            .as_mut()
-            .unwrap()
-            .animation_type = AnimationType::PingPong;
+        enemies.push(Enemy::new(
+            EnemyType::Wizard,
+            &texture_creator,
+            &mut texture_map,
+        ));
+
+        let mut projectiles = Vec::new();
 
         // hud
         let pavza = Button::new(
@@ -415,6 +307,7 @@ impl Game {
         let global_clock = std::time::Instant::now();
         let mut current_time = std::time::Instant::now();
         let time_step = 1.0 / 60.0;
+        let mut last_time_clicked = 0.0;
 
         let mut hud = Hud::new(
             vec![pavza, resume],
@@ -462,8 +355,8 @@ impl Game {
                     sdl2::event::Event::KeyDown {
                         keycode: Some(sdl2::keyboard::Keycode::R),
                         ..
-                    } => match self.game_state {
-                        GameState::GameOver => {
+                    } => {
+                        if let GameState::GameOver = self.game_state {
                             self.game_state = GameState::Running;
                             player.health = 100;
                             player.pressed_down = false;
@@ -471,8 +364,7 @@ impl Game {
                             player.pressed_right = false;
                             player.pressed_up = false;
                         }
-                        _ => (),
-                    },
+                    }
                     sdl2::event::Event::KeyDown {
                         keycode: Some(sdl2::keyboard::Keycode::T),
                         ..
@@ -487,14 +379,37 @@ impl Game {
                     }
                     //klik z miško
                     sdl2::event::Event::MouseButtonDown {
-                        timestamp,
-                        window_id,
-                        which,
+                        timestamp: _,
+                        window_id: _,
+                        which: _,
                         mouse_btn,
-                        clicks,
+                        clicks: _,
                         x,
                         y,
                     } => {
+                        if mouse_btn == sdl2::mouse::MouseButton::Left {
+                            // delay to prevent spam
+                            if last_time_clicked + 0.25
+                                < std::time::Instant::elapsed(&global_clock).as_secs_f32()
+                            {
+                                last_time_clicked =
+                                    std::time::Instant::elapsed(&global_clock).as_secs_f32();
+
+                                projectiles.push(Projectile::new(
+                                    player.x + player.size_x as f64 / 2.0,
+                                    player.y + player.size_y as f64 / 2.0,
+                                    15,
+                                    ((y - (SCREEN_HEIGHT / 2) as i32) as f64)
+                                        .atan2((x - (SCREEN_WIDTH / 2) as i32) as f64),
+                                    true,
+                                ));
+                                projectiles
+                                    .last_mut()
+                                    .unwrap()
+                                    .load_projectile_texture(&texture_creator, &mut texture_map);
+                            }
+                        }
+
                         for but in &mut hud.buttons {
                             but.handle_event(&event, &mut self.game_state);
                         }
@@ -502,15 +417,12 @@ impl Game {
                             item.handle_event(&event, &mut self.game_state);
                         }
                     }
-                    sdl2::event::Event::MouseMotion { x, y, .. } => {
+                    sdl2::event::Event::MouseMotion { .. } => {
                         hud.dropdown.handle_event(&event);
                     }
-
                     _ => {}
                 }
             }
-
-            //println!("player animation {:?}", player.animation_data.current_animation);
 
             // check if we need to load a new level
             if let Some(exit) = player.reached_end.clone() {
@@ -542,24 +454,48 @@ impl Game {
             //  while frame_time > std::time::Duration::from_secs_f64(0.0){
             let delta_time = f64::min(frame_time.as_secs_f64(), time_step);
 
-            match self.game_state {
-                GameState::Running => {
-                    for enemy in &mut enemies {
-                        enemy.update(delta_time, &level, &player, &global_clock);
-                    }
-                    player.update(
-                        delta_time,
-                        &self.packet_sender,
-                        &level,
-                        &mut camera,
-                        &enemies,
-                        &global_clock,
-                    );
-                    for (_, other_player) in &mut other_players {
-                        other_player.animation_data.update(delta_time);
+            if let GameState::Running = self.game_state {
+                for enemy in &mut enemies {
+                    let prev_size = projectiles.len();
+                    enemy.update(delta_time, &level, &player, &global_clock, &mut projectiles);
+                    if projectiles.len() > prev_size {
+                        // if new projectiles were added, we need to load their textures
+                        projectiles
+                            .last_mut()
+                            .unwrap()
+                            .load_projectile_texture(&texture_creator, &mut texture_map);
                     }
                 }
-                _ => (),
+                player.update(
+                    delta_time,
+                    &self.packet_sender,
+                    &level,
+                    &mut camera,
+                    &enemies,
+                    &global_clock,
+                );
+                for other_player in other_players.values_mut() {
+                    other_player.animation_data.update(delta_time);
+                }
+                // update projectiles
+                let mut remove_projectiles = Vec::new();
+                for projectile in &mut projectiles {
+                    projectile.update(delta_time);
+                    if projectile.resolve_collision(&level, &mut enemies, &mut player) {
+                        // remove projectile if it collides with something
+                        remove_projectiles.push(projectile.clone());
+                    }
+                }
+                for projectile in &remove_projectiles {
+                    if let Some(pos) = projectiles
+                        .iter()
+                        .position(|p| p.x == projectile.x && p.y == projectile.y)
+                    {
+                        projectiles.remove(pos);
+                    }
+                }
+                // remove dead enemies
+                enemies.retain(|enemy| enemy.health > 0);
             }
 
             frame_time -= std::time::Duration::from_secs_f64(delta_time);
@@ -594,8 +530,14 @@ impl Game {
             for enemy in &enemies {
                 enemy.draw(&mut canvas, &texture_map, &camera);
             }
+
+            // draw projectiles
+            for projectile in &mut projectiles {
+                projectile.draw(&mut canvas, &texture_map, &camera);
+            }
+
             //draw other player if on the same level
-            for (_, other_player) in &mut other_players {
+            for other_player in other_players.values_mut() {
                 if other_player.current_level == player.current_level {
                     other_player.draw(&mut canvas, &texture_map, &camera, &global_clock);
                 }
@@ -614,6 +556,9 @@ impl Game {
                     .draw(&mut canvas, player_hitbox_color, &camera);
                 for enemy in &enemies {
                     enemy.hitbox.draw(&mut canvas, Color::RED, &camera);
+                }
+                for projectile in &projectiles {
+                    projectile.hitbox.draw(&mut canvas, Color::RED, &camera);
                 }
             }
 
@@ -636,31 +581,6 @@ impl Game {
                     canvas
                         .fill_rect(rect::Rect::new(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT))
                         .unwrap();
-                }
-                _ => (),
-            }
-            match self.game_state {
-                GameState::GameOver => {
-                    let color = Color::RGB(255, 255, 255);
-                    let surface = font.render("Game Joever").blended(color).unwrap(); // Create a blended surface (anti-aliased)
-
-                    let texture = texture_creator
-                        .create_texture_from_surface(&surface)
-                        .unwrap();
-
-                    // Get the size of the texture
-                    let TextureQuery { width, height, .. } = texture.query();
-
-                    // Set up the destination rectangle (where the text will appear)
-                    let dest_rect = Rect::new(
-                        (SCREEN_WIDTH / 2) as i32 - 200,
-                        (SCREEN_HEIGHT / 2) as i32 - 30,
-                        width,
-                        height,
-                    ); // Position at (100, 100)
-
-                    // Clear the screen and draw the texture
-                    canvas.copy(&texture, None, Some(dest_rect)).unwrap();
                 }
                 GameState::MainMenu => {
                     let mut main_menu = MainMenu::new("Game needs a new title".to_string());
@@ -686,6 +606,28 @@ impl Game {
                 }
                 _ => (),
             }
+            if let GameState::GameOver = self.game_state {
+                let color = Color::RGB(255, 255, 255);
+                let surface = font.render("Game Joever").blended(color).unwrap(); // Create a blended surface (anti-aliased)
+
+                let texture = texture_creator
+                    .create_texture_from_surface(&surface)
+                    .unwrap();
+
+                // Get the size of the texture
+                let TextureQuery { width, height, .. } = texture.query();
+
+                // Set up the destination rectangle (where the text will appear)
+                let dest_rect = Rect::new(
+                    (SCREEN_WIDTH / 2) as i32 - 200,
+                    (SCREEN_HEIGHT / 2) as i32 - 30,
+                    width,
+                    height,
+                ); // Position at (100, 100)
+
+                // Clear the screen and draw the texture
+                canvas.copy(&texture, None, Some(dest_rect)).unwrap();
+            };
 
             canvas.present();
 

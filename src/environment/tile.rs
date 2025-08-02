@@ -1,6 +1,6 @@
+use crate::entities::camera::Camera;
 use crate::environment::{aabb::AABB, texture_data::TextureData, tile_type::TileType};
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
-use crate::entities::camera::Camera;
 
 #[derive(Debug, Clone)]
 pub struct Tile {
@@ -8,24 +8,18 @@ pub struct Tile {
     pub y: i32,
     pub size: u32,
     pub texture_data: Option<TextureData>,
-    pub _tile_type: TileType,
+    pub tile_type: TileType,
     pub bounding_box: Option<AABB>,
 }
 
 impl Tile {
-    pub fn new(
-        x: i32,
-        y: i32,
-        size: u32,
-        _tile_type: TileType,
-        bounding_box: Option<AABB>,
-    ) -> Tile {
+    pub fn new(x: i32, y: i32, size: u32, tile_type: TileType, bounding_box: Option<AABB>) -> Tile {
         Tile {
             x,
             y,
             size,
             texture_data: None,
-            _tile_type,
+            tile_type,
             bounding_box,
         }
     }
@@ -58,19 +52,16 @@ impl Tile {
                     scaled_w,
                     scaled_h,
                 );
-                match res {
-                    Err(..) => {
-                        canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
-                        canvas
-                            .fill_rect(sdl2::rect::Rect::new(
-                                (self.x as f64 - camera.x) as i32,
-                                (self.y as f64 - camera.y) as i32,
-                                scaled_w,
-                                scaled_h,
-                            ))
-                            .unwrap();
-                    }
-                    Ok(..) => (),
+                if res.is_err() {
+                    canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
+                    canvas
+                        .fill_rect(sdl2::rect::Rect::new(
+                            (self.x as f64 - camera.x) as i32,
+                            (self.y as f64 - camera.y) as i32,
+                            scaled_w,
+                            scaled_h,
+                        ))
+                        .unwrap();
                 }
             }
             None => {

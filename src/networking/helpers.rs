@@ -1,4 +1,3 @@
-
 use std::io::{ErrorKind, Read, Write};
 use std::net::TcpStream;
 
@@ -74,53 +73,35 @@ pub fn deserialize_to_packet(buf: Vec<u8>) -> Option<Packet> {
 
     match packet_int {
         Ok(packet_int) => {
-            match packet_int.try_deserialize::<ClientID>() {
-                Some(packet) => return Some(Packet::ClientIDPacket(packet)),
-                None => (),
+            if let Some(packet) = packet_int.try_deserialize::<ClientID>() { return Some(Packet::ClientIDPacket(packet)) };
+
+            if let Some(packet) = packet_int.try_deserialize::<PlayerAnimation>() {
+                return Some(Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(
+                    packet,
+                )));
             };
 
-            match packet_int.try_deserialize::<PlayerAnimation>() {
-                Some(packet) => {
-                    return Some(Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(
-                        packet,
-                    )));
-                }
-                None => (),
+            if let Some(packet) = packet_int.try_deserialize::<PlayerPosition>() {
+                return Some(Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(
+                    packet,
+                )));
             };
 
-            match packet_int.try_deserialize::<PlayerPosition>() {
-                Some(packet) => {
-                    return Some(Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(
-                        packet,
-                    )));
-                }
-                None => (),
+            if let Some(packet) = packet_int.try_deserialize::<PlayerWelcome>() {
+                return Some(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(
+                    packet,
+                )));
             };
 
-            match packet_int.try_deserialize::<PlayerWelcome>() {
-                Some(packet) => {
-                    return Some(Packet::PlayerPacket(PlayerPacket::PlayerWelcomePacket(
-                        packet,
-                    )));
-                }
-                None => (),
+            if let Some(packet) = packet_int.try_deserialize::<PlayerDisconnect>() {
+                return Some(Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(
+                    packet,
+                )));
             };
-
-            match packet_int.try_deserialize::<PlayerDisconnect>() {
-                Some(packet) => {
-                    return Some(Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(
-                        packet,
-                    )));
-                }
-                None => (),
-            };
-            match packet_int.try_deserialize::<PlayerLevel>() {
-                Some(packet) => {
-                    return Some(Packet::PlayerPacket(PlayerPacket::PlayerLevelPacket(
-                        packet,
-                    )));
-                }
-                None => (),
+            if let Some(packet) = packet_int.try_deserialize::<PlayerLevel>() {
+                return Some(Packet::PlayerPacket(PlayerPacket::PlayerLevelPacket(
+                    packet,
+                )));
             }
             None
         }
