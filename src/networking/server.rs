@@ -21,7 +21,7 @@ fn new_client_id(set: &HashSet<u64>) -> u64 {
 
 fn handle_player_send(
     packet: PlayerPacket,
-    player_id: u64,
+    _player_id: u64,
     players: &mut HashMap<u64, Player>,
 ) -> Packet {
     match packet {

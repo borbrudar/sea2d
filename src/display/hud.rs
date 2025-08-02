@@ -1,6 +1,5 @@
 use crate::display::button::{self, HealthBar};
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
-use crate::wfc;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::TextureCreator;

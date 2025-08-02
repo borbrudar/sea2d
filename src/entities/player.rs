@@ -1,18 +1,12 @@
-use std::time::Instant;
-
 use crate::entities::animation_data::{AnimationData, AnimationState};
 use crate::entities::{animated_texture::AnimatedTexture, camera::Camera, enemy::Enemy};
 use crate::environment::{aabb::AABB, level::Level, tile_type::ExitTile};
+use crate::networking::packet::Packet;
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
-use crate::networking::{
-    packet::Packet,
-    player_packets::{PlayerPacket, PlayerPosition},
-};
-use bincode::de;
 use sdl2::render::Texture;
 use sdl2::render::{Canvas, TextureCreator};
 use sdl2::video::{Window, WindowContext};
-use serde::{Deserialize, Serialize};
+use std::time::Instant;
 
 pub enum PlayerHitState {
     Invincible,
@@ -220,7 +214,7 @@ impl Player {
     pub fn update(
         &mut self,
         dt: f64,
-        tx: &std::sync::mpsc::Sender<Packet>,
+        _tx: &std::sync::mpsc::Sender<Packet>,
         level: &Level,
         camera: &mut Camera,
         enemies: &Vec<Enemy>,

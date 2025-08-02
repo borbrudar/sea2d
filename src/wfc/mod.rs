@@ -1,7 +1,7 @@
 use crate::environment::tile_type::TileType;
 use crate::game::find_sdl_gl_driver;
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
-use rand::{prelude::IndexedRandom, rng, seq::SliceRandom};
+use rand::{prelude::IndexedRandom, rng};
 use sdl2::{pixels::Color, rect::Rect, render::Canvas, video::Window};
 
 const TILE_SIZE: usize = 32;
@@ -199,7 +199,7 @@ pub fn run_wfc() {
             ],
         },
     ];
-    let mut wfc_state = WFCState::new(tileset);
+    let wfc_state = WFCState::new(tileset);
 
     let mut event_pump = sdl_context.event_pump().unwrap();
     'running: loop {

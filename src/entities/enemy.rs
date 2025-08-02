@@ -13,10 +13,7 @@ use crate::{
         point::Point,
         projectile::Projectile,
     },
-    environment::{
-        aabb::AABB,
-        level::{self, Level},
-    },
+    environment::{aabb::AABB, level::Level},
 };
 use std::{
     collections::{HashMap, VecDeque},

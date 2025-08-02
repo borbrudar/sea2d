@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::entities::{animated_texture::AnimatedTexture, animation_data::AnimationData};
+use crate::entities::animation_data::AnimationData;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum PlayerPacket {

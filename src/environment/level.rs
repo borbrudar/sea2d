@@ -1,6 +1,5 @@
 use crate::environment::autotiler::TileSetType;
 use ::image::RgbaImage;
-use image::Rgba;
 use sdl2::render::{Texture, TextureCreator};
 use std::{collections::HashMap, io::BufRead};
 

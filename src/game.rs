@@ -1,29 +1,18 @@
 use crate::display::button::{Badge, Button, ButtonAction, Dropdown, HealthBar};
 use crate::display::hud::Hud;
 use crate::entities::enemy::EnemyType;
-use crate::entities::projectile::{self, Projectile};
-use crate::entities::{
-    animated_texture::{AnimatedTexture, AnimationType},
-    camera::Camera,
-    enemy::Enemy,
-    player::Player,
-};
+use crate::entities::projectile::Projectile;
+use crate::entities::{camera::Camera, enemy::Enemy, player::Player};
 use crate::environment::{level::Level, texture_data::TextureData};
 use crate::networking::{packet::Packet, player_packets::*, shared::*};
-use crate::wfc;
-use sdl2::audio::AudioDevice;
 use sdl2::image::{self};
-use sdl2::mixer;
-use sdl2::mixer::Chunk;
-use sdl2::mixer::Music;
 use sdl2::pixels::Color;
 use sdl2::rect;
 use sdl2::rect::Rect;
 use sdl2::render::Texture;
 use sdl2::render::TextureQuery;
 use sdl2::ttf;
-use std::clone;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::sync::mpsc as mspc;
 
 #[derive(Clone, Copy, Debug)]
@@ -64,8 +53,8 @@ impl Game {
         &self,
         player: &mut Player,
         other_players: &mut HashMap<u64, Player>,
-        texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>,
-        texture_map: &mut HashMap<String, Texture<'a>>,
+        _texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>,
+        _texture_map: &mut HashMap<String, Texture<'a>>,
     ) {
         match self.packet_receiver.try_recv() {
             Ok(packet) => {
@@ -387,11 +376,11 @@ impl Game {
                     }
                     //klik z miško
                     sdl2::event::Event::MouseButtonDown {
-                        timestamp,
-                        window_id,
-                        which,
+                        timestamp: _,
+                        window_id: _,
+                        which: _,
                         mouse_btn,
-                        clicks,
+                        clicks: _,
                         x,
                         y,
                     } => {
@@ -425,7 +414,7 @@ impl Game {
                             item.handle_event(&event, &mut self.game_state);
                         }
                     }
-                    sdl2::event::Event::MouseMotion { x, y, .. } => {
+                    sdl2::event::Event::MouseMotion { .. } => {
                         hud.dropdown.handle_event(&event);
                     }
                     _ => {}

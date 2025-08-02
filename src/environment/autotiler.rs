@@ -6,10 +6,10 @@ const TILE_SIZE: u32 = 16;
 
 #[derive(Hash)]
 pub enum TileSetType {
-    Simple,       // 1 tile
-    Complex,      // 3x3
-    Full,         // 47
-    FullVariants, // se variacije
+    Simple,        // 1 tile
+    _Complex,      // 3x3
+    Full,          // 47
+    _FullVariants, // se variacije
 }
 
 pub struct Autotiler {
@@ -49,7 +49,7 @@ impl Autotiler {
         if let Some((tile_set_type, path)) = self.tiles_info.get(&tile_type) {
             match tile_set_type {
                 TileSetType::Simple => Some(TextureData::new(path.clone())),
-                TileSetType::Complex => {
+                TileSetType::_Complex => {
                     if check([2, 0, 2, 0, 0, 1, 2, 1, 2], neighbours) {
                         return Some(TextureData::new_full(
                             path.clone(),
@@ -615,7 +615,7 @@ impl Autotiler {
 
                     Some(TextureData::new(path.clone()))
                 }
-                TileSetType::FullVariants => {
+                TileSetType::_FullVariants => {
                     // Logic for full variants
                     Some(TextureData::new(path.clone()))
                 }
