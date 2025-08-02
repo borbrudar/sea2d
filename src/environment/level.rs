@@ -82,6 +82,41 @@ impl<'a> Level {
             TileSetType::Simple,
             "resources/textures/exit.png".to_string(),
         );
+        self.autotiler.add_tile(
+            TileType::Slime,
+            TileSetType::Simple,
+            "resources/textures/swamp_slime.png".to_string(),
+        );
+        self.autotiler.add_tile(
+            TileType::Ice,
+            TileSetType::Simple,
+            "resources/textures/ice.png".to_string(),
+        );
+        self.autotiler.add_tile(
+            TileType::Cactus,
+            TileSetType::Simple,
+            "resources/textures/cactus.png".to_string(),
+        );
+        self.autotiler.add_tile(
+            TileType::Lava,
+            TileSetType::Simple,
+            "resources/textures/lava.png".to_string(),
+        );
+        self.autotiler.add_tile(
+            TileType::Snow,
+            TileSetType::Full,
+            "resources/textures/snow_full.png".to_string(),
+        );
+        self.autotiler.add_tile(
+            TileType::Swamp,
+            TileSetType::Full,
+            "resources/textures/swamp_full.png".to_string(),
+        );
+        self.autotiler.add_tile(
+            TileType::Cave,
+            TileSetType::Full,
+            "resources/textures/cave_full.png".to_string(),
+        );
     }
 
     pub fn load_from_file(
@@ -403,6 +438,154 @@ impl<'a> Level {
                         layer.get_mut(&pos).unwrap().texture_data = Some(TextureData::new(
                             "resources/textures/cogwheel.png".to_string(),
                         ));
+                        layer
+                            .get_mut(&pos)
+                            .unwrap()
+                            .texture_data
+                            .as_mut()
+                            .unwrap()
+                            .load_texture(texture_creator, texture_map);
+                    }
+                    TileType::SWAMP_COLOR => {
+                        layer.insert(
+                            pos,
+                            Tile::new(
+                                pos.x,
+                                pos.y,
+                                self.tile_size as u32,
+                                TileType::Swamp,
+                                default_bounding_box,
+                            ),
+                        );
+                        layer.get_mut(&pos).unwrap().texture_data =
+                            self.autotiler.get_tile_texture(neighbours, TileType::Swamp);
+                        layer
+                            .get_mut(&pos)
+                            .unwrap()
+                            .texture_data
+                            .as_mut()
+                            .unwrap()
+                            .load_texture(texture_creator, texture_map);
+                    }
+                    TileType::SLIME_COLOR => {
+                        layer.insert(
+                            pos,
+                            Tile::new(
+                                pos.x,
+                                pos.y,
+                                self.tile_size as u32,
+                                TileType::Slime,
+                                default_bounding_box,
+                            ),
+                        );
+                        layer.get_mut(&pos).unwrap().texture_data =
+                            self.autotiler.get_tile_texture(neighbours, TileType::Slime);
+                        layer
+                            .get_mut(&pos)
+                            .unwrap()
+                            .texture_data
+                            .as_mut()
+                            .unwrap()
+                            .load_texture(texture_creator, texture_map);
+                    }
+                    TileType::SNOW_COLOR => {
+                        layer.insert(
+                            pos,
+                            Tile::new(
+                                pos.x,
+                                pos.y,
+                                self.tile_size as u32,
+                                TileType::Snow,
+                                default_bounding_box,
+                            ),
+                        );
+                        layer.get_mut(&pos).unwrap().texture_data =
+                            self.autotiler.get_tile_texture(neighbours, TileType::Snow);
+                        layer
+                            .get_mut(&pos)
+                            .unwrap()
+                            .texture_data
+                            .as_mut()
+                            .unwrap()
+                            .load_texture(texture_creator, texture_map);
+                    }
+                    TileType::ICE_COLOR => {
+                        layer.insert(
+                            pos,
+                            Tile::new(
+                                pos.x,
+                                pos.y,
+                                self.tile_size as u32,
+                                TileType::Ice,
+                                default_bounding_box,
+                            ),
+                        );
+                        layer.get_mut(&pos).unwrap().texture_data =
+                            self.autotiler.get_tile_texture(neighbours, TileType::Ice);
+                        layer
+                            .get_mut(&pos)
+                            .unwrap()
+                            .texture_data
+                            .as_mut()
+                            .unwrap()
+                            .load_texture(texture_creator, texture_map);
+                    }
+                    TileType::CACTUS_COLOR => {
+                        layer.insert(
+                            pos,
+                            Tile::new(
+                                pos.x,
+                                pos.y,
+                                self.tile_size as u32,
+                                TileType::Cactus,
+                                default_bounding_box,
+                            ),
+                        );
+                        layer.get_mut(&pos).unwrap().texture_data = self
+                            .autotiler
+                            .get_tile_texture(neighbours, TileType::Cactus);
+                        layer
+                            .get_mut(&pos)
+                            .unwrap()
+                            .texture_data
+                            .as_mut()
+                            .unwrap()
+                            .load_texture(texture_creator, texture_map);
+                    }
+                    TileType::CAVE_COLOR => {
+                        layer.insert(
+                            pos,
+                            Tile::new(
+                                pos.x,
+                                pos.y,
+                                self.tile_size as u32,
+                                TileType::Cave,
+                                default_bounding_box,
+                            ),
+                        );
+                        layer.get_mut(&pos).unwrap().texture_data =
+                            self.autotiler.get_tile_texture(neighbours, TileType::Cave);
+                        layer
+                            .get_mut(&pos)
+                            .unwrap()
+                            .texture_data
+                            .as_mut()
+                            .unwrap()
+                            .load_texture(texture_creator, texture_map);
+                    }
+                    TileType::LAVA_COLOR => {
+                        layer.insert(
+                            pos,
+                            Tile::new(
+                                pos.x,
+                                pos.y,
+                                self.tile_size as u32,
+                                TileType::Lava,
+                                default_bounding_box,
+                            ),
+                        );
+                        layer.get_mut(&pos).unwrap().texture_data =
+                            self.autotiler.get_tile_texture(neighbours, TileType::Lava);
                         layer
                             .get_mut(&pos)
                             .unwrap()

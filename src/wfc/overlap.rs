@@ -428,7 +428,7 @@ pub fn write_exits_file(current_level_name: &str, next_level_path: &str) {
 }
 
 pub fn run_overlap() {
-    for k in 1..2 {
+    for k in 1..=5 {
         let (patterns, frequencies) =
             extract_patterns(&format!("resources/levels/sample_{}.png", k), 3);
 

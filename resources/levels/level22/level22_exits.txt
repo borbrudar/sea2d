@@ -1,0 +1,1 @@
+resources/levels/level23/level23_1.png

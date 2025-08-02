@@ -167,7 +167,7 @@ impl Game {
 
     // main game loop
     pub fn run(&mut self) {
-        let initial_level = "resources/levels/level1_1.png".to_string();
+        let initial_level = "resources/levels/level31/level31_1.png".to_string();
 
         // initalize sdl2 stuff
         let sdl_context = sdl2::init().unwrap();

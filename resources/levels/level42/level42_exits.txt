@@ -1,0 +1,1 @@
+resources/levels/level43/level43_1.png
