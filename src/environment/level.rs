@@ -1,20 +1,25 @@
-use std::{collections::HashMap, io::BufRead};
 use crate::environment::autotiler::TileSetType;
-use image::Rgba;
 use ::image::RgbaImage;
+use image::Rgba;
 use sdl2::render::{Texture, TextureCreator};
+use std::{collections::HashMap, io::BufRead};
 
 use crate::{
-    entities::{camera::Camera, point::Point}, environment::{
-        aabb::AABB, autotiler::Autotiler, texture_data::TextureData, tile::Tile, tile_type::{ExitTile, TileType}
-    }
+    entities::{camera::Camera, point::Point},
+    environment::{
+        aabb::AABB,
+        autotiler::Autotiler,
+        texture_data::TextureData,
+        tile::Tile,
+        tile_type::{ExitTile, TileType},
+    },
 };
 
 pub struct Level {
     pub tiles: Vec<HashMap<Point<i32>, Tile>>, // vector for each layer, hashmap for fast position queries
     pub player_spawn: (i32, i32),
     pub tile_size: i32,
-    pub autotiler : Autotiler,
+    pub autotiler: Autotiler,
 }
 
 impl<'a> Level {
@@ -23,7 +28,7 @@ impl<'a> Level {
             tiles: Vec::new(),
             player_spawn: (0, 0),
             tile_size: 60,
-            autotiler : Autotiler::new(),
+            autotiler: Autotiler::new(),
         }
     }
 
@@ -44,7 +49,7 @@ impl<'a> Level {
             //TileSetType::Simple,
             //"resources/textures/grass.png".to_string(),
             TileSetType::Full,
-            "resources/textures/grass_full.png".to_string(),
+            "resources/textures/grass_full_background.png".to_string(),
         );
         self.autotiler.add_tile(
             TileType::Sand,
@@ -91,17 +96,19 @@ impl<'a> Level {
 
         // load exits file
         let mut exits_strs = path.clone();
-        exits_strs = exits_strs.chars().take(exits_strs.chars().count() - 5).collect();
+        exits_strs = exits_strs
+            .chars()
+            .take(exits_strs.chars().count() - 5)
+            .collect();
         exits_strs.push_str(String::from("exits.txt").as_str());
         let mut exits: Vec<String> = Vec::new();
         if ::std::path::Path::new(&exits_strs).exists() {
-            
             let exit = ::std::fs::File::open(exits_strs).expect("Failed to read exits file");
             let exit = ::std::io::BufReader::new(exit);
             exits = ::std::io::BufReader::new(exit)
-            .lines()
-            .filter_map(Result::ok)
-            .collect();
+                .lines()
+                .filter_map(Result::ok)
+                .collect();
             exits.reverse();
         }
 
@@ -166,16 +173,22 @@ impl<'a> Level {
 
                 let mut neighbours = [[false; 3]; 3]; // 3x3 grid of neighbours, center is the current pixel, y pol x
                 neighbours[1][1] = true; // center pixel is always true (current pixel)
-                for xoff in -1..2{
-                    for yoff in -1..2{
+                for xoff in -1..2 {
+                    for yoff in -1..2 {
                         if xoff == 0 && yoff == 0 {
                             continue; // skip the current pixel
                         }
                         let neighbour_x = (x + xoff) as i32;
                         let neighbour_y = (y + yoff) as i32;
-                        if neighbour_x < width  && neighbour_y < height && neighbour_x >= 0 && neighbour_y >= 0 {
-                            let neighbour_pixel = img.get_pixel(neighbour_x as u32, neighbour_y as u32);
-                            neighbours[(yoff + 1) as usize][(xoff + 1) as usize] = neighbour_pixel == pixel_rgb;
+                        if neighbour_x < width
+                            && neighbour_y < height
+                            && neighbour_x >= 0
+                            && neighbour_y >= 0
+                        {
+                            let neighbour_pixel =
+                                img.get_pixel(neighbour_x as u32, neighbour_y as u32);
+                            neighbours[(yoff + 1) as usize][(xoff + 1) as usize] =
+                                neighbour_pixel == pixel_rgb;
                         }
                     }
                 }
@@ -345,10 +358,21 @@ impl<'a> Level {
                                 pos.x,
                                 pos.y,
                                 self.tile_size as u32,
-                                TileType::Exit(ExitTile { next_level: last }),
+                                TileType::Exit(ExitTile {
+                                    next_level: last.clone(),
+                                }),
                                 exit_bb,
                             ),
                         );
+                        layer.get_mut(&pos).unwrap().texture_data =
+                            Some(TextureData::new("resources/textures/exit.png".to_string()));
+                        layer
+                            .get_mut(&pos)
+                            .unwrap()
+                            .texture_data
+                            .as_mut()
+                            .unwrap()
+                            .load_texture(&texture_creator, texture_map);
                     }
                     TileType::INVENTORY_COLOR => {
                         layer.insert(

@@ -111,6 +111,5 @@ impl<'a> Hud<'a> {
         //narise ddm
         self.dropdown
             .draw(canvas, ttf_context, texture_creator, texture_map);
-
     }
 }

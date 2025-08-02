@@ -1,9 +1,16 @@
 use std::net::{TcpListener, TcpStream};
 
 use crate::{
-    entities::{animation_data::AnimationData}, networking::{helpers::{deserialize_to_packet, prepend_size, serialize_and_send, try_read_tcp, NetworkResult}, packet::{ClientID, Packet}, player_packets::{
-        PlayerAnimation, PlayerDisconnect, PlayerPacket, PlayerPosition, PlayerWelcome,
-    }}
+    entities::animation_data::AnimationData,
+    networking::{
+        helpers::{
+            NetworkResult, deserialize_to_packet, prepend_size, serialize_and_send, try_read_tcp,
+        },
+        packet::{ClientID, Packet},
+        player_packets::{
+            PlayerAnimation, PlayerDisconnect, PlayerPacket, PlayerPosition, PlayerWelcome,
+        },
+    },
 };
 
 #[test]

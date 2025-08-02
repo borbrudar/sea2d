@@ -1,7 +1,7 @@
 pub mod animated_texture;
+pub mod animation_data;
 pub mod camera;
 pub mod enemy;
-pub mod point;
 pub mod player;
-pub mod animation_data;
+pub mod point;
 pub mod projectile;

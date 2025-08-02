@@ -1,15 +1,15 @@
-use crate::display::hud::Hud;
 use crate::display::button::{Badge, Button, ButtonAction, Dropdown, HealthBar};
+use crate::display::hud::Hud;
 use crate::entities::enemy::EnemyType;
 use crate::entities::projectile::{self, Projectile};
-use crate::environment::{level::Level, texture_data::TextureData};
-use crate::networking::{packet::Packet, player_packets::*, shared::*};
 use crate::entities::{
-    player::Player,
     animated_texture::{AnimatedTexture, AnimationType},
     camera::Camera,
     enemy::Enemy,
+    player::Player,
 };
+use crate::environment::{level::Level, texture_data::TextureData};
+use crate::networking::{packet::Packet, player_packets::*, shared::*};
 use crate::wfc;
 use sdl2::audio::AudioDevice;
 use sdl2::image::{self};
@@ -100,8 +100,10 @@ impl Game {
                                 println!("Got a disconnect packet");
                                 other_players.remove(&disconnected.id);
                             }
-                            PlayerPacket::PlayerAnimationPacket(_)=>{
-                                println!("Got an animation packet, but animations are disabled for now");
+                            PlayerPacket::PlayerAnimationPacket(_) => {
+                                println!(
+                                    "Got an animation packet, but animations are disabled for now"
+                                );
                             }
                             //PlayerPacket::PlayerAnimationPacket(animation) => {
                             //    println!("Got an animation packet");
@@ -227,7 +229,6 @@ impl Game {
         let mut player = Player::new(1_000_000);
         player.load_player_texture(&texture_creator, &mut texture_map);
 
-
         player.x = level.player_spawn.0 as f64;
         player.y = level.player_spawn.1 as f64;
         player.hitbox.x = player.x + 16.;
@@ -244,8 +245,11 @@ impl Game {
 
         // enemies
         let mut enemies: Vec<Enemy> = Vec::new();
-        enemies.push(Enemy::new(EnemyType::Wizard,&texture_creator, &mut texture_map));
-        
+        enemies.push(Enemy::new(
+            EnemyType::Wizard,
+            &texture_creator,
+            &mut texture_map,
+        ));
 
         let mut projectiles = Vec::new();
 
@@ -393,20 +397,24 @@ impl Game {
                     } => {
                         if mouse_btn == sdl2::mouse::MouseButton::Left {
                             // delay to prevent spam
-                            if last_time_clicked + 0.25 < std::time::Instant::elapsed(&global_clock).as_secs_f32() {
-                                last_time_clicked = std::time::Instant::elapsed(&global_clock).as_secs_f32();
-                                
+                            if last_time_clicked + 0.25
+                                < std::time::Instant::elapsed(&global_clock).as_secs_f32()
+                            {
+                                last_time_clicked =
+                                    std::time::Instant::elapsed(&global_clock).as_secs_f32();
+
                                 projectiles.push(Projectile::new(
                                     player.x + player.size_x as f64 / 2.0,
                                     player.y + player.size_y as f64 / 2.0,
                                     15,
-                                    ((y - (SCREEN_HEIGHT/2) as i32) as f64).atan2((x - (SCREEN_WIDTH/2) as i32) as f64),
-                                    true
+                                    ((y - (SCREEN_HEIGHT / 2) as i32) as f64)
+                                        .atan2((x - (SCREEN_WIDTH / 2) as i32) as f64),
+                                    true,
                                 ));
-                                projectiles.last_mut().unwrap().load_projectile_texture(
-                                    &texture_creator,
-                                    &mut texture_map,
-                                );
+                                projectiles
+                                    .last_mut()
+                                    .unwrap()
+                                    .load_projectile_texture(&texture_creator, &mut texture_map);
                             }
                         }
 
@@ -461,10 +469,10 @@ impl Game {
                         enemy.update(delta_time, &level, &player, &global_clock, &mut projectiles);
                         if projectiles.len() > prev_size {
                             // if new projectiles were added, we need to load their textures
-                            projectiles.last_mut().unwrap().load_projectile_texture(
-                                &texture_creator,
-                                &mut texture_map,
-                            );
+                            projectiles
+                                .last_mut()
+                                .unwrap()
+                                .load_projectile_texture(&texture_creator, &mut texture_map);
                         }
                     }
                     player.update(
@@ -488,7 +496,10 @@ impl Game {
                         }
                     }
                     for projectile in &remove_projectiles {
-                        if let Some(pos) = projectiles.iter().position(|p| p.x== projectile.x && p.y == projectile.y) {
+                        if let Some(pos) = projectiles
+                            .iter()
+                            .position(|p| p.x == projectile.x && p.y == projectile.y)
+                        {
                             projectiles.remove(pos);
                         }
                     }
@@ -563,8 +574,7 @@ impl Game {
             }
 
             //hud
-            if draw_hud{
-
+            if draw_hud {
                 hud.draw(
                     player.health,
                     &mut canvas,

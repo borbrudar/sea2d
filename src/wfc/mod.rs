@@ -1,5 +1,5 @@
-use crate::game::find_sdl_gl_driver;
 use crate::environment::tile_type::TileType;
+use crate::game::find_sdl_gl_driver;
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use rand::{prelude::IndexedRandom, rng, seq::SliceRandom};
 use sdl2::{pixels::Color, rect::Rect, render::Canvas, video::Window};

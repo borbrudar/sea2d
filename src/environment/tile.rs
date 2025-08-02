@@ -1,6 +1,6 @@
+use crate::entities::camera::Camera;
 use crate::environment::{aabb::AABB, texture_data::TextureData, tile_type::TileType};
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
-use crate::entities::camera::Camera;
 
 #[derive(Debug, Clone)]
 pub struct Tile {
@@ -13,13 +13,7 @@ pub struct Tile {
 }
 
 impl Tile {
-    pub fn new(
-        x: i32,
-        y: i32,
-        size: u32,
-        tile_type: TileType,
-        bounding_box: Option<AABB>,
-    ) -> Tile {
+    pub fn new(x: i32, y: i32, size: u32, tile_type: TileType, bounding_box: Option<AABB>) -> Tile {
         Tile {
             x,
             y,

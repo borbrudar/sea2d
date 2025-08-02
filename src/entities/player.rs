@@ -1,25 +1,23 @@
-
 use std::time::Instant;
 
 use crate::entities::animation_data::{AnimationData, AnimationState};
-use crate::environment::{level::Level, aabb::AABB, tile_type::ExitTile};
+use crate::entities::{animated_texture::AnimatedTexture, camera::Camera, enemy::Enemy};
+use crate::environment::{aabb::AABB, level::Level, tile_type::ExitTile};
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use crate::networking::{
     packet::Packet,
     player_packets::{PlayerPacket, PlayerPosition},
 };
-use crate::entities::{animated_texture::AnimatedTexture, camera::Camera, enemy::Enemy};
 use bincode::de;
-use sdl2::render::{Canvas, TextureCreator};
 use sdl2::render::Texture;
+use sdl2::render::{Canvas, TextureCreator};
 use sdl2::video::{Window, WindowContext};
-use serde::{Serialize,Deserialize};
+use serde::{Deserialize, Serialize};
 
 pub enum PlayerHitState {
     Invincible,
     Vulnerable,
 }
-
 
 pub struct Player {
     pub id: u64,
@@ -44,23 +42,23 @@ pub struct Player {
     pub hit_state: PlayerHitState,
     pub health: i32,
     last_hit_time: f64,
-    last_moved_time : f64,
+    last_moved_time: f64,
     invicibility_blinks: i32,
     last_blink_time: f64,
     pub moved: bool,
 }
 
 impl Player {
-    pub fn new(id : u64) -> Player{
+    pub fn new(id: u64) -> Player {
         Player {
             id: id,
             x: ((SCREEN_WIDTH as i32) / 2) as f64,
             y: ((SCREEN_HEIGHT as i32) / 2) as f64,
             velocity_x: 0.0,
             velocity_y: 0.0,
-            size_x: 36*2,
-            size_y : 48*2,
-            animation_data : AnimationData::new(),
+            size_x: 36 * 2,
+            size_y: 48 * 2,
+            animation_data: AnimationData::new(),
 
             hitbox: AABB::new(
                 ((SCREEN_WIDTH as i32) / 2) as f64,
@@ -82,34 +80,84 @@ impl Player {
             invicibility_blinks: 0,
             last_blink_time: 0.0,
             moved: false,
-            last_moved_time : 0.0,
+            last_moved_time: 0.0,
         }
     }
 
-    pub fn load_player_texture<'a>(&mut self,texture_creator : &'a TextureCreator<WindowContext>, texture_map: &mut std::collections::HashMap<String, Texture<'a>>) {
+    pub fn load_player_texture<'a>(
+        &mut self,
+        texture_creator: &'a TextureCreator<WindowContext>,
+        texture_map: &mut std::collections::HashMap<String, Texture<'a>>,
+    ) {
         self.animation_data.front = Some(AnimatedTexture::new(1.0 / 12.));
         self.animation_data.front.as_mut().unwrap().load_animation(
-            "resources/player_animation/pretnar_spritesheet.png".to_string(),0,0,32, 48,6,&texture_creator,texture_map,
+            "resources/player_animation/pretnar_spritesheet.png".to_string(),
+            0,
+            0,
+            32,
+            48,
+            6,
+            &texture_creator,
+            texture_map,
         );
         self.animation_data.right = Some(AnimatedTexture::new(1.0 / 12.));
         self.animation_data.right.as_mut().unwrap().load_animation(
-            "resources/player_animation/pretnar_spritesheet.png".to_string(),0,48,32,48,6,&texture_creator,texture_map,
+            "resources/player_animation/pretnar_spritesheet.png".to_string(),
+            0,
+            48,
+            32,
+            48,
+            6,
+            &texture_creator,
+            texture_map,
         );
         self.animation_data.left = Some(AnimatedTexture::new(1.0 / 12.));
         self.animation_data.left.as_mut().unwrap().load_animation(
-            "resources/player_animation/pretnar_spritesheet.png".to_string(),0,96,32,48,6,&texture_creator,texture_map,
+            "resources/player_animation/pretnar_spritesheet.png".to_string(),
+            0,
+            96,
+            32,
+            48,
+            6,
+            &texture_creator,
+            texture_map,
         );
         self.animation_data.back = Some(AnimatedTexture::new(1.0 / 12.));
         self.animation_data.back.as_mut().unwrap().load_animation(
-            "resources/player_animation/pretnar_spritesheet.png".to_string(),0,144,32,48,6,&texture_creator,texture_map,
+            "resources/player_animation/pretnar_spritesheet.png".to_string(),
+            0,
+            144,
+            32,
+            48,
+            6,
+            &texture_creator,
+            texture_map,
         );
         self.animation_data.default = Some(AnimatedTexture::new(1.0));
-        self.animation_data.default.as_mut().unwrap().load_animation(
-            "resources/player_animation/pretnar_spritesheet.png".to_string(),0,0,32,48,1,&texture_creator,texture_map,
-        );
-        self.animation_data.idle = Some(AnimatedTexture::new(1.0/3.0));
+        self.animation_data
+            .default
+            .as_mut()
+            .unwrap()
+            .load_animation(
+                "resources/player_animation/pretnar_spritesheet.png".to_string(),
+                0,
+                0,
+                32,
+                48,
+                1,
+                &texture_creator,
+                texture_map,
+            );
+        self.animation_data.idle = Some(AnimatedTexture::new(1.0 / 3.0));
         self.animation_data.idle.as_mut().unwrap().load_animation(
-            "resources/player_animation/pretnar_spritesheet.png".to_string(),0,192,32,48,6,&texture_creator,texture_map,
+            "resources/player_animation/pretnar_spritesheet.png".to_string(),
+            0,
+            192,
+            32,
+            48,
+            6,
+            &texture_creator,
+            texture_map,
         );
     }
 
@@ -129,7 +177,6 @@ impl Player {
         camera: &Camera,
         global_clock: &Instant,
     ) {
-
         match self.hit_state {
             PlayerHitState::Invincible => {
                 let time_since_last_blink =
@@ -138,8 +185,7 @@ impl Player {
                     return ();
                 }
                 let mut draw = false;
-                let time_since_hit =
-                    global_clock.elapsed().as_secs_f64() - self.last_hit_time;
+                let time_since_hit = global_clock.elapsed().as_secs_f64() - self.last_hit_time;
                 for i in 0..4 {
                     if self.invicibility_blinks <= i && time_since_hit > (i as f64) / 4. {
                         self.invicibility_blinks += 1;
@@ -167,7 +213,7 @@ impl Player {
                     self.size_x,
                     self.size_y,
                 );
-            } 
+            }
         }
     }
 
@@ -183,7 +229,7 @@ impl Player {
         if self.id == 1_000_000 {
             return ();
         }
-        
+
         self.moved = false;
         if self.velocity_x != 0.0 && self.velocity_y != 0.0 {
             self.x += self.velocity_x * dt * 0.7071; // sqrt(2)/2
@@ -201,8 +247,8 @@ impl Player {
         if self.velocity_x == 0.0 && self.velocity_y == 0.0 {
             self.moved = false;
         }
-        
-        if self.moved{
+
+        if self.moved {
             if self.velocity_x > 0.0 {
                 self.animation_data.current_animation = AnimationState::Right;
             } else if self.velocity_x < 0.0 {
@@ -211,7 +257,7 @@ impl Player {
                 self.animation_data.current_animation = AnimationState::Front;
             } else if self.velocity_y < 0.0 {
                 self.animation_data.current_animation = AnimationState::Back;
-            } 
+            }
             self.animation_data.update(dt);
             self.last_moved_time = global_clock.elapsed().as_secs_f64();
         } else if self.last_moved_time + 5.0 < global_clock.elapsed().as_secs_f64() {

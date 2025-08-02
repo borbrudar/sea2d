@@ -1,5 +1,5 @@
-use crate::game::GameState;
 use crate::environment::texture_data::TextureData;
+use crate::game::GameState;
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use sdl2::pixels::Color as RGB;
 use sdl2::render::Texture;
@@ -16,10 +16,9 @@ pub struct Button<'a> {
     //ukaz
     pub action: ButtonAction<'a>,
     //pub function: Box<dyn FnMut() + 'a>,
-
     pub text: Option<String>,
     pub texture: Option<TextureData>,
-    
+
     pub colour: RGB,
     pub position: Rect,
 }
@@ -102,7 +101,7 @@ impl<'a> Button<'a> {
         }
     }
 
-    pub fn handle_event(&mut self, event: &Event, game_state : &mut GameState) -> bool {
+    pub fn handle_event(&mut self, event: &Event, game_state: &mut GameState) -> bool {
         if let Event::MouseButtonDown {
             timestamp,
             window_id,
@@ -121,8 +120,8 @@ impl<'a> Button<'a> {
                     ButtonAction::ChangeGameState(state) => *game_state = state,
                 }
                 return true;
-            } 
-        } 
+            }
+        }
         return false;
     }
 }
