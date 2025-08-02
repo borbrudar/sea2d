@@ -1,7 +1,7 @@
 use crate::display::hud::Hud;
 use crate::display::button::{Badge, Button, ButtonAction, Dropdown, HealthBar};
 use crate::entities::enemy::EnemyType;
-use crate::entities::projectile::Projectile;
+use crate::entities::projectile::{self, Projectile};
 use crate::environment::{level::Level, texture_data::TextureData};
 use crate::networking::{packet::Packet, player_packets::*, shared::*};
 use crate::entities::{
@@ -393,7 +393,7 @@ impl Game {
                     } => {
                         if mouse_btn == sdl2::mouse::MouseButton::Left {
                             // delay to prevent spam
-                            if last_time_clicked + 0.4 < std::time::Instant::elapsed(&global_clock).as_secs_f32() {
+                            if last_time_clicked + 0.25 < std::time::Instant::elapsed(&global_clock).as_secs_f32() {
                                 last_time_clicked = std::time::Instant::elapsed(&global_clock).as_secs_f32();
                                 
                                 projectiles.push(Projectile::new(
@@ -471,8 +471,20 @@ impl Game {
                         other_player.animation_data.update(delta_time);
                     }
                     // update projectiles
-
-
+                    let mut remove_projectiles = Vec::new();
+                    for projectile in &mut projectiles {
+                        projectile.update(delta_time);
+                        if projectile.resolve_collision(&level, &mut enemies, &mut player) {
+                            // remove projectile if it collides with something
+                            println!("Projectile hit something");
+                            remove_projectiles.push(projectile.clone());
+                        }
+                    }
+                    for projectile in &remove_projectiles {
+                        if let Some(pos) = projectiles.iter().position(|p| p.x== projectile.x && p.y == projectile.y) {
+                            projectiles.remove(pos);
+                        }
+                    }
                 }
                 _ => (),
             }
@@ -512,7 +524,6 @@ impl Game {
 
             // draw projectiles
             for projectile in &mut projectiles {
-                projectile.update(delta_time);
                 projectile.draw(&mut canvas, &texture_map);
             }
 
@@ -536,6 +547,9 @@ impl Game {
                     .draw(&mut canvas, player_hitbox_color, &camera);
                 for enemy in &enemies {
                     enemy.hitbox.draw(&mut canvas, Color::RED, &camera);
+                }
+                for projectile in &projectiles {
+                    projectile.hitbox.draw(&mut canvas, Color::RED, &camera);
                 }
             }
 

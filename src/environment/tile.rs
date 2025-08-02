@@ -8,7 +8,7 @@ pub struct Tile {
     pub y: i32,
     pub size: u32,
     pub texture_data: Option<TextureData>,
-    pub _tile_type: TileType,
+    pub tile_type: TileType,
     pub bounding_box: Option<AABB>,
 }
 
@@ -17,7 +17,7 @@ impl Tile {
         x: i32,
         y: i32,
         size: u32,
-        _tile_type: TileType,
+        tile_type: TileType,
         bounding_box: Option<AABB>,
     ) -> Tile {
         Tile {
@@ -25,7 +25,7 @@ impl Tile {
             y,
             size,
             texture_data: None,
-            _tile_type,
+            tile_type,
             bounding_box,
         }
     }

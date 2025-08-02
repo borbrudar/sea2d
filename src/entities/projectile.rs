@@ -1,7 +1,7 @@
-use crate::{entities::{animated_texture::AnimatedTexture, enemy::Enemy, player::Player}, environment::{aabb::AABB, level::Level}};
+use crate::{entities::{animated_texture::AnimatedTexture, enemy::Enemy, player::Player}, environment::{aabb::AABB, level::Level, tile_type::TileType}};
 
 
-
+#[derive(Debug, Clone)]
 pub struct Projectile{
     pub x: f64,
     pub y: f64,
@@ -42,11 +42,15 @@ impl Projectile {
             texture_creator,
             texture_map,
         );
-    } 
+        self.hitbox.x = self.x;
+        self.hitbox.y = self.y;
+    }
 
     pub fn update(&mut self, dt: f64) {
         self.x += self.speed * dt * self.direction.cos();
         self.y += self.speed * dt * self.direction.sin();
+        self.hitbox.x = self.x;
+        self.hitbox.y = self.y;
     }
 
     pub fn draw(
@@ -68,9 +72,32 @@ impl Projectile {
         }
     }
 
-    pub fn resolve_collision(&self, level : &Level, enemies : &mut Vec<Enemy>, player : &Player ) -> bool {
+    pub fn resolve_collision(&self, level : &Level, enemies : &mut Vec<Enemy>, player : &mut Player ) -> bool {
         let mut ret = false;
+        // check if colliding with level, enemies or player 
+        // if so decrease their health and return true
+        for tile in level.check_collision(&self.hitbox) {
+            if tile.bounding_box.is_some()  == false{
+                continue;
+            }
+            if tile.tile_type == TileType::Water{
+                continue;
+            }
+            ret = true; 
+            break;
+        }
 
+        for enemy in enemies.iter_mut() {
+            if self.hitbox.intersects(&enemy.hitbox) {
+                enemy.health -= 15; 
+                ret = true;
+            }
+        }
+
+        if self.hitbox.intersects(&player.hitbox) {
+            player.health -= 15; 
+            ret = true;
+        }
 
         ret
     }

@@ -226,7 +226,7 @@ impl Player {
             self.colliding = false;
         }
         for tile in collisions {
-            match tile._tile_type {
+            match tile.tile_type {
                 crate::environment::tile_type::TileType::Exit(inner) => {
                     self.reached_end = Some(inner.clone());
                 }

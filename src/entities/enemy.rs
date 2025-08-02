@@ -33,6 +33,7 @@ pub struct Enemy {
     pub dir: i32,
     pub spotted_player: bool,
     pub moving_speed : f64,
+    pub health : i32,
 }
 
 impl Enemy {
@@ -127,6 +128,13 @@ impl Enemy {
             }
             EnemyType::Placeholder => {}
         }
+        let health = match kind {
+            EnemyType::Slime => 45,
+            EnemyType::Stonewalker => 120,
+            EnemyType::Wizard => 100,
+            EnemyType::Skull => 80,
+            EnemyType::Placeholder => 0,
+        };
         
         Enemy {
             x: 1000.,
@@ -140,6 +148,7 @@ impl Enemy {
             kind : kind,
             spotted_player: false,
             moving_speed : 3.0,
+            health,
         }
     }
 

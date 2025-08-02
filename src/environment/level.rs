@@ -426,7 +426,6 @@ impl<'a> Level {
             self.get_snapped_position(hitbox).0,
             self.get_snapped_position(hitbox).1,
         );
-        //println!("Player tile: {:?}",player_tile);
         // check 9 neighbouring tiles
         for offx in -1..2 {
             for offy in -1..2 {
