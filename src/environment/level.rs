@@ -31,6 +31,20 @@ impl<'a> Level {
         }
     }
 
+    pub fn unlock_exit(&mut self) {
+        for layer in &mut self.tiles {
+            for tile in layer.values_mut() {
+                if let TileType::Exit(ExitTile { next_level, locked }) = &mut tile.tile_type {
+                    if *locked {
+                        *locked = false;
+                        println!("Exit unlocked!");
+                        // Optionally change the tile texture or visual
+                    }
+                }
+            }
+        }
+    }
+
     fn autotiler_init(&mut self) {
         // Initialize autotiler with default tiles
         self.autotiler.add_tile(
@@ -78,6 +92,7 @@ impl<'a> Level {
         self.autotiler.add_tile(
             TileType::Exit(ExitTile {
                 next_level: String::new(),
+                locked: true,
             }),
             TileSetType::Simple,
             "resources/textures/exit.png".to_string(),
@@ -410,6 +425,7 @@ impl<'a> Level {
                                 self.tile_size as u32,
                                 TileType::Exit(ExitTile {
                                     next_level: last.clone(),
+                                    locked: true,
                                 }),
                                 exit_bb,
                             ),

@@ -502,6 +502,11 @@ impl Game {
                 }
                 // remove dead enemies
                 enemies.retain(|enemy| enemy.health > 0);
+
+                //if all enemies dead, unlock exit
+                if enemies.is_empty() {
+                    level.unlock_exit();
+                }
             }
 
             frame_time -= std::time::Duration::from_secs_f64(delta_time);

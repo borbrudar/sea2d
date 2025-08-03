@@ -176,7 +176,7 @@ impl Player {
                 let time_since_last_blink =
                     global_clock.elapsed().as_secs_f64() - self.last_blink_time;
                 if time_since_last_blink < 0.1 {
-                    return ;
+                    return;
                 }
                 let mut draw = false;
                 let time_since_hit = global_clock.elapsed().as_secs_f64() - self.last_hit_time;
@@ -221,7 +221,7 @@ impl Player {
         global_clock: &Instant,
     ) {
         if self.id == 1_000_000 {
-            return ;
+            return;
         }
 
         self.moved = false;
@@ -263,7 +263,11 @@ impl Player {
         self.colliding = !collisions.is_empty();
         for tile in collisions {
             if let crate::environment::tile_type::TileType::Exit(inner) = tile.tile_type {
-                self.reached_end = Some(inner.clone());
+                if inner.locked {
+                    self.reached_end = None
+                } else {
+                    self.reached_end = Some(inner.clone());
+                }
             }
         }
 
