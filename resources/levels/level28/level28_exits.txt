@@ -1,1 +1,0 @@
-resources/levels/level29/level29_1.png

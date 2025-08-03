@@ -1,1 +1,0 @@
-resources/levels/level16/level16_1.png

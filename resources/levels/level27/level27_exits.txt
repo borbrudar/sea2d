@@ -1,1 +1,0 @@
-resources/levels/level28/level28_1.png

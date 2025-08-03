@@ -1,1 +1,0 @@
-resources/levels/level45/level45_1.png

@@ -1,1 +1,0 @@
-resources/levels/level7/level7_1.png

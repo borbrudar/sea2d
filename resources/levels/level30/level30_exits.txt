@@ -1,1 +1,0 @@
-resources/levels/level31/level31_1.png

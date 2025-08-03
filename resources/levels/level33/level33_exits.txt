@@ -1,1 +1,0 @@
-resources/levels/level34/level34_1.png

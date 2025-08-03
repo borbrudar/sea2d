@@ -1,1 +1,0 @@
-resources/levels/level35/level35_1.png

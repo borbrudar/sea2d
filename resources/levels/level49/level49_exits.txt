@@ -1,1 +1,0 @@
-resources/levels/level50/level50_1.png

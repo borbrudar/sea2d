@@ -1,1 +1,0 @@
-resources/levels/level22/level22_1.png

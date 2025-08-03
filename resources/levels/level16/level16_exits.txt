@@ -1,1 +1,0 @@
-resources/levels/level17/level17_1.png

@@ -1,1 +1,0 @@
-resources/levels/level24/level24_1.png

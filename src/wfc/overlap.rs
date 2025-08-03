@@ -1,5 +1,6 @@
 use core::panic;
 use image;
+use rand::Rng;
 use rand::prelude::IndexedRandom;
 use rand::seq::SliceRandom;
 use std::collections::HashMap;
@@ -427,51 +428,116 @@ pub fn write_exits_file(current_level_name: &str, next_level_path: &str) {
     println!("Exit file created: {}", exits_file_path);
 }
 
-pub fn run_overlap() {
-    for k in 1..=5 {
-        let (patterns, frequencies) =
-            extract_patterns(&format!("resources/levels/sample_{}.png", k), 3);
+pub fn run_overlap(k: i32, i: i32) {
+    let (patterns, frequencies) =
+        extract_patterns(&format!("resources/levels/sample_{}.png", k), 3);
 
-        for i in (k - 1) * 10..k * 10 {
-            let width = GRID_WIDTH as u32; // grid width in tiles
-            let height = GRID_HEIGHT as u32; // grid height in tiles
-            let mut tile_grid = generate_wfc(&patterns, width, height, 3);
+    let width = GRID_WIDTH as u32; // grid width in tiles
+    let height = GRID_HEIGHT as u32; // grid height in tiles
+    let mut tile_grid = generate_wfc(&patterns, width, height, 3);
 
-            //find exit tile
-            let forbidden_exit_edge = find_exit_tile_edge(
-                &format!("resources/levels/level{}/level{}_1.png", i, i),
-                TILE_SIZE as u32,
-            )
-            .map(|e| opposite_edge(&e));
+    //find exit tile
+    let forbidden_exit_edge = find_exit_tile_edge(
+        &format!("resources/levels/level{}/level{}_1.png", i, i),
+        TILE_SIZE as u32,
+    )
+    .map(|e| opposite_edge(&e));
 
-            let (exit_pos, exit_edge) = load_exit_tile(&tile_grid, forbidden_exit_edge);
+    let (exit_pos, exit_edge) = load_exit_tile(&tile_grid, forbidden_exit_edge);
 
-            //find spawn tile
-            let (spawn_pos, spawn_edge) = if let Some(prev_edge) = forbidden_exit_edge {
-                (load_spawn(&tile_grid, prev_edge), Some(prev_edge))
-            } else {
-                (random_walkable_tile(&tile_grid), None)
-            };
+    //find spawn tile
+    let (spawn_pos, spawn_edge) = if let Some(prev_edge) = forbidden_exit_edge {
+        (load_spawn(&tile_grid, prev_edge), Some(prev_edge))
+    } else {
+        (random_walkable_tile(&tile_grid), None)
+    };
 
-            //wrap edge of the map
-            tile_grid = wrap_edge(&tile_grid, WALL_RGBA);
+    //wrap edge of the map
+    tile_grid = wrap_edge(&tile_grid, WALL_RGBA);
 
-            //place exit and spawn tiles
-            place_tile_on_edge(&mut tile_grid, exit_edge, exit_pos, EXIT_RGBA);
-            place_tile_on_edge(&mut tile_grid, spawn_edge, spawn_pos, SPAWN_RGBA);
+    //place exit and spawn tiles
+    place_tile_on_edge(&mut tile_grid, exit_edge, exit_pos, EXIT_RGBA);
+    place_tile_on_edge(&mut tile_grid, spawn_edge, spawn_pos, SPAWN_RGBA);
 
-            //save level image
-            save_output_image(
-                &tile_grid,
-                TILE_SIZE as u32,
-                &format!("resources/levels/level{}/level{}_1.png", i + 1, i + 1),
-            );
+    //save level image
+    save_output_image(
+        &tile_grid,
+        TILE_SIZE as u32,
+        &format!("resources/levels/level{}/level{}_1.png", i + 1, i + 1),
+    );
 
-            //create exit file
-            write_exits_file(
-                &format!("level{}", i + 1),
-                &format!("resources/levels/level{}/level{}_1.png", i + 2, i + 2),
-            );
+    //create exit file
+    write_exits_file(
+        &format!("level{}", i + 1),
+        &format!("resources/levels/level{}/level{}_1.png", i + 2, i + 2),
+    );
+}
+
+fn extract_level_index(level_path: &str) -> Option<i32> {
+    let path = Path::new(level_path);
+    let folder_name = path.parent()?.file_name()?.to_str()?;
+
+    if let Some(index_str) = folder_name.strip_prefix("level") {
+        if let Ok(index) = index_str.parse::<i32>() {
+            println!("Extracted level index: {}", index);
+            return Some(index);
         }
+    }
+
+    None
+}
+// fn extract_level_index(path: &str) -> Option<i32> {
+//     path.split('/')
+//         .find(|s| s.starts_with("level") && !s.contains('.'))
+//         .and_then(|s| s.trim_start_matches("level").parse::<i32>().ok())
+//     println!()
+// }
+
+fn get_folder_path_from_level(level_path: &str) -> Option<String> {
+    Path::new(level_path)
+        .parent()
+        .map(|p| p.to_string_lossy().to_string())
+}
+
+fn delete_level_folder(folder_path: &str) -> std::io::Result<()> {
+    let path = Path::new(folder_path);
+    if path.exists() {
+        fs::remove_dir_all(path)?; // Recursively deletes folder + files
+        println!("Deleted folder: {}", folder_path);
+    } else {
+        println!("Folder does not exist: {}", folder_path);
+    }
+    Ok(())
+}
+
+//prev_level: Some(player.current_level)
+pub fn wfc_level_generator(prev_level: Option<String>) {
+    let mut rng = rand::rng();
+    let k = rng.random_range(1..=5);
+    if let Some(previous) = prev_level {
+        //parse previous
+        let j = extract_level_index(&previous);
+
+        //generate new
+        if let Some(i) = j {
+            run_overlap(k, i);
+        } else {
+            panic!("Couldn't extract number of previous level")
+        }
+
+        //delete previous level and exit file
+        let folder = get_folder_path_from_level(&previous);
+        if let Some(path) = folder {
+            if let Err(e) = delete_level_folder(&path) {
+                eprintln!("Error deleting folder: {}", e);
+            }
+        } else {
+            panic!("Couldn't delete previous level folder")
+        }
+        println!("successfully generated next level!")
+    } else {
+        //first level
+        run_overlap(k, 0);
+        println!("first level successful")
     }
 }

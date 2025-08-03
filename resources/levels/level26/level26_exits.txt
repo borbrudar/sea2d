@@ -1,1 +1,0 @@
-resources/levels/level27/level27_1.png

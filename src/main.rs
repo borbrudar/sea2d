@@ -23,8 +23,8 @@ fn main() {
     } else if args.len() >= 2 && args[1] == "server" {
         println!("Running server on localhost:6000");
         server();
-    } else if args.contains(&"--wfc".to_string()) {
-        return run_overlap();
+    // } else if args.contains(&"--wfc".to_string()) {
+    //     return run_overlap();
     } else {
         println!("Running server-client on localhost:6000");
         let _server = thread::spawn(|| {

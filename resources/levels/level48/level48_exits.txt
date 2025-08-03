@@ -1,1 +1,0 @@
-resources/levels/level49/level49_1.png

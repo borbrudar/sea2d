@@ -1,1 +1,0 @@
-resources/levels/level36/level36_1.png

@@ -1,1 +1,0 @@
-resources/levels/level38/level38_1.png

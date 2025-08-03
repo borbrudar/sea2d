@@ -1,1 +1,0 @@
-resources/levels/level30/level30_1.png

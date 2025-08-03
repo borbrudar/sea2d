@@ -1,1 +1,0 @@
-resources/levels/level12/level12_1.png

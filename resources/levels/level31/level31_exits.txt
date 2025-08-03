@@ -1,1 +1,0 @@
-resources/levels/level32/level32_1.png

@@ -5,6 +5,7 @@ use crate::entities::projectile::Projectile;
 use crate::entities::{camera::Camera, enemy::Enemy, player::Player};
 use crate::environment::{level::Level, texture_data::TextureData};
 use crate::networking::{packet::Packet, player_packets::*, shared::*};
+use crate::wfc::overlap::wfc_level_generator;
 use sdl2::image::{self};
 use sdl2::pixels::Color;
 use sdl2::rect;
@@ -167,7 +168,9 @@ impl Game {
 
     // main game loop
     pub fn run(&mut self) {
-        let initial_level = "resources/levels/level31/level31_1.png".to_string();
+        //generate first level
+        wfc_level_generator(None);
+        let initial_level = "resources/levels/level1/level1_1.png".to_string();
 
         // initalize sdl2 stuff
         let sdl_context = sdl2::init().unwrap();
@@ -426,6 +429,9 @@ impl Game {
 
             // check if we need to load a new level
             if let Some(exit) = player.reached_end.clone() {
+                //generate new level
+                wfc_level_generator(Some(player.current_level));
+                //load level
                 level.load_from_file(exit.next_level.clone(), &texture_creator, &mut texture_map);
                 player.x = level.player_spawn.0 as f64;
                 player.y = level.player_spawn.1 as f64;

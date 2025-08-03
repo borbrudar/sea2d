@@ -1,1 +1,0 @@
-resources/levels/level15/level15_1.png
