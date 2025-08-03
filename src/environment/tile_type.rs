@@ -22,6 +22,7 @@ pub enum TileType {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExitTile {
     pub next_level: String,
+    pub locked: bool,
 }
 
 impl TileType {

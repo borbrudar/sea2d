@@ -120,17 +120,17 @@ impl<'a> Level {
         self.autotiler.add_tile(
             TileType::Snow,
             TileSetType::Full,
-            "resources/textures/snow_full.png".to_string(),
+            "resources/textures/snow_full_background.png".to_string(),
         );
         self.autotiler.add_tile(
             TileType::Swamp,
             TileSetType::Full,
-            "resources/textures/swamp_full.png".to_string(),
+            "resources/textures/swamp_full_background.png".to_string(),
         );
         self.autotiler.add_tile(
             TileType::Cave,
             TileSetType::Full,
-            "resources/textures/cave_full.png".to_string(),
+            "resources/textures/cave_full_background.png".to_string(),
         );
     }
 
