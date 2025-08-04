@@ -1,5 +1,8 @@
 use crate::display::button::{Badge, Button, ButtonAction, Dropdown, HealthBar};
-use crate::display::{hud::Hud, mainmenu::MainMenu};
+use crate::display::{
+    hud::Hud,
+    mainmenu::{MainMenu, Screen},
+};
 use crate::entities::enemy::EnemyType;
 use crate::entities::enemy_generation::generate_enemies;
 use crate::entities::projectile::Projectile;
@@ -23,6 +26,7 @@ pub enum GameState {
     Paused,
     GameOver,
     MainMenu,
+    Instructions,
 }
 
 pub struct Game {
@@ -253,7 +257,7 @@ impl Game {
             ButtonAction::ChangeGameState(GameState::Paused),
             None,
             Some(TextureData::new("resources/textures/pause.png".to_string())),
-            Color::RGB(255, 0, 0),
+            Some(Color::RGB(255, 0, 0)),
             Rect::new(100, 0, 50, 50),
         );
 
@@ -263,7 +267,7 @@ impl Game {
             Some(TextureData::new(
                 "resources/textures/resume-2.png".to_string(),
             )),
-            Color::RGB(0, 255, 0),
+            Some(Color::RGB(0, 255, 0)),
             Rect::new(50, 0, 50, 50),
         );
         //Health bar
@@ -281,7 +285,7 @@ impl Game {
                 ButtonAction::Callback(Box::new(|| println!("Dropdown triggered"))),
                 Some("...".to_string()),
                 None,
-                Color::RGB(0, 0, 0),
+                Some(Color::RGB(0, 0, 0)),
                 Rect::new(0, 0, 50, 50),
             ),
             vec![
@@ -289,21 +293,21 @@ impl Game {
                     ButtonAction::ChangeGameState(GameState::MainMenu),
                     Some("Back to Main Menu".to_string()),
                     None,
-                    Color::RGB(214, 2, 112),
+                    Some(Color::RGB(214, 2, 112)),
                     Rect::new(0, 50, 300, 50),
                 ),
                 Button::new(
                     ButtonAction::Callback(Box::new(|| println!("Item 2 clicked"))),
                     Some("Character descriptions".to_string()),
                     None,
-                    Color::RGB(155, 79, 150),
+                    Some(Color::RGB(155, 79, 150)),
                     Rect::new(0, 100, 300, 50),
                 ),
                 Button::new(
                     ButtonAction::Callback(Box::new(|| println!("Item 3 clicked"))),
                     Some("Item 3".to_string()),
                     None,
-                    Color::RGB(0, 56, 168),
+                    Some(Color::RGB(0, 56, 168)),
                     Rect::new(0, 150, 300, 50),
                 ),
             ],
@@ -332,8 +336,7 @@ impl Game {
                         player.reset_velocity();
                         hud.time_display.pause();
                     }
-                    GameState::GameOver => hud.time_display.pause(),
-                    GameState::MainMenu => hud.time_display.pause(),
+                    _ => hud.time_display.pause(),
                 }
                 //camera.handle_zoom(&event);
                 match event {
@@ -354,8 +357,7 @@ impl Game {
                     } => match self.game_state {
                         GameState::Paused => self.game_state = GameState::Running,
                         GameState::Running => self.game_state = GameState::Paused,
-                        GameState::GameOver => (),
-                        GameState::MainMenu => (),
+                        _ => (),
                     },
                     sdl2::event::Event::KeyDown {
                         keycode: Some(sdl2::keyboard::Keycode::R),
@@ -619,6 +621,37 @@ impl Game {
                         main_menu
                             .start_button
                             .handle_event(&event, &mut self.game_state);
+                        match event {
+                            sdl2::event::Event::Quit { .. }
+                            | sdl2::event::Event::KeyDown {
+                                keycode: Some(sdl2::keyboard::Keycode::ESCAPE),
+                                ..
+                            } => break 'running,
+                            _ => (),
+                        }
+                    }
+                }
+                GameState::Instructions => {
+                    let mut instructions = Screen::new(
+                        vec![Button::new(
+                            ButtonAction::ChangeGameState(GameState::Running),
+                            None,
+                            None,
+                            None,
+                            Rect::new(303, 324, 160, 60),
+                        )],
+                        "resources/screenshots/instructions.png".to_string(),
+                    );
+                    instructions.draw(
+                        &mut canvas,
+                        &ttf_context,
+                        &texture_creator,
+                        &mut texture_map,
+                    );
+                    for event in event_pump.poll_iter() {
+                        for button in instructions.buttons.iter_mut() {
+                            button.handle_event(&event, &mut self.game_state);
+                        }
                         match event {
                             sdl2::event::Event::Quit { .. }
                             | sdl2::event::Event::KeyDown {

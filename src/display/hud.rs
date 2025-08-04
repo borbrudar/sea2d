@@ -40,12 +40,6 @@ impl<'a> Hud<'a> {
         texture_creator: &TextureCreator<WindowContext>,
     ) {
         let time_text = self.time_display.formatted_time();
-        // let elapsed = self.time_display.elapsed();
-        // let seconds = elapsed.as_secs();
-        // let minutes = seconds / 60;
-        // let remaining_seconds = seconds % 60;
-
-        // let time_text = format!("{:02}:{:02}", minutes, remaining_seconds);
         let font_path = "resources/fonts/manolomono.otf";
 
         let font = ttf_context

@@ -20,7 +20,7 @@ pub struct Button<'a> {
     pub text: Option<String>,
     pub texture: Option<TextureData>,
 
-    pub colour: RGB,
+    pub colour: Option<RGB>,
     pub position: Rect,
 }
 
@@ -29,7 +29,7 @@ impl<'a> Button<'a> {
         act: ButtonAction<'a>,
         line: Option<String>,
         tex: Option<TextureData>,
-        col: RGB,
+        col: Option<RGB>,
         pos: Rect,
     ) -> Button<'a> {
         Button {
@@ -74,9 +74,10 @@ impl<'a> Button<'a> {
         texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>,
         texture_map: &mut std::collections::HashMap<String, Texture<'a>>,
     ) {
-        canvas.set_draw_color(self.colour);
-        canvas.fill_rect(self.position).unwrap();
-
+        if let Some(col) = self.colour {
+            canvas.set_draw_color(col);
+            canvas.fill_rect(self.position).unwrap();
+        }
         //texture
         if let Some(tex_data) = self.texture.as_mut() {
             tex_data.load_texture(texture_creator, texture_map);
