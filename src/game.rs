@@ -324,7 +324,7 @@ impl Game {
         let mut draw_hitboxes = false;
         let mut draw_hud = true;
 
-        self.game_state = GameState::Running;
+        self.game_state = GameState::MainMenu;
 
         'running: loop {
             // event polling

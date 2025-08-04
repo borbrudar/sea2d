@@ -3,10 +3,12 @@ use crate::display::text::Text;
 use crate::environment::texture_data::TextureData;
 use crate::game::GameState;
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
+use sdl2::image::LoadTexture;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
-use sdl2::render::Texture;
+use sdl2::render::{Canvas, Texture, TextureCreator};
 use sdl2::ttf;
+use sdl2::video::Window;
 
 pub struct MainMenu<'a> {
     pub start_button: Button<'a>,
@@ -17,7 +19,7 @@ impl<'a> MainMenu<'a> {
     pub fn new<'b>(title_text: String) -> MainMenu<'b> {
         let dest_rect = Rect::new(
             (SCREEN_WIDTH / 2) as i32 - 75,
-            (SCREEN_HEIGHT / 2) as i32 - 35,
+            (SCREEN_HEIGHT / 2) as i32 + 80,
             150,
             70,
         );
@@ -25,7 +27,7 @@ impl<'a> MainMenu<'a> {
             ButtonAction::ChangeGameState(GameState::Running),
             Some("Start".to_string()),
             None,
-            Color::RGB(30, 139, 195),
+            Color::RGB(109, 165, 194),
             dest_rect,
         );
 
@@ -43,6 +45,19 @@ impl<'a> MainMenu<'a> {
         }
     }
 
+    // pub fn draw_menu_background(
+    //     canvas: &mut Canvas<Window>,
+    //     texture_creator: &TextureCreator<sdl2::video::WindowContext>,
+    // ) -> Result<(), String> {
+    //     let texture = texture_creator.load_texture("resources/textures/menu_background.png")?;
+
+    //     // Assuming full-screen background
+    //     let target = Rect::new(0, 0, 800, 600); // Replace with actual screen dimensions
+    //     canvas.copy(&texture, None, Some(target))?;
+
+    //     Ok(())
+    // }
+
     pub fn draw(
         &mut self,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
@@ -51,10 +66,17 @@ impl<'a> MainMenu<'a> {
         texture_map: &mut std::collections::HashMap<String, Texture<'a>>,
     ) {
         // Draw background
-        canvas.set_draw_color(Color::RGB(44, 130, 201));
-        canvas.clear();
-        let rect = Rect::new(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-        canvas.fill_rect(rect).unwrap();
+        let texture = texture_creator
+            .load_texture("resources/screenshots/main_menu_background.png")
+            .expect("couldn't find texture of mm background");
+
+        // Assuming full-screen background
+        let target = Rect::new(0, 0, 800, 600); // Replace with actual screen dimensions
+        canvas.copy(&texture, None, Some(target)).unwrap();
+        // canvas.set_draw_color(Color::RGB(44, 130, 201));
+        // canvas.clear();
+        // let rect = Rect::new(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        // canvas.fill_rect(rect).unwrap();
 
         // Draw start button
         //draw frame around the button

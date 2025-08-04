@@ -12,7 +12,7 @@ use std::path::Path;
 
 //sample: 5x5 ploščic, 10x10 pixlov
 const SAMPLE_TILE_SIZE: usize = 2;
-const TILE_SIZE: usize = 1;
+pub const TILE_SIZE: usize = 1;
 const GRID_HEIGHT: usize = 12;
 const GRID_WIDTH: usize = 16;
 
@@ -478,6 +478,7 @@ pub fn run_overlap(k: i32, i: i32) {
     //create second layer
     let mut second_layer: Vec<Vec<[u8; 4]>> =
         vec![vec![[0; 4]; (width + 2) as usize]; (height + 2) as usize];
+
     //place spawn on second layer
     place_spawn_tile(&mut second_layer, spawn_pos, SPAWN_RGBA);
 
@@ -502,7 +503,7 @@ pub fn run_overlap(k: i32, i: i32) {
     );
 }
 
-fn extract_level_index(level_path: &str) -> Option<i32> {
+pub fn extract_level_index(level_path: &str) -> Option<i32> {
     let path = Path::new(level_path);
     let folder_name = path.parent()?.file_name()?.to_str()?;
 
@@ -534,7 +535,7 @@ fn delete_level_folder(folder_path: &str) -> std::io::Result<()> {
 }
 
 //prev_level: Some(player.current_level)
-pub fn wfc_level_generator(prev_level: Option<String>) {
+pub fn wfc_level_generator(prev_level: Option<&String>) {
     let mut rng = rand::rng();
     let k = rng.random_range(1..=5);
     if let Some(previous) = prev_level {
@@ -557,10 +558,10 @@ pub fn wfc_level_generator(prev_level: Option<String>) {
         } else {
             panic!("Couldn't delete previous level folder")
         }
-        println!("successfully generated next level!")
+        println!("successfully generated next level!");
     } else {
         //first level
         run_overlap(k, 0);
-        println!("first level successful")
+        println!("first level successful");
     }
 }
