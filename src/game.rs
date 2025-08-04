@@ -240,6 +240,7 @@ impl Game {
         let mut enemies: Vec<Enemy> = Vec::new();
         enemies.push(Enemy::new(
             EnemyType::Wizard,
+            (10., 10.),
             &texture_creator,
             &mut texture_map,
         ));
@@ -472,12 +473,14 @@ impl Game {
                             .load_projectile_texture(&texture_creator, &mut texture_map);
                     }
                 }
+
                 player.update(
                     delta_time,
                     &self.packet_sender,
                     &level,
                     &mut camera,
-                    &enemies,
+                    &mut enemies,
+                    &projectiles,
                     &global_clock,
                 );
                 for other_player in other_players.values_mut() {

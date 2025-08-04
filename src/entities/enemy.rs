@@ -47,6 +47,7 @@ pub struct Enemy {
 impl Enemy {
     pub fn new<'a>(
         kind: EnemyType,
+        spawn_pt: (f64, f64),
         texture_creator: &'a TextureCreator<WindowContext>,
         texture_map: &mut std::collections::HashMap<String, Texture<'a>>,
     ) -> Enemy {
@@ -405,8 +406,8 @@ impl Enemy {
         };
 
         Enemy {
-            x: 1000.,
-            y: 1000.,
+            x: spawn_pt.0,
+            y: spawn_pt.1,
             animation_data: ani_data,
             size_x,
             size_y,

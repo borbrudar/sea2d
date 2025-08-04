@@ -198,6 +198,19 @@ pub const EXIT_RGBA: [u8; 4] = [64, 58, 171, 102]; // RGBA color for exit tile
 pub const SPAWN_RGBA: [u8; 4] = [255, 0, 0, 102]; // RGBA color for player spawn tile
 pub const WALL_RGBA: [u8; 4] = [50, 47, 77, 255]; //RGBA color for wrap around wall
 
+//place spawn tile
+pub fn place_spawn_tile(tile_grid: &mut Vec<Vec<[u8; 4]>>, (x, y): (usize, usize), color: [u8; 4]) {
+    if y + 1 < tile_grid.len() && x < tile_grid[y + 1].len() {
+        tile_grid[y + 1][x + 1] = color
+    } else {
+        panic!(
+            "Attempted to place tile out of bounds at ({}, {})",
+            x + 1,
+            y + 1
+        );
+    }
+}
+
 //place special tiles on the edge of wrapped grid (spawn, exit, etc.)
 pub fn place_tile_on_edge(
     wrapped_grid: &mut Vec<Vec<[u8; 4]>>,
@@ -222,10 +235,14 @@ pub fn place_tile_on_edge(
             );
         }
     } else {
-        if y < wrapped_grid.len() && x < wrapped_grid[y].len() {
-            wrapped_grid[y][x] = color
+        if y + 1 < wrapped_grid.len() && x + 1 < wrapped_grid[y + 1].len() {
+            wrapped_grid[y + 1][x + 1] = color
         } else {
-            panic!("Attempted to place tile out of bounds at ({}, {})", x, y);
+            panic!(
+                "Attempted to place tile out of bounds at ({}, {})",
+                x + 1,
+                y + 1
+            );
         }
     }
 }
@@ -455,15 +472,27 @@ pub fn run_overlap(k: i32, i: i32) {
     //wrap edge of the map
     tile_grid = wrap_edge(&tile_grid, WALL_RGBA);
 
-    //place exit and spawn tiles
+    //place exit
     place_tile_on_edge(&mut tile_grid, exit_edge, exit_pos, EXIT_RGBA);
-    place_tile_on_edge(&mut tile_grid, spawn_edge, spawn_pos, SPAWN_RGBA);
+
+    //create second layer
+    let mut second_layer: Vec<Vec<[u8; 4]>> =
+        vec![vec![[0; 4]; (width + 2) as usize]; (height + 2) as usize];
+    //place spawn on second layer
+    place_spawn_tile(&mut second_layer, spawn_pos, SPAWN_RGBA);
 
     //save level image
     save_output_image(
         &tile_grid,
         TILE_SIZE as u32,
         &format!("resources/levels/level{}/level{}_1.png", i + 1, i + 1),
+    );
+
+    // save second layer
+    save_output_image(
+        &second_layer,
+        TILE_SIZE as u32,
+        &format!("resources/levels/level{}/level{}_2.png", i + 1, i + 1),
     );
 
     //create exit file
@@ -486,12 +515,6 @@ fn extract_level_index(level_path: &str) -> Option<i32> {
 
     None
 }
-// fn extract_level_index(path: &str) -> Option<i32> {
-//     path.split('/')
-//         .find(|s| s.starts_with("level") && !s.contains('.'))
-//         .and_then(|s| s.trim_start_matches("level").parse::<i32>().ok())
-//     println!()
-// }
 
 fn get_folder_path_from_level(level_path: &str) -> Option<String> {
     Path::new(level_path)

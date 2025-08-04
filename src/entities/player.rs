@@ -1,4 +1,5 @@
 use crate::entities::animation_data::{AnimationData, AnimationState};
+use crate::entities::projectile::{self, Projectile};
 use crate::entities::{animated_texture::AnimatedTexture, camera::Camera, enemy::Enemy};
 use crate::environment::{aabb::AABB, level::Level, tile_type::ExitTile};
 use crate::networking::packet::Packet;
@@ -36,6 +37,7 @@ pub struct Player {
     pub hit_state: PlayerHitState,
     pub health: i32,
     last_hit_time: f64,
+    last_heal_time: f64,
     last_moved_time: f64,
     invicibility_blinks: i32,
     last_blink_time: f64,
@@ -71,6 +73,7 @@ impl Player {
             hit_state: PlayerHitState::Vulnerable,
             health: 100,
             last_hit_time: 0.0,
+            last_heal_time: 0.0,
             invicibility_blinks: 0,
             last_blink_time: 0.0,
             moved: false,
@@ -217,7 +220,8 @@ impl Player {
         _tx: &std::sync::mpsc::Sender<Packet>,
         level: &Level,
         camera: &mut Camera,
-        enemies: &Vec<Enemy>,
+        enemies: &mut Vec<Enemy>,
+        projectiles: &Vec<Projectile>,
         global_clock: &Instant,
     ) {
         if self.id == 1_000_000 {
@@ -271,6 +275,12 @@ impl Player {
             }
         }
 
+        for projectile in projectiles {
+            if projectile.resolve_collision(level, enemies, self) && !projectile.fired_by_player {
+                self.last_hit_time = global_clock.elapsed().as_secs_f64();
+            }
+        }
+
         for enemy in enemies {
             if self.hitbox.intersects(&enemy.hitbox) {
                 if let PlayerHitState::Vulnerable = self.hit_state {
@@ -282,9 +292,23 @@ impl Player {
             }
         }
 
-        if global_clock.elapsed().as_secs_f64() - self.last_hit_time > 1.0 {
+        let difference = global_clock.elapsed().as_secs_f64() - self.last_hit_time;
+
+        if difference > 1.0 {
             self.hit_state = PlayerHitState::Vulnerable;
             self.invicibility_blinks = 0;
+        }
+
+        //healing logic
+
+        let now = global_clock.elapsed().as_secs_f64();
+        let time_since_hit = now - self.last_hit_time;
+        let time_since_heal = now - self.last_heal_time;
+
+        if self.health < 100 && time_since_hit >= 3.0 && time_since_heal >= 3.0 {
+            self.health = (self.health + 10).min(100);
+            self.last_heal_time = now;
+            println!("Healed! Current health: {}", self.health);
         }
 
         level.resolve_collision(&mut self.hitbox);
