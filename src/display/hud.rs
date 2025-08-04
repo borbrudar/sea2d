@@ -1,4 +1,5 @@
 use crate::display::button::{self, HealthBar};
+use crate::display::game_clock;
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
@@ -13,7 +14,7 @@ pub struct Hud<'a> {
     pub badges: Vec<button::Badge>,
     pub dropdown: button::Dropdown<'a>,
     pub health_bar: button::HealthBar,
-    pub time_display: std::time::Instant,
+    pub time_display: game_clock::GameClock,
 }
 
 impl<'a> Hud<'a> {
@@ -22,14 +23,13 @@ impl<'a> Hud<'a> {
         ikone: Vec<button::Badge>,
         meni: button::Dropdown<'b>,
         health: HealthBar,
-        time: std::time::Instant,
     ) -> Hud<'b> {
         Hud {
             buttons: gumbi,
             badges: ikone,
             health_bar: health,
             dropdown: meni,
-            time_display: time,
+            time_display: game_clock::GameClock::new(),
         }
     }
 
@@ -39,12 +39,13 @@ impl<'a> Hud<'a> {
         ttf_context: &ttf::Sdl2TtfContext,
         texture_creator: &TextureCreator<WindowContext>,
     ) {
-        let elapsed = self.time_display.elapsed();
-        let seconds = elapsed.as_secs();
-        let minutes = seconds / 60;
-        let remaining_seconds = seconds % 60;
+        let time_text = self.time_display.formatted_time();
+        // let elapsed = self.time_display.elapsed();
+        // let seconds = elapsed.as_secs();
+        // let minutes = seconds / 60;
+        // let remaining_seconds = seconds % 60;
 
-        let time_text = format!("{:02}:{:02}", minutes, remaining_seconds);
+        // let time_text = format!("{:02}:{:02}", minutes, remaining_seconds);
         let font_path = "resources/fonts/manolomono.otf";
 
         let font = ttf_context

@@ -314,13 +314,7 @@ impl Game {
         let time_step = 1.0 / 60.0;
         let mut last_time_clicked = 0.0;
 
-        let mut hud = Hud::new(
-            vec![pavza, resume],
-            Vec::new(),
-            ddm,
-            healthbar,
-            current_time,
-        );
+        let mut hud = Hud::new(vec![pavza, resume], Vec::new(), ddm, healthbar);
         let mut draw_hitboxes = false;
         let mut draw_hud = true;
 
@@ -330,10 +324,16 @@ impl Game {
             // event polling
             for event in event_pump.poll_iter() {
                 match self.game_state {
-                    GameState::Running => player.on_event(&event),
-                    GameState::Paused => player.reset_velocity(),
-                    GameState::GameOver => (),
-                    GameState::MainMenu => (),
+                    GameState::Running => {
+                        player.on_event(&event);
+                        hud.time_display.resume();
+                    }
+                    GameState::Paused => {
+                        player.reset_velocity();
+                        hud.time_display.pause();
+                    }
+                    GameState::GameOver => hud.time_display.pause(),
+                    GameState::MainMenu => hud.time_display.pause(),
                 }
                 //camera.handle_zoom(&event);
                 match event {
