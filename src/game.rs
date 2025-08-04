@@ -1,11 +1,12 @@
 use crate::display::button::{Badge, Button, ButtonAction, Dropdown, HealthBar};
 use crate::display::{hud::Hud, mainmenu::MainMenu};
 use crate::entities::enemy::EnemyType;
+use crate::entities::enemy_generation::generate_enemies;
 use crate::entities::projectile::Projectile;
 use crate::entities::{camera::Camera, enemy::Enemy, player::Player};
 use crate::environment::{level::Level, texture_data::TextureData};
 use crate::networking::{packet::Packet, player_packets::*, shared::*};
-use crate::wfc::overlap::wfc_level_generator;
+use crate::wfc::overlap::{extract_level_index, wfc_level_generator};
 use sdl2::image::{self};
 use sdl2::pixels::Color;
 use sdl2::rect;
@@ -237,13 +238,13 @@ impl Game {
         );
 
         // enemies
-        let mut enemies: Vec<Enemy> = Vec::new();
-        enemies.push(Enemy::new(
-            EnemyType::Wizard,
-            (10., 10.),
-            &texture_creator,
-            &mut texture_map,
-        ));
+        let mut enemies: Vec<Enemy> = generate_enemies(1, &texture_creator, &mut texture_map);
+        // enemies.push(Enemy::new(
+        //     EnemyType::Wizard,
+        //     (10., 10.),
+        //     &texture_creator,
+        //     &mut texture_map,
+        // ));
 
         let mut projectiles = Vec::new();
 
@@ -431,7 +432,17 @@ impl Game {
             // check if we need to load a new level
             if let Some(exit) = player.reached_end.clone() {
                 //generate new level
-                wfc_level_generator(Some(player.current_level));
+                wfc_level_generator(Some(&player.current_level));
+
+                //generate new enemies
+                let j = extract_level_index(&player.current_level);
+
+                if let Some(i) = j {
+                    enemies = generate_enemies(i + 1, &texture_creator, &mut texture_map);
+                } else {
+                    panic!("Couldn't extract number of previous level to generate enemies")
+                }
+
                 //load level
                 level.load_from_file(exit.next_level.clone(), &texture_creator, &mut texture_map);
                 player.x = level.player_spawn.0 as f64;
