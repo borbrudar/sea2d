@@ -1,9 +1,8 @@
 use crate::entities::enemy::{Enemy, EnemyType};
-use crate::wfc::overlap::{SPAWN_RGBA, TILE_SIZE, random_walkable_tile};
+use crate::wfc::overlap::{TILE_SIZE, get_tile_grid_from_png};
 use rand::Rng;
 use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
-use std::path::Path;
 
 pub fn generate_enemies<'a>(
     i: i32,
@@ -45,48 +44,6 @@ pub fn pick_random_enemy_type() -> EnemyType {
     }
 }
 
-pub fn get_tile_grid_from_png(path: &str, tile_size: u32) -> Option<Vec<Vec<[u8; 4]>>> {
-    if !Path::new(path).exists() {
-        return None; // File doesn't exist
-    }
-
-    let img = match image::open(path) {
-        Ok(img) => img.to_rgba8(),
-        Err(_) => return None, // File is unreadable or invalid format
-    };
-
-    let (width, height) = img.dimensions();
-    let tiles_x = width / tile_size;
-    let tiles_y = height / tile_size;
-
-    let mut tile_grid = vec![vec![[0; 4]; width as usize]; height as usize];
-
-    for ty in 0..tiles_y {
-        for tx in 0..tiles_x {
-            let px = tx * tile_size;
-            let py = ty * tile_size;
-            let pixel = img.get_pixel(px, py);
-            tile_grid[py as usize][px as usize] = pixel.0;
-        }
-    }
-    Some(tile_grid)
-}
-
-pub fn read_spawn(tile_grid: &Vec<Vec<[u8; 4]>>) -> (i32, i32) {
-    let height = tile_grid.len();
-    let width = tile_grid[0].len();
-
-    for ty in 0..height {
-        for tx in 0..width {
-            if tile_grid[ty][tx] == SPAWN_RGBA {
-                return (tx as i32, ty as i32); // x is column, y is row
-            }
-        }
-    }
-
-    panic!("Couldn't read spawn: no tile matches SPAWN_RGBA");
-}
-
 pub fn enemy_spawn_pt(level_index: i32, level_tile_size: i32) -> (f64, f64) {
     //read spawn from second layer picture
     let second_layer = format!(
@@ -98,7 +55,7 @@ pub fn enemy_spawn_pt(level_index: i32, level_tile_size: i32) -> (f64, f64) {
     let mut spawn_pt = (0, 0);
 
     if let Some(grid) = layer_grid {
-        spawn_pt = read_spawn(&grid);
+        spawn_pt = grid.read_spawn();
     } else {
         panic!("Couldn't find layer grid")
     }
@@ -115,7 +72,7 @@ pub fn enemy_spawn_pt(level_index: i32, level_tile_size: i32) -> (f64, f64) {
     if let Some(grid) = level_grid {
         loop {
             //pick a random walkable tile
-            let (x, y) = random_walkable_tile(&grid);
+            let (x, y) = grid.random_walkable_tile();
             let distance = (x as i32 - spawn_pt.0).abs() + (y as i32 - spawn_pt.1).abs(); // Manhattan distance
 
             if distance >= 3 {

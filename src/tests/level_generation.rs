@@ -12,14 +12,9 @@ fn generated_level_is_correct_size() {
     let height = 12;
     let grid = generate_wfc(&patterns, width, height, 1);
 
+    assert_eq!(grid.width, width as usize, "Width does not match expected");
     assert_eq!(
-        grid[0].len(),
-        width as usize,
-        "Width does not match expected"
-    );
-    assert_eq!(
-        grid.len(),
-        height as usize,
+        grid.height, height as usize,
         "Height does not match expected"
     );
 }

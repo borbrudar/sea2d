@@ -1,12 +1,12 @@
-use crate::display::button::{Badge, Button, ButtonAction, Dropdown, HealthBar};
 use crate::display::{
+    button::{Button, ButtonAction, Dropdown, HealthBar},
     hud::Hud,
     mainmenu::{MainMenu, Screen},
 };
-use crate::entities::enemy::EnemyType;
-use crate::entities::enemy_generation::generate_enemies;
-use crate::entities::projectile::Projectile;
-use crate::entities::{camera::Camera, enemy::Enemy, player::Player};
+use crate::entities::{
+    camera::Camera, enemy::Enemy, enemy_generation::generate_enemies, player::Player,
+    projectile::Projectile,
+};
 use crate::environment::{level::Level, texture_data::TextureData};
 use crate::networking::{packet::Packet, player_packets::*, shared::*};
 use crate::wfc::overlap::{extract_level_index, wfc_level_generator};
@@ -14,8 +14,7 @@ use sdl2::image::{self};
 use sdl2::pixels::Color;
 use sdl2::rect;
 use sdl2::rect::Rect;
-use sdl2::render::Texture;
-use sdl2::render::TextureQuery;
+use sdl2::render::{Texture, TextureQuery};
 use sdl2::ttf;
 use std::collections::HashMap;
 use std::sync::mpsc as mspc;
