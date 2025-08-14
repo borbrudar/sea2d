@@ -1,4 +1,4 @@
-/// Modul za generiranje ravni z uporabo Overlap Wave Function Collapse (WFC) algoritma
+/// Modul za generiranje nivojev z uporabo Overlap Wave Function Collapse (WFC) algoritma
 use core::panic;
 use image;
 use rand::Rng;
@@ -20,8 +20,10 @@ pub const EXIT_RGBA: [u8; 4] = [64, 58, 171, 102]; // RGBA color for exit tile
 pub const SPAWN_RGBA: [u8; 4] = [255, 0, 0, 102]; // RGBA color for player spawn tile
 pub const WALL_RGBA: [u8; 4] = [50, 47, 77, 255]; //RGBA color for wrap around wall
 
+/// Vzorec je 2D matrika barv v RGBA formatu.
 pub type Pattern = Vec<Vec<[u8; 4]>>; // 2D array of RGBA colors
 
+/// Funkcija izvleče vzorce iz vzorčne slike.
 pub fn extract_patterns(path: &str, n: usize) -> Vec<Pattern> {
     let img = image::open(path).unwrap().to_rgba8();
     let (width, height) = img.dimensions();
@@ -55,6 +57,7 @@ pub fn extract_patterns(path: &str, n: usize) -> Vec<Pattern> {
     patterns
 }
 
+/// Iz vzorcev generira mrežo vzorcev.
 pub fn generate_pattern_grid(
     patterns: &Vec<Pattern>,
     pattern_width: u32,
@@ -73,12 +76,14 @@ pub fn generate_pattern_grid(
     grid
 }
 
+/// Struktura, ki predstavlja mrežo ploščic.
 pub struct TileGrid {
     pub width: usize,
     pub height: usize,
     pub tiles: Vec<Vec<[u8; 4]>>,
 }
 
+/// Pretvori mrežo vzorcev v mrežo ploščic.
 pub fn flatten_patterns_to_tile_grid(pattern_grid: &Vec<Vec<Pattern>>, n: usize) -> TileGrid {
     let grid_height = pattern_grid.len();
     let grid_width = pattern_grid[0].len();
@@ -110,10 +115,8 @@ pub fn flatten_patterns_to_tile_grid(pattern_grid: &Vec<Vec<Pattern>>, n: usize)
     }
 }
 
-/// Check if the tile grid is fully connected via walkable tiles
-/// Alpha >= 128: the tile is not walkable
-///
 impl TileGrid {
+    /// Ustvari novo prazno mrežo ploščic z danimi dimenzijami.
     pub fn new(width: usize, height: usize) -> Self {
         TileGrid {
             width,
@@ -122,6 +125,7 @@ impl TileGrid {
         }
     }
 
+    /// Preveri, ali je mreža ploščic popolnoma povezana s prehodnimi ploščicami.
     pub fn is_fully_connected(&self) -> bool {
         let height = self.height;
         let width = self.width;
@@ -185,7 +189,7 @@ impl TileGrid {
         visited_count == total_walkable
     }
 
-    //place spawn tile
+    /// Postavi ploščico za pojavno mesto igralca na dani koordinati.
     pub fn place_spawn_tile(&mut self, (x, y): (usize, usize), color: [u8; 4]) {
         if y + 1 < self.height && x < self.width {
             self.tiles[y + 1][x + 1] = color
@@ -198,6 +202,8 @@ impl TileGrid {
         }
     }
 
+    /// Ustvari novo mrežo ploščic z obrobo, ki obdaja obstoječo mrežo.
+    /// Obroba je napolnjena z dano barvo ploščice.
     pub fn wrap_edge(&self, tile_color: [u8; 4]) -> Self {
         let height = self.height;
         let width = self.width;
@@ -219,7 +225,8 @@ impl TileGrid {
         }
     }
 
-    //place special tiles on the edge of wrapped grid (exit, etc.)
+    /// Postavi ploščico na rob mreže na dani koordinati.
+    /// To funkcijo se uporablja na mreži, ki je že obrobljena z `wrap_edge`.
     pub fn place_tile_on_edge(
         &mut self,
         edge: Option<Edge>,
@@ -255,6 +262,7 @@ impl TileGrid {
         }
     }
 
+    /// Naloži izhodno ploščico na rob mreže, pri čemer se izogne prepovedanemu robu (kjer je pojavno mesto igralca).
     fn load_exit_tile(&self, forbidden_edge: Option<Edge>) -> ((usize, usize), Option<Edge>) {
         let mut rng = rand::rng();
         let width = self.width;
@@ -294,6 +302,7 @@ impl TileGrid {
         panic!("No valid edge found for exit placement");
     }
 
+    /// Poišče naključno pojavno mesto na ustreznem robu mreže.
     fn load_spawn(&self, edge: Edge) -> (usize, usize) {
         let mut rng = rand::rng();
         let width = self.width;
@@ -316,6 +325,7 @@ impl TileGrid {
             .expect("No valid spawn tile found near edge")
     }
 
+    /// Poišče naključno prehodno ploščico v mreži.
     pub fn random_walkable_tile(&self) -> (usize, usize) {
         let mut rng = rand::rng();
 
@@ -335,6 +345,7 @@ impl TileGrid {
             .expect("No walkable tiles found in the tile grid")
     }
 
+    /// Shrani izhodno sliko mreže ploščic v PNG datoteko.
     pub fn save_output_image(&self, tile_size: u32, output_path: &str) {
         if let Some(parent) = Path::new(output_path).parent() {
             fs::create_dir_all(parent).expect("Failed to create output directory");
@@ -364,6 +375,7 @@ impl TileGrid {
         println!("Saved output to {}", output_path);
     }
 
+    /// Prebere pojavno mesto igralca iz mreže ploščic.
     pub fn read_spawn(&self) -> (i32, i32) {
         let height = self.height;
         let width = self.width;
@@ -380,6 +392,8 @@ impl TileGrid {
     }
 }
 
+/// Generira mrežo ploščic z uporabo Overlap WFC algoritma.
+/// Ponavlja generacijo, dokler ni mreža povezana.
 pub fn generate_wfc(patterns: &Vec<Pattern>, width: u32, height: u32, n: usize) -> TileGrid {
     let mut tile_grid = TileGrid::new(width as usize, height as usize);
     let mut connected = false;
@@ -394,6 +408,7 @@ pub fn generate_wfc(patterns: &Vec<Pattern>, width: u32, height: u32, n: usize) 
     tile_grid
 }
 
+/// Iz PNG datoteke ustvari mrežo ploščic.
 pub fn get_tile_grid_from_png(path: &str, tile_size: u32) -> Option<TileGrid> {
     if !Path::new(path).exists() {
         return None; // File doesn't exist
@@ -421,6 +436,7 @@ pub fn get_tile_grid_from_png(path: &str, tile_size: u32) -> Option<TileGrid> {
     Some(tile_grid)
 }
 
+/// Struktura, ki predstavlja rob mreže ploščic.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Edge {
     Top,
@@ -429,6 +445,7 @@ pub enum Edge {
     Right,
 }
 
+/// Poišče nasprotni rob danega roba mreže ploščic.
 fn opposite_edge(edge: &Edge) -> Edge {
     match edge {
         Edge::Top => Edge::Bottom,
@@ -438,6 +455,7 @@ fn opposite_edge(edge: &Edge) -> Edge {
     }
 }
 
+/// Poišče izhodno ploščico na robu mreže ploščic iz PNG datoteke in vrne njen rob, če je najden.
 pub fn find_exit_tile_edge(path: &str, tile_size: u32) -> Option<Edge> {
     if !Path::new(path).exists() {
         return None; // File doesn't exist
@@ -475,7 +493,7 @@ pub fn find_exit_tile_edge(path: &str, tile_size: u32) -> Option<Edge> {
     None
 }
 
-/// Writes the next level path to an exits file for the current level
+/// Ustvari izhodno datoteko z imenom trenutnega nivoja in potjo do naslednjega nivoja.
 pub fn write_exits_file(current_level_name: &str, next_level_path: &str) {
     let exits_file_path = format!(
         "resources/levels/{}/{}_exits.txt",
@@ -490,6 +508,8 @@ pub fn write_exits_file(current_level_name: &str, next_level_path: &str) {
     println!("Exit file created: {}", exits_file_path);
 }
 
+/// Zažene Overlap WFC algoritem za generiranje nivoja z danim indeksom `k` in `i`.
+/// `k` določa velikost vzorcev, `i` pa indeks prejšnjega nivoja.
 pub fn run_overlap(k: i32, i: i32) {
     let patterns = extract_patterns(&format!("resources/levels/sample_{}.png", k), 3);
 
@@ -544,6 +564,7 @@ pub fn run_overlap(k: i32, i: i32) {
     );
 }
 
+/// Izvleče indeks nivoja iz poti do nivoja.
 pub fn extract_level_index(level_path: &str) -> Option<i32> {
     let path = Path::new(level_path);
     let folder_name = path.parent()?.file_name()?.to_str()?;
@@ -558,12 +579,14 @@ pub fn extract_level_index(level_path: &str) -> Option<i32> {
     None
 }
 
+/// Pridobi pot do mape nivoja iz poti do nivoja.
 fn get_folder_path_from_level(level_path: &str) -> Option<String> {
     Path::new(level_path)
         .parent()
         .map(|p| p.to_string_lossy().to_string())
 }
 
+/// Izbriše mapo nivoja in vse njene datoteke.
 fn delete_level_folder(folder_path: &str) -> std::io::Result<()> {
     let path = Path::new(folder_path);
     if path.exists() {
@@ -575,6 +598,7 @@ fn delete_level_folder(folder_path: &str) -> std::io::Result<()> {
     Ok(())
 }
 
+/// Generira naslednji nivo z uporabo Overlap WFC algoritma.
 //prev_level: Some(player.current_level)
 pub fn wfc_level_generator(prev_level: Option<&String>) {
     let mut rng = rand::rng();

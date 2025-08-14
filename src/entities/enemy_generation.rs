@@ -1,9 +1,11 @@
+/// Modul za generiranje sovražnikov v igri.
 use crate::entities::enemy::{Enemy, EnemyType};
 use crate::wfc::overlap::{TILE_SIZE, get_tile_grid_from_png};
 use rand::Rng;
 use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
 
+/// Generira seznam sovražnikov glede na indeks nivoja.
 pub fn generate_enemies<'a>(
     i: i32,
     texture_creator: &'a TextureCreator<WindowContext>,
@@ -32,6 +34,7 @@ pub fn generate_enemies<'a>(
     enemies
 }
 
+/// Naključno izbere tip sovražnika.
 pub fn pick_random_enemy_type() -> EnemyType {
     let mut rng = rand::rng();
     let j = rng.random_range(1..=4);
@@ -44,6 +47,7 @@ pub fn pick_random_enemy_type() -> EnemyType {
     }
 }
 
+/// Določi začetno točko za pojavljanje sovražnikov na podlagi nivoja.
 pub fn enemy_spawn_pt(level_index: i32, level_tile_size: i32) -> (f64, f64) {
     //read spawn from second layer picture
     let second_layer = format!(
