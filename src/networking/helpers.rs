@@ -1,3 +1,4 @@
+/// Modul pomožnih funkcij za mrežno komunikacijo v igri.
 use std::io::{ErrorKind, Read, Write};
 use std::net::TcpStream;
 
@@ -73,7 +74,9 @@ pub fn deserialize_to_packet(buf: Vec<u8>) -> Option<Packet> {
 
     match packet_int {
         Ok(packet_int) => {
-            if let Some(packet) = packet_int.try_deserialize::<ClientID>() { return Some(Packet::ClientIDPacket(packet)) };
+            if let Some(packet) = packet_int.try_deserialize::<ClientID>() {
+                return Some(Packet::ClientIDPacket(packet));
+            };
 
             if let Some(packet) = packet_int.try_deserialize::<PlayerAnimation>() {
                 return Some(Packet::PlayerPacket(PlayerPacket::PlayerAnimationPacket(

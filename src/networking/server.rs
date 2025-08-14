@@ -1,3 +1,4 @@
+/// Modul za upravljanje s strežnikom v mrežnem okolju igre.
 use crate::entities::player::Player;
 use crate::networking::helpers::{
     NetworkResult, deserialize_to_packet, serialize_and_send, try_read_tcp,
@@ -73,7 +74,9 @@ fn handle_player_send(
 }
 
 fn send_to_clients(packet: Packet, clients: &mut HashMap<u64, TcpStream>) {
-    if let Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect { id })) = packet {
+    if let Packet::PlayerPacket(PlayerPacket::PlayerDisconnectPacket(PlayerDisconnect { id })) =
+        packet
+    {
         clients.remove(&id);
     }
 

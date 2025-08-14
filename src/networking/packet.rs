@@ -1,3 +1,4 @@
+/// Modul za upravljanje s paketom v mrežnem okolju igre.
 use fnv::FnvHasher;
 use serde_derive::{Deserialize, Serialize};
 use std::error::Error;
@@ -6,6 +7,7 @@ use crate::networking::player_packets::PlayerPacket;
 
 use std::hash::{Hash, Hasher};
 
+/// Struktura, ki predstavlja paket, ki se uporablja za komunikacijo med klientom in strežnikom.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 
 pub enum Packet {

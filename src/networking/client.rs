@@ -1,3 +1,5 @@
+/// Modul za upravljanje s klientom v mrežnem okolju igre.
+///
 use crate::game::Game;
 use crate::networking::helpers::{
     NetworkResult, deserialize_to_packet, serialize_and_send, try_read_tcp,
@@ -22,9 +24,10 @@ pub fn client(address: &str) {
             // read from server and send to game thread
             match try_read_tcp(&mut client) {
                 NetworkResult::Ok(buf) => {
-                    if let Some(packet) = deserialize_to_packet(buf) { tx2
-                    .send(packet)
-                    .expect("Failed to send packet to game thread") };
+                    if let Some(packet) = deserialize_to_packet(buf) {
+                        tx2.send(packet)
+                            .expect("Failed to send packet to game thread")
+                    };
                 }
                 NetworkResult::WouldBlock => (),
                 NetworkResult::ConnectionLost => {

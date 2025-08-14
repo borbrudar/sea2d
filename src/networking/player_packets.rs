@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::entities::animation_data::AnimationData;
 
+/// Tipi paketov, vezanih na igralca.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum PlayerPacket {
     PlayerWelcomePacket(PlayerWelcome),
