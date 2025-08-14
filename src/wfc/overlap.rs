@@ -238,7 +238,7 @@ impl TileGrid {
         color: [u8; 4],
     ) {
         if let Some(e) = edge {
-            let mut adj_coord = (0, 0);
+            let adj_coord;
             match e {
                 Edge::Bottom => adj_coord = (x + 1, y + 2),
                 Edge::Top => adj_coord = (x + 1, 0),
@@ -526,7 +526,7 @@ pub fn run_overlap(k: i32, i: i32) {
     let (exit_pos, exit_edge) = tile_grid.load_exit_tile(forbidden_exit_edge);
 
     //find spawn tile
-    let (spawn_pos, spawn_edge) = if let Some(prev_edge) = forbidden_exit_edge {
+    let (spawn_pos, _spawn_edge) = if let Some(prev_edge) = forbidden_exit_edge {
         (tile_grid.load_spawn(prev_edge), Some(prev_edge))
     } else {
         (tile_grid.random_walkable_tile(), None)

@@ -45,7 +45,11 @@ impl<'a> Level {
     pub fn unlock_exit(&mut self) {
         for layer in &mut self.tiles {
             for tile in layer.values_mut() {
-                if let TileType::Exit(ExitTile { next_level, locked }) = &mut tile.tile_type {
+                if let TileType::Exit(ExitTile {
+                    next_level: _,
+                    locked,
+                }) = &mut tile.tile_type
+                {
                     if *locked {
                         *locked = false;
                         println!("Exit unlocked!");

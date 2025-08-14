@@ -71,7 +71,7 @@ impl Enemy {
         let mut size_x = 50;
         let mut size_y = 50;
 
-        /// Za vsak tip naloži ustrezno animacijo in velikost.
+        // Za vsak tip naloži ustrezno animacijo in velikost.
         match kind {
             EnemyType::Slime => {
                 ani_data = Some(AnimationData::new());

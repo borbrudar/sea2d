@@ -203,7 +203,7 @@ pub struct Badge {
 
 impl Badge {
     /// Ustvari novo značko z določenim položajem in teksturo.
-    pub fn new(pos: Rect, tex: TextureData) -> Badge {
+    pub fn _new(pos: Rect, tex: TextureData) -> Badge {
         Badge {
             position: pos,
             texture: tex,

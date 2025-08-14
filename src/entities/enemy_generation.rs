@@ -55,7 +55,7 @@ pub fn enemy_spawn_pt(level_index: i32, level_tile_size: i32) -> (f64, f64) {
     );
 
     let layer_grid = get_tile_grid_from_png(&second_layer, TILE_SIZE as u32);
-    let mut spawn_pt = (0, 0);
+    let spawn_pt;
 
     if let Some(grid) = layer_grid {
         spawn_pt = grid.read_spawn();

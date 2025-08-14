@@ -95,23 +95,23 @@ impl<'a> Hud<'a> {
             ))
             .unwrap();
 
-        /// Izriše gumb HUD-a.
+        // Izriše gumb HUD-a.
         for b in self.buttons.iter_mut() {
             b.draw(canvas, ttf_context, texture_creator, texture_map);
         }
 
-        /// Izriše značke HUD-a.
+        // Izriše značke HUD-a.
         for b in self.badges.iter_mut() {
             b.draw(canvas, texture_creator, texture_map);
         }
 
-        /// Izriše prikazovalnik časa.
+        // Izriše prikazovalnik časa.
         self.draw_time(canvas, ttf_context, texture_creator);
 
-        /// Izriše prikazovalnik zdravja igralca.
+        // Izriše prikazovalnik zdravja igralca.
         self.health_bar.draw(player_health, canvas);
 
-        /// Izriše dropdown meni HUD-a.
+        // Izriše dropdown meni HUD-a.
         self.dropdown
             .draw(canvas, ttf_context, texture_creator, texture_map);
     }
