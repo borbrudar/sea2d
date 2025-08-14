@@ -48,6 +48,8 @@ impl<'a> Button<'a> {
         }
     }
 
+    /// Ustvari teksturo za besedilo gumba.
+    /// Uporablja se za izris besedila na gumbu.
     pub fn create_text_texture<'b>(
         &'b self,
         texture_creator: &'b render::TextureCreator<WindowContext>,
@@ -74,6 +76,8 @@ impl<'a> Button<'a> {
         (texture, width, height)
     }
 
+    /// Izriše gumb na danem platnu.
+    /// Gumb lahko vsebuje barvo, teksturo in besedilo.
     pub fn draw(
         &mut self,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
@@ -112,6 +116,7 @@ impl<'a> Button<'a> {
         canvas.copy(&texture, None, Some(target)).unwrap();
     }
 
+    /// Obravnava klike na gumb.
     pub fn handle_event(&mut self, event: &Event, game_state: &mut GameState) -> bool {
         if let Event::MouseButtonDown {
             timestamp: _,
@@ -137,9 +142,8 @@ impl<'a> Button<'a> {
     }
 }
 
-//health bar
+/// Struktura, ki predstavlja kazalec zdravja igralca.
 pub struct HealthBar {
-    _offset: i32,
     width: i32,
     height: i32,
     x: i32,
@@ -148,9 +152,9 @@ pub struct HealthBar {
 }
 
 impl HealthBar {
+    /// Ustvari nov kazalec zdravja z začetno širino, višino in položajem.
     pub fn new() -> HealthBar {
         HealthBar {
-            _offset: 20,
             width: 200,
             height: 30,
             x: (SCREEN_WIDTH - 205) as i32,
@@ -158,7 +162,8 @@ impl HealthBar {
             _health: 100,
         }
     }
-
+    /// Izriše kazalec zdravja na danem platnu.
+    /// Barva kazalca se spreminja glede na odstotek zdravja.
     pub fn draw(&self, health: i32, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
         let health_percent = health as f32 / 100.0;
         let fill_width = (self.width as f32 * health_percent - 2.) as i32;
@@ -190,19 +195,22 @@ impl HealthBar {
     }
 }
 
-//badges
+/// Struktura, ki predstavlja značko v igri.
 pub struct Badge {
     pub position: Rect,
     pub texture: TextureData,
 }
 
 impl Badge {
+    /// Ustvari novo značko z določenim položajem in teksturo.
     pub fn new(pos: Rect, tex: TextureData) -> Badge {
         Badge {
             position: pos,
             texture: tex,
         }
     }
+
+    /// Izriše značko na danem platnu.
     pub fn draw<'a>(
         &mut self,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
@@ -223,14 +231,18 @@ impl Badge {
     }
 }
 
-//dropdown menu
+//Struktura, ki predstavlja spustni meni (Dropdown menu).
 pub struct Dropdown<'a> {
+    /// Gumb, ki sproži prikaz spustnega menija.
     pub trigger: Button<'a>,
+    /// Seznam gumbov, ki predstavljajo možnosti v spustnem meniju.
     pub items: Vec<Button<'a>>,
+    /// Ali je spustni meni viden.
     pub visible: bool,
 }
 
 impl<'a> Dropdown<'a> {
+    /// Ustvari nov spustni meni z danim sprožilnim gumbom in seznamom možnosti.
     pub fn new(trig: Button<'a>, stuff: Vec<Button<'a>>) -> Dropdown<'a> {
         Dropdown {
             trigger: trig,
@@ -239,6 +251,7 @@ impl<'a> Dropdown<'a> {
         }
     }
 
+    /// Izriše spustni meni na danem platnu.
     pub fn draw(
         &mut self,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
@@ -255,6 +268,8 @@ impl<'a> Dropdown<'a> {
         }
     }
 
+    /// Obravnava dogodke miške v spustnem meniju.
+    /// Preveri, ali je miška znotraj sprožilnega gumba ali katerega koli gumba v spustnem meniju.
     pub fn handle_event(&mut self, event: &Event) {
         if let Event::MouseMotion { x, y, .. } = event {
             let mouse_point = Point::new(*x, *y);

@@ -1,5 +1,5 @@
+/// Modul za upravljanje glavnega menija igre.
 use crate::display::button::{Button, ButtonAction};
-use crate::display::text::Text;
 use crate::game::GameState;
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use sdl2::image::LoadTexture;
@@ -10,11 +10,13 @@ use sdl2::ttf::{self, Sdl2TtfContext};
 use sdl2::video::{Window, WindowContext};
 use std::collections::HashMap;
 
+/// Struktura, ki predstavlja glavni meni igre.
 pub struct MainMenu<'a> {
     pub start_button: Button<'a>,
 }
 
 impl<'a> MainMenu<'a> {
+    /// Ustvari nov glavni meni z gumbom za začetek igre.
     pub fn new<'b>() -> MainMenu<'b> {
         let dest_rect = Rect::new(
             (SCREEN_WIDTH / 2) as i32 - 75,
@@ -33,6 +35,7 @@ impl<'a> MainMenu<'a> {
         MainMenu { start_button }
     }
 
+    /// Izriše glavni meni na danem platnu.
     pub fn draw(
         &mut self,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
@@ -48,10 +51,6 @@ impl<'a> MainMenu<'a> {
         // Assuming full-screen background
         let target = Rect::new(0, 0, 800, 600);
         canvas.copy(&texture, None, Some(target)).unwrap();
-        // canvas.set_draw_color(Color::RGB(44, 130, 201));
-        // canvas.clear();
-        // let rect = Rect::new(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-        // canvas.fill_rect(rect).unwrap();
 
         // Draw start button
         //draw frame around the button
@@ -71,12 +70,14 @@ impl<'a> MainMenu<'a> {
     }
 }
 
+/// Struktura, ki predstavlja zaslon z gumbi.
 pub struct Screen<'a> {
     pub buttons: Vec<Button<'a>>,
     pub background_png: String,
 }
 
 impl<'a> Screen<'a> {
+    /// Ustvari nov zaslon z danimi gumbi in ozadjem.
     pub fn new(bts: Vec<Button>, background: String) -> Screen {
         Screen {
             buttons: bts,
@@ -84,6 +85,7 @@ impl<'a> Screen<'a> {
         }
     }
 
+    /// Izriše zaslon z gumbi na danem platnu.
     pub fn draw(
         &mut self,
         canvas: &mut Canvas<Window>,
