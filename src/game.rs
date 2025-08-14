@@ -1,3 +1,4 @@
+/// Modul z glavno logiko igre.
 use crate::display::{
     button::{Button, ButtonAction, Dropdown, HealthBar},
     hud::Hud,
@@ -19,6 +20,7 @@ use sdl2::ttf;
 use std::collections::HashMap;
 use std::sync::mpsc as mspc;
 
+/// Stanje igre.
 #[derive(Clone, Copy, Debug)]
 pub enum GameState {
     Running,
@@ -28,6 +30,7 @@ pub enum GameState {
     Instructions,
 }
 
+/// Struktura, ki predstavlja igro.
 pub struct Game {
     packet_receiver: mspc::Receiver<Packet>,
     packet_sender: mspc::Sender<Packet>,
@@ -44,6 +47,7 @@ pub fn find_sdl_gl_driver() -> Option<u32> {
 }
 
 impl Game {
+    /// Ustvari novo igro.
     pub fn new(
         packet_sender: mspc::Sender<Packet>,
         packet_receiver: mspc::Receiver<Packet>,
@@ -55,6 +59,7 @@ impl Game {
         }
     }
 
+    /// Obdeluje prejete pakete in posodablja stanje igralca in drugih igralcev.
     fn handle_receive<'a>(
         &self,
         player: &mut Player,
@@ -170,7 +175,8 @@ impl Game {
         }
     }
 
-    // main game loop
+    /// Glavna zanka igre, ki obdeluje dogodke, posodablja stanje in riše vsebino na zaslon.
+    /// V tej zanki se generira prvi nivo in inicializira SDL2.
     pub fn run(&mut self) {
         //generate first level
         wfc_level_generator(None);
@@ -242,12 +248,6 @@ impl Game {
 
         // enemies
         let mut enemies: Vec<Enemy> = generate_enemies(1, &texture_creator, &mut texture_map);
-        // enemies.push(Enemy::new(
-        //     EnemyType::Wizard,
-        //     (10., 10.),
-        //     &texture_creator,
-        //     &mut texture_map,
-        // ));
 
         let mut projectiles = Vec::new();
 
@@ -269,14 +269,9 @@ impl Game {
             Some(Color::RGB(0, 255, 0)),
             Rect::new(50, 0, 50, 50),
         );
+
         //Health bar
         let healthbar = HealthBar::new();
-
-        //Badges
-        // let first_badge = Badge::new(
-        //     Rect::new(300, 0, 50, 50),
-        //     TextureData::new("resources/textures/scuba_mask.png".to_string()),
-        // );
 
         //dropdown menu
         let ddm = Dropdown::new(
