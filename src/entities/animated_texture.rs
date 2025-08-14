@@ -1,24 +1,36 @@
+/// Modul, ki predstavlja animirano teksturo.
 use serde::{Deserialize, Serialize};
 
 use crate::environment::texture_data::TextureData;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+
+/// Vrsta animacije, ki določa, kako se animacija obnaša.
 pub enum AnimationType {
     Loop,
     PingPong,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+
+/// Struktura, ki predstavlja animirano teksturo.
 pub struct AnimatedTexture {
+    /// Seznam posameznih okvirjev animacije.
     pub frames: Vec<TextureData>,
+    /// Trenutni okvir animacije.
     pub current_frame: i32,
+    /// Prejšnji okvir animacije.
     pub previous_frame: i32,
+    /// Čas med posameznimi okvirji animacije.
     pub frame_time: f64,
+    /// Trenutni čas animacije.
     pub current_time: f64,
+    /// Vrsta animacije.
     pub animation_type: AnimationType,
 }
 
 impl<'a> AnimatedTexture {
+    /// Ustvari novo animirano teksturo z določenim časom med okvirji.
     pub fn new(frame_time: f64) -> AnimatedTexture {
         AnimatedTexture {
             frames: Vec::new(),
@@ -30,6 +42,7 @@ impl<'a> AnimatedTexture {
         }
     }
 
+    /// Posodobi animacijo glede na pretekli čas.
     pub fn update(&mut self, dt: f64) {
         self.current_time += dt;
         if self.current_time >= self.frame_time {
@@ -54,6 +67,7 @@ impl<'a> AnimatedTexture {
         }
     }
 
+    /// Izriše animacijo na dani poziciji in z dano velikostjo.
     pub fn draw(
         &self,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
@@ -68,6 +82,7 @@ impl<'a> AnimatedTexture {
             .unwrap();
     }
 
+    /// Naloži animacijo iz datoteke.
     pub fn load_animation(
         &mut self,
         path: String,

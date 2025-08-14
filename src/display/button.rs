@@ -1,4 +1,4 @@
-use crate::display::text::Text;
+/// Modul za gumbe v igri.
 use crate::environment::texture_data::TextureData;
 use crate::game::GameState;
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
@@ -7,24 +7,31 @@ use sdl2::render::Texture;
 use sdl2::ttf;
 use sdl2::{event::Event, rect::Point, rect::Rect, render, video::WindowContext};
 
+/// Gumb lahko sprejme dve vrsti dejanj: spreminja lahko stanje igre
+/// ali pa izvede funkcijo.
 pub enum ButtonAction<'a> {
     ChangeGameState(GameState),
     Callback(Box<dyn FnMut() + 'a>),
 }
 
-//basic button
+/// Struktura, ki predstavlja gumb v igri.
+/// Gumb ima svoj ukaz, lahko vsebuje besedilo, teksturo in barvo
+/// ter ima določen položaj na zaslonu.
 pub struct Button<'a> {
-    //ukaz
+    /// Ukaz.
     pub action: ButtonAction<'a>,
-    //pub function: Box<dyn FnMut() + 'a>,
+    /// Besedilo gumba.
     pub text: Option<String>,
+    /// Tekstura gumba, če obstaja.
     pub texture: Option<TextureData>,
-
+    /// Barva gumba.
     pub colour: Option<RGB>,
+    /// Pravokotnik, ki predstavlja položaj gumba na zaslonu.
     pub position: Rect,
 }
 
 impl<'a> Button<'a> {
+    /// Ustvari nov gumb z določenim dejanjem, besedilom, teksturo, barvo in položajem.
     pub fn new(
         act: ButtonAction<'a>,
         line: Option<String>,
@@ -180,55 +187,6 @@ impl HealthBar {
                 fill_height as u32,
             ))
             .unwrap();
-
-        /*
-        // Points of the parallelogram
-        let p0 = (self.x, self.y);
-        let p1 = (self.x + self.width, self.y);
-        let p2 = (self.x + self.width - self.offset, self.y + self.height);
-        let p3 = (self.x - self.offset, self.y + self.height);
-
-        // Health percent (from 0.0 to 1.0)
-        let health_percent = self.health as f32 / 100.0;
-
-        // Interpolate points for filled area
-        let fill_p1_x = self.x + (self.width as f32 * health_percent) as i32;
-        let fill_p2_x = self.x + (self.width as f32 * health_percent) as i32 - self.offset;
-
-        let fill_points = [p0, (fill_p1_x, p1.1), (fill_p2_x, p2.1), p3];
-
-        let vx = [p0.0, p1.0, p2.0, p3.0];
-        let vy = [p0.1, p1.1, p2.1, p3.1];
-
-        canvas
-            .filled_polygon(
-                &vx.iter().map(|&x| x as i16).collect::<Vec<i16>>(),
-                &vy.iter().map(|&y| y as i16).collect::<Vec<i16>>(),
-                RGB::RGB(50, 50, 50),
-            )
-            .unwrap();
-
-        let vxf = [
-            fill_points[0].0,
-            fill_points[1].0,
-            fill_points[2].0,
-            fill_points[3].0,
-        ];
-        let vyf = [
-            fill_points[0].1,
-            fill_points[1].1,
-            fill_points[2].1,
-            fill_points[3].1,
-        ];
-
-        canvas
-            .filled_polygon(
-                &vxf.iter().map(|&x| x as i16).collect::<Vec<i16>>(),
-                &vyf.iter().map(|&y| y as i16).collect::<Vec<i16>>(),
-                RGB::RGB(255, 0, 0),
-            )
-            .unwrap();
-        */
     }
 }
 
@@ -264,6 +222,7 @@ impl Badge {
             .unwrap();
     }
 }
+
 //dropdown menu
 pub struct Dropdown<'a> {
     pub trigger: Button<'a>,

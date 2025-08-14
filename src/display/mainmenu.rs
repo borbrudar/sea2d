@@ -12,11 +12,10 @@ use std::collections::HashMap;
 
 pub struct MainMenu<'a> {
     pub start_button: Button<'a>,
-    pub title: Text,
 }
 
 impl<'a> MainMenu<'a> {
-    pub fn new<'b>(title_text: String) -> MainMenu<'b> {
+    pub fn new<'b>() -> MainMenu<'b> {
         let dest_rect = Rect::new(
             (SCREEN_WIDTH / 2) as i32 - 75,
             (SCREEN_HEIGHT / 2) as i32 + 80,
@@ -31,18 +30,7 @@ impl<'a> MainMenu<'a> {
             dest_rect,
         );
 
-        let title = Text::new(
-            50,
-            100,
-            50,
-            "resources/fonts/Battle-Race.ttf",
-            title_text,
-            Color::RGB(255, 255, 255),
-        );
-        MainMenu {
-            start_button,
-            title,
-        }
+        MainMenu { start_button }
     }
 
     pub fn draw(
@@ -80,8 +68,6 @@ impl<'a> MainMenu<'a> {
 
         self.start_button
             .draw(canvas, ttf_context, texture_creator, texture_map);
-
-        self.title.draw(canvas, ttf_context);
     }
 }
 

@@ -293,22 +293,15 @@ impl Game {
                     ButtonAction::ChangeGameState(GameState::MainMenu),
                     Some("Back to Main Menu".to_string()),
                     None,
-                    Some(Color::RGB(214, 2, 112)),
-                    Rect::new(0, 50, 300, 50),
+                    Some(Color::RGB(30, 139, 195)),
+                    Rect::new(0, 50, 250, 50),
                 ),
                 Button::new(
-                    ButtonAction::Callback(Box::new(|| println!("Item 2 clicked"))),
-                    Some("Character descriptions".to_string()),
+                    ButtonAction::ChangeGameState(GameState::Instructions),
+                    Some("Instructions".to_string()),
                     None,
-                    Some(Color::RGB(155, 79, 150)),
-                    Rect::new(0, 100, 300, 50),
-                ),
-                Button::new(
-                    ButtonAction::Callback(Box::new(|| println!("Item 3 clicked"))),
-                    Some("Item 3".to_string()),
-                    None,
-                    Some(Color::RGB(0, 56, 168)),
-                    Rect::new(0, 150, 300, 50),
+                    Some(Color::RGB(109, 165, 194)),
+                    Rect::new(0, 100, 250, 50),
                 ),
             ],
         );
@@ -610,7 +603,7 @@ impl Game {
                         .unwrap();
                 }
                 GameState::MainMenu => {
-                    let mut main_menu = MainMenu::new("Game needs a new title".to_string());
+                    let mut main_menu = MainMenu::new();
                     main_menu.draw(
                         &mut canvas,
                         &ttf_context,

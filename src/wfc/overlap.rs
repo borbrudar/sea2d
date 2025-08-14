@@ -3,12 +3,13 @@ use image;
 use rand::Rng;
 use rand::prelude::IndexedRandom;
 use rand::seq::SliceRandom;
-use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
+
+//TODO -- cleanup:
 
 //sample: 5x5 ploščic, 10x10 pixlov
 const SAMPLE_TILE_SIZE: usize = 2;
@@ -18,7 +19,7 @@ const GRID_WIDTH: usize = 16;
 
 pub type Pattern = Vec<Vec<[u8; 4]>>; // 2D array of RGBA colors
 
-pub fn extract_patterns(path: &str, n: usize) -> (Vec<Pattern>, HashMap<Pattern, usize>) {
+pub fn extract_patterns(path: &str, n: usize) -> Vec<Pattern> {
     let img = image::open(path).unwrap().to_rgba8();
     let (width, height) = img.dimensions();
     let tile_px = SAMPLE_TILE_SIZE;
@@ -26,7 +27,6 @@ pub fn extract_patterns(path: &str, n: usize) -> (Vec<Pattern>, HashMap<Pattern,
     let tiles_y = height as usize / tile_px;
 
     let mut patterns = Vec::new();
-    let mut frequencies = HashMap::new();
 
     for ty in 0..=tiles_y - n {
         for tx in 0..=tiles_x - n {
@@ -45,23 +45,13 @@ pub fn extract_patterns(path: &str, n: usize) -> (Vec<Pattern>, HashMap<Pattern,
 
                 pattern.push(row);
             }
-
-            if !frequencies.contains_key(&pattern) {
-                patterns.push(pattern.clone());
-            }
-            *frequencies.entry(pattern).or_insert(0) += 1;
         }
     }
 
-    println!(
-        "Extracted {} unique patterns ({} total)",
-        patterns.len(),
-        frequencies.len()
-    );
-    (patterns, frequencies)
+    println!("Extracted {} unique patterns", patterns.len(),);
+    patterns
 }
 
-//frequencies not used here (yet?!)
 pub fn generate_pattern_grid(
     patterns: &Vec<Pattern>,
     pattern_width: u32,
@@ -446,8 +436,7 @@ pub fn write_exits_file(current_level_name: &str, next_level_path: &str) {
 }
 
 pub fn run_overlap(k: i32, i: i32) {
-    let (patterns, frequencies) =
-        extract_patterns(&format!("resources/levels/sample_{}.png", k), 3);
+    let patterns = extract_patterns(&format!("resources/levels/sample_{}.png", k), 3);
 
     let width = GRID_WIDTH as u32; // grid width in tiles
     let height = GRID_HEIGHT as u32; // grid height in tiles

@@ -1,23 +1,31 @@
-use crate::display::button::{self, HealthBar};
-use crate::display::game_clock;
+/// Modul, ki predstavlja HUD (Heads-Up Display) v igri.
+use crate::display::{
+    button::{self, HealthBar},
+    game_clock,
+};
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
-use sdl2::render::TextureCreator;
-use sdl2::render::{Canvas, Texture};
+use sdl2::render::{Canvas, Texture, TextureCreator};
 use sdl2::ttf;
-use sdl2::video::Window;
-use sdl2::video::WindowContext;
+use sdl2::video::{Window, WindowContext};
 
+/// Struktura, ki predstavlja HUD v igri.
 pub struct Hud<'a> {
+    /// Seznam gumbov, ki so prikazani na HUD-u.
     pub buttons: Vec<button::Button<'a>>,
+    /// Seznam značk (badges), ki so prikazane na HUD-u.
     pub badges: Vec<button::Badge>,
+    /// Dropdown meni, ki je del HUD-a.
     pub dropdown: button::Dropdown<'a>,
+    /// Prikazovalnik zdravja igralca.
     pub health_bar: button::HealthBar,
+    /// Prikazovalnik časa igre.
     pub time_display: game_clock::GameClock,
 }
 
 impl<'a> Hud<'a> {
+    /// Ustvari nov HUD z danimi gumbi, značkami, dropdown menijem in prikazovalnikom zdravja.
     pub fn new<'b: 'a>(
         gumbi: Vec<button::Button<'b>>,
         ikone: Vec<button::Badge>,
@@ -33,6 +41,7 @@ impl<'a> Hud<'a> {
         }
     }
 
+    /// Izriše prikazovalnik časa na zaslonu.
     pub fn draw_time(
         &self,
         canvas: &mut Canvas<Window>,
@@ -64,6 +73,7 @@ impl<'a> Hud<'a> {
         canvas.copy(&texture, None, rect).unwrap();
     }
 
+    /// Izriše HUD na zaslon.
     pub fn draw(
         &mut self,
         player_health: i32,
@@ -72,7 +82,6 @@ impl<'a> Hud<'a> {
         texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>,
         texture_map: &mut std::collections::HashMap<String, Texture<'a>>,
     ) {
-        // izrisi zadeve na ekranu, npr. health bar, score, etc.
         canvas.set_draw_color(sdl2::pixels::Color::RGB(128, 128, 128));
         canvas
             .fill_rect(sdl2::rect::Rect::new(0, 0, SCREEN_WIDTH, 50))
@@ -86,23 +95,23 @@ impl<'a> Hud<'a> {
             ))
             .unwrap();
 
-        // narise gumbke
+        /// Izriše gumb HUD-a.
         for b in self.buttons.iter_mut() {
             b.draw(canvas, ttf_context, texture_creator, texture_map);
         }
 
-        //narise badge
+        /// Izriše značke HUD-a.
         for b in self.badges.iter_mut() {
             b.draw(canvas, texture_creator, texture_map);
         }
 
-        // narise time
+        /// Izriše prikazovalnik časa.
         self.draw_time(canvas, ttf_context, texture_creator);
 
-        // narise health bar
+        /// Izriše prikazovalnik zdravja igralca.
         self.health_bar.draw(player_health, canvas);
 
-        //narise ddm
+        /// Izriše dropdown meni HUD-a.
         self.dropdown
             .draw(canvas, ttf_context, texture_creator, texture_map);
     }
