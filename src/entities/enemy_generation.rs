@@ -17,7 +17,6 @@ pub fn generate_enemies<'a>(
     let mut n = 1;
     if i >= 3 {
         let div = (i - 3) / 4;
-        println!("div: {}", div);
         n += div + 1;
     }
     for _ in 1..=n {
@@ -80,7 +79,6 @@ pub fn enemy_spawn_pt(level_index: i32, level_tile_size: i32) -> (f64, f64) {
             let distance = (x as i32 - spawn_pt.0).abs() + (y as i32 - spawn_pt.1).abs(); // Manhattan distance
 
             if distance >= 3 {
-                println!("enemy spawn: {}, {}", x, y);
                 return (
                     (x * level_tile_size as usize) as f64,
                     (y * level_tile_size as usize) as f64,

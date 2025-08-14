@@ -638,7 +638,7 @@ impl Enemy {
             Some(&3) => self.dir = 3,
             _ => {
                 self.dir = -1;
-                println!("No possible moves found");
+                //println!("No possible moves found");
             }
         };
     }

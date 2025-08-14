@@ -376,7 +376,6 @@ impl TileGrid {
         }
 
         img.save(Path::new(output_path)).unwrap();
-        println!("Saved output to {}", output_path);
     }
 
     /// Prebere pojavno mesto igralca iz mreže ploščic.
@@ -481,8 +480,6 @@ pub fn find_exit_tile_edge(path: &str, tile_size: u32) -> Option<Edge> {
             let pixel = img.get_pixel(px, py);
 
             if pixel.0 == EXIT_RGBA {
-                println!("Found exit tile at previous level");
-
                 return match (tx, ty) {
                     (0, _) => Some(Edge::Left),
                     (x, _) if x == tiles_x - 1 => Some(Edge::Right),
@@ -508,8 +505,6 @@ pub fn write_exits_file(current_level_name: &str, next_level_path: &str) {
 
     writeln!(file, "{}", next_level_path)
         .unwrap_or_else(|_| panic!("Failed to write to exits file: {}", exits_file_path));
-
-    println!("Exit file created: {}", exits_file_path);
 }
 
 /// Zažene Overlap WFC algoritem za generiranje nivoja z danim indeksom `k` in `i`.
@@ -575,7 +570,6 @@ pub fn extract_level_index(level_path: &str) -> Option<i32> {
 
     if let Some(index_str) = folder_name.strip_prefix("level") {
         if let Ok(index) = index_str.parse::<i32>() {
-            println!("Extracted level index: {}", index);
             return Some(index);
         }
     }
@@ -595,7 +589,6 @@ fn delete_level_folder(folder_path: &str) -> std::io::Result<()> {
     let path = Path::new(folder_path);
     if path.exists() {
         fs::remove_dir_all(path)?; // Recursively deletes folder + files
-        println!("Deleted folder: {}", folder_path);
     } else {
         println!("Folder does not exist: {}", folder_path);
     }

@@ -160,13 +160,12 @@ impl<'a> Level {
 
         let mut exits: Vec<String> = Vec::new();
         let exits_path = path.replace("1.png", "exits.txt");
-        println!("Looking for exits file at: {}", exits_path);
+
         if Path::new(&exits_path).exists() {
             let file = File::open(&exits_path).expect("Failed to read exits file");
             let reader = BufReader::new(file);
 
             exits = reader.lines().filter_map(Result::ok).collect();
-            println!("Exits found: {:?}", exits);
 
             exits.reverse();
         }
