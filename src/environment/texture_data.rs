@@ -1,18 +1,26 @@
+/// Modul za upravljanje s podatki o teksturah.
 use sdl2::image::LoadTexture;
 use sdl2::render::Texture;
 use sdl2::render::TextureCreator;
 use serde::{Deserialize, Serialize};
 
+/// Struktura, ki predstavlja podatke o teksturi.
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Hash)]
 pub struct TextureData {
+    /// Pot do datoteke teksture.
     pub path: String,
+    /// Širina teksture.
     pub width: u32,
+    /// Višina teksture.
     pub height: u32,
+    /// X koordinata za risanje teksture.
     pub x: u32,
+    /// Y koordinata za risanje teksture.
     pub y: u32,
 }
 
 impl<'a> TextureData {
+    /// Ustvari novo instanco `TextureData` z dano potjo.
     pub fn new(path: String) -> TextureData {
         TextureData {
             path,
@@ -22,6 +30,7 @@ impl<'a> TextureData {
             y: 0,
         }
     }
+    /// Ustvari novo instanco `TextureData` z dano potjo in velikostjo.
     pub fn new_full(path: String, width: u32, height: u32, x: u32, y: u32) -> TextureData {
         TextureData {
             path,
@@ -32,6 +41,7 @@ impl<'a> TextureData {
         }
     }
 
+    /// Naloži teksturo iz datoteke in jo shrani v `texture_map`.
     pub fn load_texture(
         &mut self,
         texture_creator: &'a TextureCreator<sdl2::video::WindowContext>,
@@ -52,6 +62,8 @@ impl<'a> TextureData {
             }
         }
     }
+
+    /// Izriše teksturo na dani koordinati in velikosti.
     pub fn draw(
         &self,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
@@ -81,6 +93,7 @@ impl<'a> TextureData {
         }
     }
 
+    /// Samodejno nastavi širino in višino teksture, če sta nastavljeni na 0.
     pub fn size_auto(&mut self, texture: &Texture) {
         if self.width == 0 || self.height == 0 {
             let query = texture.query();

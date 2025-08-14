@@ -1,7 +1,11 @@
+/// Modul, ki predstavlja nivo igre.
 use crate::environment::autotiler::TileSetType;
 use ::image::RgbaImage;
 use sdl2::render::{Texture, TextureCreator};
-use std::{collections::HashMap, io::BufRead};
+use std::collections::HashMap;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+use std::path::Path;
 
 use crate::{
     entities::{camera::Camera, point::Point},
@@ -14,14 +18,21 @@ use crate::{
     },
 };
 
+/// Struktura, ki predstavlja nivo igre.
 pub struct Level {
+    /// Vektor ploščic nivoja.
     pub tiles: Vec<HashMap<Point<i32>, Tile>>, // vector for each layer, hashmap for fast position queries
+    /// Koordinate začetne pozicije igralca na nivoju.
     pub player_spawn: (i32, i32),
+    /// Velikost ploščic na nivoju.
     pub tile_size: i32,
+    /// Avtomatski postavljalnik ploščic, ki omogoča enostavno upravljanje s teksturami ploščic.
     pub autotiler: Autotiler,
 }
 
 impl<'a> Level {
+    /// Ustvari nov nivo z začetnimi vrednostmi.
+    /// Inicializira prazne ploščice, začetno pozicijo igralca, velikost ploščic in avtomatski postavljalnik ploščic.
     pub fn new() -> Level {
         Level {
             tiles: Vec::new(),
@@ -30,7 +41,7 @@ impl<'a> Level {
             autotiler: Autotiler::new(),
         }
     }
-
+    /// Odkleni izhod nivoja, če je bil prej zaklenjen.
     pub fn unlock_exit(&mut self) {
         for layer in &mut self.tiles {
             for tile in layer.values_mut() {
@@ -45,6 +56,8 @@ impl<'a> Level {
         }
     }
 
+    /// Inicializira avtomatski postavljalnik ploščic z vsemi privzetimi ploščicami.
+    /// Doda različne tipe ploščic z njihovimi teksturami.
     fn autotiler_init(&mut self) {
         // Initialize autotiler with default tiles
         self.autotiler.add_tile(
@@ -134,6 +147,8 @@ impl<'a> Level {
         );
     }
 
+    /// Naloži nivo iz datoteke.
+    /// Prebere nivo iz slike in ustvari ploščice glede na barve pikslov.
     pub fn load_from_file(
         &mut self,
         path: String,
@@ -142,28 +157,6 @@ impl<'a> Level {
     ) {
         // delete previous level (if any)
         self.tiles.clear();
-
-        // load exits file
-        // let mut exits_strs = path.clone();
-        // exits_strs = exits_strs
-        //     .chars()
-        //     .take(exits_strs.chars().count() - 5)
-        //     .collect();
-        // exits_strs.push_str(String::from("exits.txt").as_str());
-        // let mut exits: Vec<String> = Vec::new();
-        // if ::std::path::Path::new(&exits_strs).exists() {
-        //     let exit = ::std::fs::File::open(exits_strs).expect("Failed to read exits file");
-        //     let exit = ::std::io::BufReader::new(exit);
-        //     exits = ::std::io::BufReader::new(exit)
-        //         .lines()
-        //         .filter_map(Result::ok)
-        //         .collect();
-        //     exits.reverse();
-        // }
-
-        use std::fs::File;
-        use std::io::{BufRead, BufReader};
-        use std::path::Path;
 
         let mut exits: Vec<String> = Vec::new();
         let exits_path = path.replace("1.png", "exits.txt");
@@ -175,7 +168,7 @@ impl<'a> Level {
             exits = reader.lines().filter_map(Result::ok).collect();
             println!("Exits found: {:?}", exits);
 
-            exits.reverse(); // if needed for your logic
+            exits.reverse();
         }
 
         // initialize autotiler
@@ -200,6 +193,8 @@ impl<'a> Level {
         }
     }
 
+    /// Naloži plast ploščic iz slike.
+    /// Prebere sliko in ustvari ploščice glede na barve pikslov.
     fn load_layer(
         &mut self,
         path: String,
@@ -230,7 +225,7 @@ impl<'a> Level {
                     ));
                 }
                 let pixel = (pixel_rgb[0], pixel_rgb[1], pixel_rgb[2]);
-                //println!("Pixel: {:?}",pixel);
+
                 let pos: Point<i32> = Point::new(x * self.tile_size, y * self.tile_size);
 
                 // get neihbours for autotiler
@@ -618,6 +613,7 @@ impl<'a> Level {
         self.tiles.push(layer);
     }
 
+    /// Izriše nivo na zaslon.
     pub fn draw(
         &self,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
@@ -631,6 +627,7 @@ impl<'a> Level {
         }
     }
 
+    /// Nariše zadetne škatle.
     pub fn draw_hitboxes(
         &self,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
@@ -645,6 +642,7 @@ impl<'a> Level {
         }
     }
 
+    /// Pridobi položaj entitete glede na ploščice nivoja.
     // snap to nearest tile
     pub fn get_snapped_position(&self, hitbox: &AABB) -> (i32, i32) {
         let x = (hitbox.x + hitbox.w as f64 / 2.0) as i32;
@@ -655,6 +653,7 @@ impl<'a> Level {
         )
     }
 
+    /// Preveri trke med nivojem in ostalimi entitetami.
     pub fn check_collision(&self, hitbox: &AABB) -> Vec<Tile> {
         let mut ret = Vec::new();
         let player_tile = (
@@ -682,6 +681,8 @@ impl<'a> Level {
         }
         ret
     }
+
+    /// Reši trke z okoljem.
     pub fn resolve_collision(&self, hitbox: &mut AABB) {
         let player_tile = (
             self.get_snapped_position(hitbox).0,

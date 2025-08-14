@@ -1,9 +1,10 @@
-use std::collections::HashMap;
-
 use crate::environment::{texture_data::TextureData, tile_type::TileType};
+/// Modul za avtomatsko postavljanje tekstur na ploščice v igri.
+use std::collections::HashMap;
 
 const TILE_SIZE: u32 = 16;
 
+/// Tipi setov ploščic, ki jih podpira avtomatsko postavljanje.
 #[derive(Hash)]
 pub enum TileSetType {
     Simple,        // 1 tile
@@ -12,21 +13,26 @@ pub enum TileSetType {
     _FullVariants, // se variacije
 }
 
+/// Struktura, ki predstavlja avtomatsko postavljanje ploščic.
 pub struct Autotiler {
     pub tiles_info: HashMap<TileType, (TileSetType, String)>,
 }
 
 impl Autotiler {
+    /// Ustvari nov avtomatski postavljalnik ploščic.
+    /// Inicializira prazno mapo za informacije o ploščicah.
     pub fn new() -> Autotiler {
         Autotiler {
             tiles_info: HashMap::new(),
         }
     }
 
+    /// Doda novo ploščico v avtomatsko postavljanje.
     pub fn add_tile(&mut self, tile_type: TileType, tile_set_type: TileSetType, path: String) {
         self.tiles_info.insert(tile_type, (tile_set_type, path));
     }
 
+    ///Pridobi teksturo ploščice glede na sosede in tip ploščice.
     pub fn get_tile_texture(
         &self,
         neighbours: [[bool; 3]; 3],

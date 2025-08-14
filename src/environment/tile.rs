@@ -1,18 +1,26 @@
+/// Modul za upravljanje s ploščicami v okolju igre.
 use crate::entities::camera::Camera;
 use crate::environment::{aabb::AABB, texture_data::TextureData, tile_type::TileType};
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
 
+/// Struktura, ki predstavlja ploščico v igri.
 #[derive(Debug, Clone)]
 pub struct Tile {
+    /// Položaj ploščice na mreži.
     pub x: i32,
     pub y: i32,
+    /// Velikost ploščice.
     pub size: u32,
+    /// Podatki o teksturi ploščice, če so na voljo.
     pub texture_data: Option<TextureData>,
+    /// Tip ploščice, ki določa njeno funkcionalnost in videz.
     pub tile_type: TileType,
+    /// Omejitveni okvir ploščice, če je določen.
     pub bounding_box: Option<AABB>,
 }
 
 impl Tile {
+    /// Ustvari novo ploščico z danimi lastnostmi.
     pub fn new(x: i32, y: i32, size: u32, tile_type: TileType, bounding_box: Option<AABB>) -> Tile {
         Tile {
             x,
@@ -24,6 +32,7 @@ impl Tile {
         }
     }
 
+    /// Izriše ploščico na zaslon.
     pub fn draw(
         &self,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,

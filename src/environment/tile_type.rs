@@ -1,3 +1,6 @@
+/// Modul za razvrščanje tipov ploščic.
+
+/// Struktura, ki predstavlja različne tipe ploščic v igri.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum TileType {
     Grass,
@@ -19,6 +22,8 @@ pub enum TileType {
     Exit(ExitTile),
 }
 
+/// Struktura, ki predstavlja izhodno ploščico z informacijami o naslednji ravni in zaklenitvi.
+/// Uporablja se za prehod med nivoji v igri.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExitTile {
     pub next_level: String,
@@ -46,6 +51,7 @@ impl TileType {
     pub const CACTUS_COLOR: (u8, u8, u8) = (96, 164, 79);
     // Other colors for each type can be defined here...
 
+    /// Vrne barvo ploščice glede na njen tip.
     pub fn _get_color(&self) -> (u8, u8, u8) {
         match *self {
             TileType::Grass => TileType::GRASS_COLOR,
