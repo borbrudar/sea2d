@@ -50,10 +50,14 @@ pub fn extract_patterns(path: &str, n: usize) -> Vec<Pattern> {
 
                 pattern.push(row);
             }
+
+            if !patterns.contains(&pattern) {
+                patterns.push(pattern);
+            }
         }
     }
 
-    println!("Extracted {} unique patterns", patterns.len(),);
+    println!("Extracted {} unique patterns", patterns.len());
     patterns
 }
 
