@@ -1,3 +1,4 @@
+/// Modul, ki predstavlja podatke o animacijah, ki jih uporablja entiteta.
 use sdl2::{
     render::{Canvas, Texture},
     video::Window,
@@ -6,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::entities::animated_texture::AnimatedTexture;
 
+/// Stanje animacije, ki določa, katera animacija naj bo prikazana.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum AnimationState {
     Front,
@@ -16,6 +18,9 @@ pub enum AnimationState {
     Default,
 }
 
+/// Struktura, ki vsebuje podatke o animacijah entitete.
+/// Za vsako stanje animacije (spredaj, zadaj, levo, desno, mirujoče, privzeto) je shranjena možnost `AnimatedTexture`
+/// ter trenutno stanje animacije, ki je tipa `AnimationState`.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct AnimationData {
     pub front: Option<AnimatedTexture>,
@@ -27,6 +32,7 @@ pub struct AnimationData {
     pub current_animation: AnimationState,
 }
 impl AnimationData {
+    /// Ustvari novo instanco `AnimationData` z vsemi animacijami nastavljenimi na `None`.
     pub fn new() -> AnimationData {
         AnimationData {
             front: None,
@@ -38,7 +44,7 @@ impl AnimationData {
             current_animation: AnimationState::Default,
         }
     }
-
+    /// Izriše animacijo.
     pub fn draw(
         &self,
         canvas: &mut Canvas<Window>,
@@ -101,14 +107,39 @@ impl AnimationData {
         }
     }
 
+    /// Posodobi trenutno animacijo glede na časovni korak `dt`.
     pub fn update(&mut self, dt: f64) {
         match self.current_animation {
-            AnimationState::Default => if let Some(ref mut anim) = self.default { anim.update(dt) },
-            AnimationState::Front => if let Some(ref mut anim) = self.front { anim.update(dt) },
-            AnimationState::Back => if let Some(ref mut anim) = self.back { anim.update(dt) },
-            AnimationState::Left => if let Some(ref mut anim) = self.left { anim.update(dt) },
-            AnimationState::Right => if let Some(ref mut anim) = self.right { anim.update(dt) },
-            AnimationState::Idle => if let Some(ref mut anim) = self.idle { anim.update(dt) },
+            AnimationState::Default => {
+                if let Some(ref mut anim) = self.default {
+                    anim.update(dt)
+                }
+            }
+            AnimationState::Front => {
+                if let Some(ref mut anim) = self.front {
+                    anim.update(dt)
+                }
+            }
+            AnimationState::Back => {
+                if let Some(ref mut anim) = self.back {
+                    anim.update(dt)
+                }
+            }
+            AnimationState::Left => {
+                if let Some(ref mut anim) = self.left {
+                    anim.update(dt)
+                }
+            }
+            AnimationState::Right => {
+                if let Some(ref mut anim) = self.right {
+                    anim.update(dt)
+                }
+            }
+            AnimationState::Idle => {
+                if let Some(ref mut anim) = self.idle {
+                    anim.update(dt)
+                }
+            }
         }
     }
 }

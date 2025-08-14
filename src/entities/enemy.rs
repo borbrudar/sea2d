@@ -1,3 +1,4 @@
+/// Modul, ki predstavlja sovražnike v igri.
 use rand::seq::IndexedRandom;
 use sdl2::{
     render::{Canvas, Texture, TextureCreator},
@@ -20,6 +21,7 @@ use std::{
     time::Instant,
 };
 
+/// Tipi sovražnikov.
 pub enum EnemyType {
     Slime,
     Stonewalker,
@@ -28,23 +30,37 @@ pub enum EnemyType {
     Placeholder,
 }
 
+/// Struktura, ki predstavlja sovražnika.
 pub struct Enemy {
+    /// X- koordinata sovražnika.
     pub x: f64,
+    /// Y- koordinata sovražnika.
     pub y: f64,
+    /// Podatki o animaciji sovražnika.
     pub animation_data: Option<AnimationData>,
+    /// Velikost sovražnika v X smeri.
     pub size_x: u32,
+    /// Velikost sovražnika v Y smeri.
     pub size_y: u32,
+    /// Zadetna škatla (hitbox) sovražnika za preverjanje trkov.
     pub hitbox: AABB,
+    /// Tip sovražnika.
     pub kind: EnemyType,
 
+    /// Čas zadnje akcije sovražnika.
     pub last_time: f64,
+    /// Smer gibanja sovražnika (-1 = ne giblje se, 0 = gor, 1 = desno, 2 = dol, 3 = levo).
     pub dir: i32,
+    /// Ali je sovražnik opazil igralca.
     pub spotted_player: bool,
+    /// Hitrost gibanja sovražnika.
     pub moving_speed: f64,
+    /// Zdravje sovražnika.
     pub health: i32,
 }
 
 impl Enemy {
+    /// Ustvari novega sovražnika z danim tipom, začetnim položajem in teksturo.
     pub fn new<'a>(
         kind: EnemyType,
         spawn_pt: (f64, f64),
@@ -55,6 +71,7 @@ impl Enemy {
         let mut size_x = 50;
         let mut size_y = 50;
 
+        /// Za vsak tip naloži ustrezno animacijo in velikost.
         match kind {
             EnemyType::Slime => {
                 ani_data = Some(AnimationData::new());
@@ -426,6 +443,7 @@ impl Enemy {
         }
     }
 
+    /// Izriše sovražnika na platno.
     pub fn draw(
         &self,
         canvas: &mut Canvas<Window>,
@@ -457,6 +475,7 @@ impl Enemy {
         }
     }
 
+    /// Posodobi sovražnika glede na čas, nivo, igralca in izstrelke.
     pub fn update(
         &mut self,
         dt: f64,
@@ -585,6 +604,7 @@ impl Enemy {
         self.hitbox.y = self.y + 5.;
     }
 
+    /// Izbere naključno smer gibanja glede na možne premike.
     pub fn choose_random_move(&mut self, level: &Level) {
         let mut possible_moves = Vec::new();
         if self.can_move_to_tile(
@@ -623,6 +643,7 @@ impl Enemy {
         };
     }
 
+    /// Preveri, ali se lahko sovražnik premakne na dano ploščico.
     pub fn can_move_to_tile(&self, level: &Level, pt: Point<i32>) -> bool {
         let mut exists = false;
         let mut obstacle = false;
@@ -638,6 +659,7 @@ impl Enemy {
         exists && !obstacle
     }
 
+    /// Izračuna smer igralca glede na položaj sovražnika in vrne ustrezno smer.
     pub fn calculate_player_direction(&self, level: &Level, player: &Player) -> i32 {
         let player_tile = Point::new(
             level.get_snapped_position(&player.hitbox).0,

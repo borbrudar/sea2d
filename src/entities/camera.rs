@@ -1,5 +1,8 @@
+/// Modul, ki predstavlja kamero v igri.
+
 //use sdl2::{event::Event, keyboard::Keycode};
 
+/// Struktura `Camera` predstavlja kamero v igri, ki določa vidno polje in položaj.
 pub struct Camera {
     pub x: f64,
     pub y: f64,
@@ -9,6 +12,7 @@ pub struct Camera {
 }
 
 impl Camera {
+    /// Ustvari novo kamero z danimi koordinatami in velikostjo.
     pub fn new(x: f64, y: f64, width: u32, height: u32) -> Camera {
         Camera {
             x,

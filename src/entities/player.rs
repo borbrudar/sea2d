@@ -1,50 +1,79 @@
-use crate::entities::animation_data::{AnimationData, AnimationState};
-use crate::entities::projectile::{self, Projectile};
-use crate::entities::{animated_texture::AnimatedTexture, camera::Camera, enemy::Enemy};
+/// Modul, ki predstavlja igralca v igri.
+use crate::entities::{
+    animated_texture::AnimatedTexture,
+    animation_data::{AnimationData, AnimationState},
+    camera::Camera,
+    enemy::Enemy,
+    projectile::Projectile,
+};
 use crate::environment::{aabb::AABB, level::Level, tile_type::ExitTile};
-use crate::networking::packet::Packet;
-use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
-use sdl2::render::Texture;
-use sdl2::render::{Canvas, TextureCreator};
+use crate::networking::{
+    packet::Packet,
+    shared::{SCREEN_HEIGHT, SCREEN_WIDTH},
+};
+use sdl2::render::{Canvas, Texture, TextureCreator};
 use sdl2::video::{Window, WindowContext};
 use std::time::Instant;
 
+/// Stanje igralca glede na njegovo zdravje oz. ranljivost.
 pub enum PlayerHitState {
     Invincible,
     Vulnerable,
 }
 
+/// Struktura, ki predstavlja igralca v igri.
 pub struct Player {
+    /// Unikatni ID igralca.
     pub id: u64,
+    /// Trenutna pozicija igralca na zaslonu.
+    /// `x` in `y` predstavljata koordinate igralca.
     pub x: f64,
     pub y: f64,
+    /// Hitrost igralca v smeri x in y.
     velocity_x: f64,
     velocity_y: f64,
+    /// Velikost igralca v x in y smeri.
     pub size_x: u32,
     pub size_y: u32,
+    /// Podatki o animaciji igralca.
     pub animation_data: AnimationData,
+    /// Hitbox igralca, ki se uporablja za zaznavanje trkov.
     pub hitbox: AABB,
+    /// Ali se igralec trči z okoljem.
     pub colliding: bool,
+    /// Hitrost igralca, ki se uporablja za premikanje.
     speed: f64,
+    /// Ali je igralec dosegel konec nivoja.
     pub reached_end: Option<ExitTile>,
 
+    /// Stanja tipk, ki jih igralec pritisne.
     pub pressed_up: bool,
     pub pressed_down: bool,
     pub pressed_left: bool,
     pub pressed_right: bool,
 
+    /// Trenutni nivo, na katerem se igralec nahaja.
     pub current_level: String,
+    /// Stanje igralca glede na njegovo ranljivost.
     pub hit_state: PlayerHitState,
+    /// Trenutno zdravje igralca.
     pub health: i32,
+    /// Čas zadnjega udarca, ki ga je igralec prejel.
     last_hit_time: f64,
+    /// Čas zadnjega zdravljenja igralca.
     last_heal_time: f64,
+    /// Čas zadnjega premika igralca.
     last_moved_time: f64,
+    /// Število utripov neranljivosti.
     invicibility_blinks: i32,
+    /// Čas zadnjega utripanja neranljivosti.
     last_blink_time: f64,
+    /// Ali je igralec premaknjen.
     pub moved: bool,
 }
 
 impl Player {
+    /// Ustvari novega igralca z danim ID-jem.
     pub fn new(id: u64) -> Player {
         Player {
             id,
@@ -81,6 +110,7 @@ impl Player {
         }
     }
 
+    /// Naloži teksturo igralca iz datoteke in jo shrani v `texture_map`.
     pub fn load_player_texture<'a>(
         &mut self,
         texture_creator: &'a TextureCreator<WindowContext>,
@@ -158,6 +188,7 @@ impl Player {
         );
     }
 
+    /// Ponastavi hitrost igralca na nič in sprosti vse pritisnjene tipke.
     pub fn reset_velocity(&mut self) {
         self.velocity_x = 0.0;
         self.velocity_y = 0.0;
@@ -167,6 +198,7 @@ impl Player {
         self.pressed_up = false;
     }
 
+    /// Nariše igralca na zaslon.
     pub fn draw(
         &mut self,
         canvas: &mut Canvas<Window>,
@@ -214,6 +246,7 @@ impl Player {
         }
     }
 
+    /// Posodobi stanje igralca glede na čas, nivo, kamero, sovražnike in izstrelke.
     pub fn update(
         &mut self,
         dt: f64,
@@ -321,6 +354,7 @@ impl Player {
         camera.y = self.y + (self.size_y as i32 / 2 - SCREEN_HEIGHT as i32 / 2) as f64;
     }
 
+    /// Obdeluje dogodke tipkovnice, ki jih igralec pritisne.
     pub fn on_event(&mut self, event: &sdl2::event::Event) {
         match event {
             sdl2::event::Event::KeyDown {
