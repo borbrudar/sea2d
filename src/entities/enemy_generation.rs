@@ -31,7 +31,7 @@ pub fn generate_enemies<'a>(
         let tip = pick_random_enemy_type();
 
         //  compute enemy_spawn_pt
-        let spawn_pt = enemy_spawn_pt(i, 60);
+        let spawn_pt = enemy_spawn_pt(&tip, i, 60);
 
         enemies.push(Enemy::new(tip, spawn_pt, texture_creator, texture_map))
     }
@@ -54,7 +54,7 @@ pub fn pick_random_enemy_type() -> EnemyType {
 }
 
 /// Določi začetno točko za pojavljanje sovražnikov na podlagi nivoja.
-pub fn enemy_spawn_pt(level_index: i32, level_tile_size: i32) -> (f64, f64) {
+pub fn enemy_spawn_pt(tip: &EnemyType, level_index: i32, level_tile_size: i32) -> (f64, f64) {
     //read spawn from second layer picture
     let second_layer = format!(
         "resources/levels/level{}/level{}_2.png",
@@ -82,14 +82,34 @@ pub fn enemy_spawn_pt(level_index: i32, level_tile_size: i32) -> (f64, f64) {
     if let Some(grid) = level_grid {
         loop {
             //pick a random walkable tile
-            let (x, y) = grid.random_walkable_tile();
-            let distance = (x as i32 - spawn_pt.0).abs() + (y as i32 - spawn_pt.1).abs(); // Manhattan distance
+            let (feet_x, feet_y) = grid.random_walkable_tile();
+            let distance = (feet_x as i32 - spawn_pt.0).abs() + (feet_y as i32 - spawn_pt.1).abs(); // Manhattan distance
 
             if distance >= 3 {
-                return (
-                    (x * level_tile_size as usize) as f64,
-                    (y * level_tile_size as usize) as f64,
-                );
+                match tip {
+                    EnemyType::Slime | EnemyType::Stonewalker => {
+                        // slime and stonewalker height
+                        let pixel_offset_y = -16.0;
+                        let px = feet_x as f64 * level_tile_size as f64;
+                        let py = feet_y as f64 * level_tile_size as f64 + pixel_offset_y;
+                        return (px, py);
+                    }
+                    EnemyType::Wizard => {
+                        // wizard height
+                        let pixel_offset_y = -64.0; // wizard is taller
+                        let px = feet_x as f64 * level_tile_size as f64;
+                        let py = feet_y as f64 * level_tile_size as f64 + pixel_offset_y;
+                        return (px, py);
+                    }
+                    EnemyType::Skull => {
+                        // skull height
+                        let pixel_offset_y = -32.0;
+                        let px = feet_x as f64 * level_tile_size as f64;
+                        let py = feet_y as f64 * level_tile_size as f64 + pixel_offset_y;
+                        return (px, py);
+                    }
+                    _ => {}
+                }
             }
         }
     } else {

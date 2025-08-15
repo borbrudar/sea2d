@@ -13,8 +13,8 @@ use std::path::Path;
 //sample: 5x5 ploščic, 10x10 pixlov
 const SAMPLE_TILE_SIZE: usize = 2;
 pub const TILE_SIZE: usize = 1;
-const GRID_HEIGHT: usize = 12;
-const GRID_WIDTH: usize = 16;
+const GRID_HEIGHT: usize = 14;
+const GRID_WIDTH: usize = 18;
 
 pub const EXIT_RGBA: [u8; 4] = [64, 58, 171, 102]; // RGBA color for exit tile
 pub const SPAWN_RGBA: [u8; 4] = [255, 0, 0, 102]; // RGBA color for player spawn tile
