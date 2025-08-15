@@ -659,16 +659,25 @@ impl Enemy {
         exists && !obstacle
     }
 
+    /// Izračuna pozicijo nog sovražnika.
+    pub fn calculate_enemy_point(&self, level: &Level) -> Point<i32> {
+        // sredina sovražnika
+        let x = self.x as i32 + (self.size_x / 2) as i32;
+        // spodaj pri nogah sovražnika
+        let y = self.y as i32 + self.size_y as i32;
+        Point::new(
+            x / level.tile_size * level.tile_size,
+            y / level.tile_size * level.tile_size,
+        )
+    }
+
     /// Izračuna smer igralca glede na položaj sovražnika in vrne ustrezno smer.
     pub fn calculate_player_direction(&self, level: &Level, player: &Player) -> i32 {
         let player_tile = Point::new(
             level.get_snapped_position(&player.hitbox).0,
             level.get_snapped_position(&player.hitbox).1,
         );
-        let enemy_tile = Point::new(
-            level.get_snapped_position(&self.hitbox).0,
-            level.get_snapped_position(&self.hitbox).1,
-        );
+        let enemy_tile = self.calculate_enemy_point(level);
 
         // run a bfs to find the shortest path to the player and return the direction
         let mut queue = VecDeque::new();
