@@ -1,18 +1,26 @@
+/// Modul za dodajanje besedila na zaslon v igri.
 use sdl2::pixels::Color;
 use sdl2::render;
 use sdl2::ttf;
 use sdl2::{rect::Rect, video::WindowContext};
 
+/// Struktura, ki predstavlja besedilo na zaslonu.
 pub struct Text {
+    /// Položaj besedila na zaslonu.
     x: i32,
     y: i32,
+    /// Velikost pisave.
     pt: i32,
+    /// Pot do pisave.
     font_path: &'static str,
+    /// Besedilo, ki ga želimo prikazati.
     line: String,
+    /// Barva besedila.
     color: Color,
 }
 
 impl Text {
+    /// Ustvari novo besedilo z danimi parametri.
     pub fn new(
         x: i32,
         y: i32,
@@ -31,6 +39,7 @@ impl Text {
         }
     }
 
+    /// Ustvari teksturo, na kateri bo besedilo izrisano.
     pub fn create_text_texture<'b>(
         &'b self,
         texture_creator: &'b render::TextureCreator<WindowContext>,
@@ -56,6 +65,7 @@ impl Text {
         (texture, width, height)
     }
 
+    /// Izriše besedilo na zaslon.
     pub fn draw(
         &self,
         canvas: &mut render::Canvas<sdl2::video::Window>,

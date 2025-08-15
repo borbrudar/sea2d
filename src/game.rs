@@ -1,6 +1,7 @@
 /// Modul z glavno logiko igre.
 use crate::display::{
     button::{Button, ButtonAction, Dropdown, HealthBar},
+    game_clock::GameClock,
     hud::Hud,
     mainmenu::{MainMenu, Screen},
 };
@@ -269,17 +270,6 @@ impl Game {
             Rect::new(50, 0, 50, 50),
         );
 
-        // let level_display = Button::new(
-        //     ButtonAction::ChangeGameState(GameState::Running),
-        //     Some(format!(
-        //         "Level: {:?}",
-        //         extract_level_index(&player.current_level).unwrap_or(0)
-        //     )),
-        //     None,
-        //     Some(Color::RGB(128, 128, 128)),
-        //     Rect::new(650, 0, 100, 50),
-        // );
-
         //Health bar
         let healthbar = HealthBar::new();
 
@@ -362,12 +352,27 @@ impl Game {
                         ..
                     } => {
                         if let GameState::GameOver = self.game_state {
+                            // reset level and player
                             self.game_state = GameState::Running;
-                            player.health = 100;
-                            player.pressed_down = false;
-                            player.pressed_left = false;
-                            player.pressed_right = false;
-                            player.pressed_up = false;
+                            wfc_level_generator(None);
+                            level.load_from_file(
+                                initial_level.clone(),
+                                &texture_creator,
+                                &mut texture_map,
+                            );
+                            // new player setup
+                            player = Player::new(player.id);
+                            player.load_player_texture(&texture_creator, &mut texture_map);
+                            player.x = level.player_spawn.0 as f64;
+                            player.y = level.player_spawn.1 as f64;
+                            player.hitbox.x = player.x + 16.;
+                            player.hitbox.y = player.y + 40.;
+                            player.current_level = initial_level.clone();
+
+                            //time reset
+                            current_time = std::time::Instant::now();
+                            hud.time_display = GameClock::new();
+                            last_time_clicked = 0.0;
                         }
                     }
                     sdl2::event::Event::KeyDown {
