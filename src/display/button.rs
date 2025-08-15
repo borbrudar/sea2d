@@ -275,10 +275,14 @@ impl<'a> Dropdown<'a> {
         if let Event::MouseMotion { x, y, .. } = event {
             let mouse_point = Point::new(*x, *y);
             let inside_trigger = self.trigger.position.contains_point(mouse_point);
-            let inside_items = self
-                .items
-                .iter()
-                .any(|item| item.position.contains_point(mouse_point));
+
+            // Only check dropdown items if already visible
+            let inside_items = self.visible
+                && self
+                    .items
+                    .iter()
+                    .any(|item| item.position.contains_point(mouse_point));
+
             self.visible = inside_trigger || inside_items;
         }
     }

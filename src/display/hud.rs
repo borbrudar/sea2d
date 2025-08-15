@@ -1,3 +1,4 @@
+use crate::display::text::Text;
 /// Modul, ki predstavlja HUD (Heads-Up Display) v igri.
 use crate::display::{
     button::{self, HealthBar},
@@ -77,6 +78,7 @@ impl<'a> Hud<'a> {
     pub fn draw(
         &mut self,
         player_health: i32,
+        level_index: i32,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
         ttf_context: &sdl2::ttf::Sdl2TtfContext,
         texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>,
@@ -94,6 +96,17 @@ impl<'a> Hud<'a> {
                 50,
             ))
             .unwrap();
+
+        // Izpiše nivo igre.
+        let level_text = Text::new(
+            650,
+            15,
+            20,
+            "resources/fonts/manolomono.otf",
+            format!("Level: {}", level_index),
+            Color::RGB(255, 255, 255),
+        );
+        level_text.draw(canvas, ttf_context);
 
         // Izriše gumb HUD-a.
         for b in self.buttons.iter_mut() {

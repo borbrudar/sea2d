@@ -250,6 +250,67 @@ impl Game {
         let mut enemies: Vec<Enemy> = generate_enemies(1, &texture_creator, &mut texture_map);
 
         let mut projectiles = Vec::new();
+        // hud
+        let pavza = Button::new(
+            ButtonAction::ChangeGameState(GameState::Paused),
+            None,
+            Some(TextureData::new("resources/textures/pause.png".to_string())),
+            Some(Color::RGB(255, 0, 0)),
+            Rect::new(100, 0, 50, 50),
+        );
+
+        let resume = Button::new(
+            ButtonAction::ChangeGameState(GameState::Running),
+            None,
+            Some(TextureData::new(
+                "resources/textures/resume-2.png".to_string(),
+            )),
+            Some(Color::RGB(0, 255, 0)),
+            Rect::new(50, 0, 50, 50),
+        );
+
+        // let level_display = Button::new(
+        //     ButtonAction::ChangeGameState(GameState::Running),
+        //     Some(format!(
+        //         "Level: {:?}",
+        //         extract_level_index(&player.current_level).unwrap_or(0)
+        //     )),
+        //     None,
+        //     Some(Color::RGB(128, 128, 128)),
+        //     Rect::new(650, 0, 100, 50),
+        // );
+
+        //Health bar
+        let healthbar = HealthBar::new();
+
+        //dropdown menu
+        let ddm = Dropdown::new(
+            Button::new(
+                ButtonAction::Callback(Box::new(|| println!("Dropdown triggered"))),
+                Some("...".to_string()),
+                None,
+                Some(Color::RGB(0, 0, 0)),
+                Rect::new(0, 0, 50, 50),
+            ),
+            vec![
+                Button::new(
+                    ButtonAction::ChangeGameState(GameState::MainMenu),
+                    Some("Back to Main Menu".to_string()),
+                    None,
+                    Some(Color::RGB(30, 139, 195)),
+                    Rect::new(0, 50, 250, 50),
+                ),
+                Button::new(
+                    ButtonAction::ChangeGameState(GameState::Instructions),
+                    Some("Instructions".to_string()),
+                    None,
+                    Some(Color::RGB(109, 165, 194)),
+                    Rect::new(0, 100, 250, 50),
+                ),
+            ],
+        );
+
+        let mut hud = Hud::new(vec![pavza, resume], Vec::new(), ddm, healthbar);
 
         let global_clock = std::time::Instant::now();
         let mut current_time = std::time::Instant::now();
@@ -262,73 +323,6 @@ impl Game {
         self.game_state = GameState::MainMenu;
 
         'running: loop {
-            // hud
-            let pavza = Button::new(
-                ButtonAction::ChangeGameState(GameState::Paused),
-                None,
-                Some(TextureData::new("resources/textures/pause.png".to_string())),
-                Some(Color::RGB(255, 0, 0)),
-                Rect::new(100, 0, 50, 50),
-            );
-
-            let resume = Button::new(
-                ButtonAction::ChangeGameState(GameState::Running),
-                None,
-                Some(TextureData::new(
-                    "resources/textures/resume-2.png".to_string(),
-                )),
-                Some(Color::RGB(0, 255, 0)),
-                Rect::new(50, 0, 50, 50),
-            );
-
-            let level_display = Button::new(
-                ButtonAction::ChangeGameState(GameState::Running),
-                Some(format!(
-                    "Level: {:?}",
-                    extract_level_index(&player.current_level).unwrap_or(0)
-                )),
-                None,
-                Some(Color::RGB(128, 128, 128)),
-                Rect::new(650, 0, 100, 50),
-            );
-
-            //Health bar
-            let healthbar = HealthBar::new();
-
-            //dropdown menu
-            let ddm = Dropdown::new(
-                Button::new(
-                    ButtonAction::Callback(Box::new(|| println!("Dropdown triggered"))),
-                    Some("...".to_string()),
-                    None,
-                    Some(Color::RGB(0, 0, 0)),
-                    Rect::new(0, 0, 50, 50),
-                ),
-                vec![
-                    Button::new(
-                        ButtonAction::ChangeGameState(GameState::MainMenu),
-                        Some("Back to Main Menu".to_string()),
-                        None,
-                        Some(Color::RGB(30, 139, 195)),
-                        Rect::new(0, 50, 250, 50),
-                    ),
-                    Button::new(
-                        ButtonAction::ChangeGameState(GameState::Instructions),
-                        Some("Instructions".to_string()),
-                        None,
-                        Some(Color::RGB(109, 165, 194)),
-                        Rect::new(0, 100, 250, 50),
-                    ),
-                ],
-            );
-
-            let mut hud = Hud::new(
-                vec![pavza, resume, level_display],
-                Vec::new(),
-                ddm,
-                healthbar,
-            );
-
             // event polling
             for event in event_pump.poll_iter() {
                 match self.game_state {
@@ -607,6 +601,7 @@ impl Game {
             if draw_hud {
                 hud.draw(
                     player.health,
+                    extract_level_index(&player.current_level).unwrap_or(0),
                     &mut canvas,
                     &ttf_context,
                     &texture_creator,
