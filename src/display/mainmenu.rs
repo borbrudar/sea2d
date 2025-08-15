@@ -1,7 +1,11 @@
 /// Modul za upravljanje glavnega menija igre.
-use crate::display::button::{Button, ButtonAction};
+use crate::display::{
+    button::{Button, ButtonAction},
+    text::Text,
+};
 use crate::game::GameState;
 use crate::networking::shared::{SCREEN_HEIGHT, SCREEN_WIDTH};
+use crate::wfc::overlap::read_highest_level;
 use sdl2::image::LoadTexture;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
@@ -67,6 +71,20 @@ impl<'a> MainMenu<'a> {
 
         self.start_button
             .draw(canvas, ttf_context, texture_creator, texture_map);
+
+        // Draw high score
+        let high_score = Text::new(
+            250,
+            500,
+            40,
+            "resources/fonts/manolomono.otf",
+            format!(
+                "HIGH SCORE: {}",
+                read_highest_level("resources/levels/highscore.txt")
+            ),
+            Color::RGB(255, 255, 255),
+        );
+        high_score.draw(canvas, ttf_context);
     }
 }
 

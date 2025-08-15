@@ -7,7 +7,7 @@ use rand::seq::SliceRandom;
 use std::collections::VecDeque;
 use std::fs;
 use std::fs::File;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::path::Path;
 
 //sample: 5x5 ploščic, 10x10 pixlov
@@ -405,7 +405,6 @@ pub fn generate_wfc(patterns: &Vec<Pattern>, width: u32, height: u32, n: usize) 
             generate_pattern_grid(&patterns, width - n as u32 + 1, height - n as u32 + 1);
         tile_grid = flatten_patterns_to_tile_grid(&pattern_grid, n);
         connected = tile_grid.is_fully_connected();
-        println!("grid not connected, retrying...");
     }
     println!("successfully generated a connected tile grid");
     tile_grid
@@ -593,6 +592,49 @@ fn delete_level_folder(folder_path: &str) -> std::io::Result<()> {
         println!("Folder does not exist: {}", folder_path);
     }
     Ok(())
+}
+
+/// Shrani najvišji nivo, če je novi nivo višji od trenutnega najvišjega.
+pub fn save_highest_level_if_higher(level: i32, path: &str) -> std::io::Result<()> {
+    let path_obj = Path::new(path);
+
+    // Read current highest if file exists
+    let current_highest = if path_obj.exists() {
+        let mut contents = String::new();
+        fs::File::open(path_obj)?.read_to_string(&mut contents)?;
+        contents.trim().parse::<i32>().unwrap_or(0)
+    } else {
+        0
+    };
+
+    // Only update if level is higher
+    if level > current_highest {
+        if let Some(parent) = path_obj.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        let mut file = fs::File::create(path_obj)?;
+        write!(file, "{}", level)?;
+    }
+
+    Ok(())
+}
+
+/// Prebere najvišji nivo iz datoteke.
+pub fn read_highest_level(path: &str) -> i32 {
+    let path_obj = Path::new(path);
+
+    if !path_obj.exists() {
+        return 0;
+    }
+
+    let mut contents = String::new();
+    if let Ok(mut file) = fs::File::open(path_obj) {
+        if file.read_to_string(&mut contents).is_ok() {
+            return contents.trim().parse::<i32>().unwrap_or(0);
+        }
+    }
+
+    0
 }
 
 /// Generira naslednji nivo z uporabo Overlap WFC algoritma.

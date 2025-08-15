@@ -143,6 +143,7 @@ impl<'a> Button<'a> {
 }
 
 /// Struktura, ki predstavlja kazalec zdravja igralca.
+#[derive(Clone)]
 pub struct HealthBar {
     width: i32,
     height: i32,
@@ -231,7 +232,7 @@ impl Badge {
     }
 }
 
-//Struktura, ki predstavlja spustni meni (Dropdown menu).
+///Struktura, ki predstavlja spustni meni (Dropdown menu).
 pub struct Dropdown<'a> {
     /// Gumb, ki sproži prikaz spustnega menija.
     pub trigger: Button<'a>,
