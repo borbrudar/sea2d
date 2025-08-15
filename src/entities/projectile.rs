@@ -159,7 +159,7 @@ impl Projectile {
             }
         }
 
-        if self.hitbox.intersects(&player.hitbox) && !self.fired_by_player {
+        if self.hitbox.intersects(&player.entire_body_hitbox) && !self.fired_by_player {
             player.health -= 15;
             ret = true;
         }

@@ -568,6 +568,9 @@ impl Game {
                 player
                     .hitbox
                     .draw(&mut canvas, player_hitbox_color, &camera);
+                player
+                    .entire_body_hitbox
+                    .draw(&mut canvas, player_hitbox_color, &camera);
                 for enemy in &enemies {
                     enemy.hitbox.draw(&mut canvas, Color::RED, &camera);
                 }

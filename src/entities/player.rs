@@ -39,6 +39,7 @@ pub struct Player {
     pub animation_data: AnimationData,
     /// Hitbox igralca, ki se uporablja za zaznavanje trkov.
     pub hitbox: AABB,
+    pub entire_body_hitbox: AABB,
     /// Ali se igralec trči z okoljem.
     pub colliding: bool,
     /// Hitrost igralca, ki se uporablja za premikanje.
@@ -90,6 +91,12 @@ impl Player {
                 ((SCREEN_HEIGHT as i32) / 2) as f64 + 76.0,
                 36,
                 20,
+            ),
+            entire_body_hitbox: AABB::new(
+                ((SCREEN_WIDTH as i32) / 2) as f64,
+                ((SCREEN_HEIGHT as i32) / 2) as f64 + 76.0,
+                36,
+                60,
             ),
             colliding: false,
             speed: 250.0,
@@ -267,12 +274,16 @@ impl Player {
             self.y += self.velocity_y * dt * 0.7071;
             self.hitbox.x += self.velocity_x * dt * 0.7071;
             self.hitbox.y += self.velocity_y * dt * 0.7071;
+            self.entire_body_hitbox.x += self.velocity_x * dt * 0.7071;
+            self.entire_body_hitbox.y += self.velocity_y * dt * 0.7071;
             self.moved = true;
         } else {
             self.x += self.velocity_x * dt;
             self.y += self.velocity_y * dt;
             self.hitbox.x += self.velocity_x * dt;
             self.hitbox.y += self.velocity_y * dt;
+            self.entire_body_hitbox.x += self.velocity_x * dt;
+            self.entire_body_hitbox.y += self.velocity_y * dt;
             self.moved = true;
         }
         if self.velocity_x == 0.0 && self.velocity_y == 0.0 {
@@ -345,6 +356,8 @@ impl Player {
         }
 
         level.resolve_collision(&mut self.hitbox);
+        self.entire_body_hitbox.x = self.hitbox.x;
+        self.entire_body_hitbox.y = self.hitbox.y - 60.0; // Adjust for the height of the player
         self.x = self.hitbox.x - 20.;
         self.y = self.hitbox.y - 76.;
         //let send = Packet::PlayerPacket(PlayerPacket::PlayerPositionPacket(PlayerPosition{x : self.x, y : self.y, player_id: self.id}));
