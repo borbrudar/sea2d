@@ -6,6 +6,16 @@ use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
 
 /// Generira seznam sovražnikov glede na indeks nivoja.
+
+pub fn enemy_count_for_level(i: i32) -> usize {
+    let mut n = 1;
+    if i >= 3 {
+        let div = (i - 3) / 4;
+        n += div + 1;
+    }
+    n as usize
+}
+
 pub fn generate_enemies<'a>(
     i: i32,
     texture_creator: &'a TextureCreator<WindowContext>,
@@ -14,11 +24,8 @@ pub fn generate_enemies<'a>(
     let mut enemies = Vec::new();
 
     //compute the number of enemies given level index
-    let mut n = 1;
-    if i >= 3 {
-        let div = (i - 3) / 4;
-        n += div + 1;
-    }
+    let n = enemy_count_for_level(i);
+
     for _ in 1..=n {
         //  pick enemy type
         let tip = pick_random_enemy_type();
