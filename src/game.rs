@@ -719,7 +719,7 @@ impl Game {
             }
             if let GameState::GameOver = self.game_state {
                 let color = Color::RGB(255, 255, 255);
-                let surface = font.render("Game Joever").blended(color).unwrap(); // Create a blended surface (anti-aliased)
+                let surface = font.render("Game Over").blended(color).unwrap(); // Create a blended surface (anti-aliased)
 
                 let texture = texture_creator
                     .create_texture_from_surface(&surface)
