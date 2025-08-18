@@ -1,5 +1,6 @@
 # sea2d
 Avtorja projekta: Bor Brudar, Lara Velkavrh
+
 Avtorica glasbe: Patricija Femc
 
 ## Navodila za uporabo 
