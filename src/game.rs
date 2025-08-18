@@ -13,6 +13,7 @@ use crate::environment::{level::Level, texture_data::TextureData};
 use crate::networking::{packet::Packet, player_packets::*, shared::*};
 use crate::wfc::overlap::{extract_level_index, save_highest_level_if_higher, wfc_level_generator};
 use sdl2::image::{self};
+use sdl2::mixer::{self, Music};
 use sdl2::pixels::Color;
 use sdl2::rect;
 use sdl2::rect::Rect;
@@ -22,7 +23,7 @@ use std::collections::HashMap;
 use std::sync::mpsc as mspc;
 
 /// Stanje igre.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum GameState {
     Running,
     Paused,
@@ -37,7 +38,6 @@ pub struct Game {
     packet_sender: mspc::Sender<Packet>,
     game_state: GameState,
 }
-
 pub fn find_sdl_gl_driver() -> Option<u32> {
     for (index, item) in sdl2::render::drivers().enumerate() {
         if item.name == "opengl" {
@@ -176,6 +176,38 @@ impl Game {
         }
     }
 
+    /// Naloži glasbo za igro
+    fn load_music() -> (Music<'static>, Music<'static>) {
+        let music_running = Music::from_file("resources/sound/music/nizje 2.mp3")
+            .expect("Could not load running music");
+        let music_idle =
+            Music::from_file("resources/sound/music/intro.mp3").expect("Could not load idle music");
+
+        (music_running, music_idle)
+    }
+
+    /// Predvaja ustrezno glasbo glede na trenutno stanje igre.
+    fn play_music_for_state(
+        &self,
+        current_state: &mut Option<GameState>,
+        music_running: &Music,
+        music_idle: &Music,
+    ) {
+        let state = self.game_state;
+        if Some(state) != *current_state {
+            // stop current and play new one
+            match state {
+                GameState::Running => {
+                    music_running.play(-1).unwrap(); // loop forever
+                }
+                _ => {
+                    music_idle.play(-1).unwrap();
+                }
+            }
+            *current_state = Some(state);
+        }
+    }
+
     /// Glavna zanka igre, ki obdeluje dogodke, posodablja stanje in riše vsebino na zaslon.
     /// V tej zanki se generira prvi nivo in inicializira SDL2.
     pub fn run(&mut self) {
@@ -205,13 +237,15 @@ impl Game {
         let font = ttf_context.load_font(font_path, 56).unwrap();
 
         //sound
-        //mixer::init(mixer::InitFlag::MP3 | mixer::InitFlag::OGG).unwrap();
-        //mixer::open_audio(22050, mixer::DEFAULT_FORMAT, 2, 4096).unwrap();
+        mixer::init(mixer::InitFlag::MP3 | mixer::InitFlag::OGG).unwrap();
+        mixer::open_audio(22050, mixer::DEFAULT_FORMAT, 2, 4096).unwrap();
 
-        //let test_sound_effect = Chunk::from_file("resources/sound/effects/795424__koolkatbenziboii4__step-dirt-1.mp3").unwrap();
-        //let test_music = Music::from_file("resources/sound/music/music.mp3").unwrap();
+        // let test_sound_effect =
+        //     Chunk::from_file("resources/sound/effects/795424__koolkatbenziboii4__step-dirt-1.mp3")
+        //         .unwrap();
 
-        //test_music.play(-1).unwrap();
+        let (music_running, music_idle) = Self::load_music();
+        let mut current_music_state: Option<GameState> = None;
 
         // --------------------------------------
         let viewport = rect::Rect::new(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -313,6 +347,9 @@ impl Game {
         self.game_state = GameState::MainMenu;
 
         'running: loop {
+            // music
+            self.play_music_for_state(&mut current_music_state, &music_running, &music_idle);
+
             // event polling
             for event in event_pump.poll_iter() {
                 match self.game_state {
