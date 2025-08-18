@@ -460,8 +460,10 @@ impl Game {
                         for but in &mut hud.buttons {
                             but.handle_event(&event, &mut self.game_state);
                         }
-                        for item in &mut hud.dropdown.items {
-                            item.handle_event(&event, &mut self.game_state);
+                        if hud.dropdown.visible {
+                            for item in &mut hud.dropdown.items {
+                                item.handle_event(&event, &mut self.game_state);
+                            }
                         }
                     }
                     sdl2::event::Event::MouseMotion { .. } => {
