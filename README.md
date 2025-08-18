@@ -26,3 +26,6 @@ Dokumentacijo se lahko generira z `cargo d`, testi pa se poženejo z `cargo t`.
 
 ![Glavni menu igre](resources/screenshots/mm_screenshot.png)
 ![Primer stopnje](resources/screenshots/level_screenshot.png)
+
+## Licensa
+[GPLv3](license.md)
