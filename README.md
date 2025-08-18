@@ -15,7 +15,7 @@ Ne pozabite imeti nameščenih razvojnih različic (devel) `SDL2` in `SDL2_image
 * Ubuntu: `sudo libsdl2-dev ibsdl2-image-dev libsdl2-mixer-dev lidsdl2-ttf-dev`.
 * Windows: razpakirajte datoteke v mapi `windows_dependencies` in kopirajte datoteke .lib in .dll za SDL2 in SDL2_image v direktorij, kjer je `Cargo.toml`, pa tudi v mapo `target/`.
 
-Uporabniki drugih operacijskih sistemov – srečno. (Žal, poskušal sem urediti Dockerfile za ta namen, ampak potrebuje GUI passthrough, tako da je več težav kot je vredno. Sicer se prevede, tako da neustrašni lahko poskusijo tudi na ta način, Dockerfile je priložen. Ukaza sta `docker build -t sea2d-image .` in pa `docker run --rm sea2d-image`.) Priporočam uporabo virtualnih mašin.
+Uporabniki drugih operacijskih sistemov – srečno (žal, poskušal sem urediti Dockerfile za ta namen, ampak potrebuje GUI passthrough, tako da je več težav kot je vredno. Sicer se prevede, tako da neustrašni lahko poskusijo tudi na ta način, Dockerfile je priložen. Ukaza sta `docker build -t sea2d-image .` in pa `docker run --rm sea2d-image`). Priporočam uporabo virtualnih mašin.
 
 Dokumentacijo se lahko generira z `cargo d`, testi pa se poženejo z `cargo t`.
 
@@ -24,5 +24,5 @@ Dokumentacijo se lahko generira z `cargo d`, testi pa se poženejo z `cargo t`.
 2D igra v pixel-art stilu. Spustite se čim globlje v zemljo in premagajte nasprotnike. Vsaka stopnja je najključno generirana z uporabo algoritma WFC (wave-function collapse), zato je vsaka izkušnja unikatna. Podpora za već igralcev je žal v povojih, kjer bo tudi ostala. 
 
 
-![Main Menu of the game](resources/screenshots/mm_screenshot.png)
-![Example level](resources/screenshots/level_screenshot.png)
+![Glavni menu igre](resources/screenshots/mm_screenshot.png)
+![Primer stopnje](resources/screenshots/level_screenshot.png)
