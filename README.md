@@ -1,5 +1,6 @@
 # sea2d
 Avtorja projekta: Bor Brudar, Lara Velkavrh
+Avtorica glasbe: Patricija Femc
 
 ## Navodila za uporabo 
 
@@ -17,4 +18,5 @@ Uporabniki Maca – srečno. (Žal, poskušal sem urediti Dockerfile za ta namen
 2D igra v pixel-art stilu. Spustite se čim globlje v zemljo in premagajte nasprotnike. Vsaka stopnja je najključno generirana z uporabo algoritma WFC (wave-function collapse), zato je vsaka izkušnja unikatna. Multiplayer podpora je žal v povojih, kjer bo tudi ostala. 
 
 
-![Current state of the game](resources/screenshots/image.png)
+![Main Menu of the game](resources/screenshots/mm_screenshot.png)
+![Example level](resources/screenshots/level_screenshot.png)
