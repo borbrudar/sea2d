@@ -3,3 +3,5 @@
 /resoures/levels/*.aseprite
 /resources/player_animation/*.aseprite
 /resources/textures/*.aseprite
+/resources/levels/level*
+/resources/levels/highscore.txt
